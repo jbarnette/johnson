@@ -18,4 +18,6 @@ Hoe.new("johnson", Johnson::VERSION) do |p|
     "ext/spidermonkey/*.{o,so,bundle,log}",
     "vendor/spidermonkey/**/*.OBJ",
     GENERATED_NODE]
+    
+  p.spec_extras = { :extensions => ["ext/spidermonkey/extconf.rb"] }
 end
