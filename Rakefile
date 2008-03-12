@@ -15,6 +15,7 @@ Hoe.new("johnson", Johnson::VERSION) do |p|
   p.changes = p.paragraphs_of("History.txt", 0..1).join("\n\n")
   
   p.clean_globs = [
+    "lib/johnson/spidermonkey.#{kind}",
     "ext/spidermonkey/Makefile",
     "ext/spidermonkey/*.{o,so,bundle,log}",
     "vendor/spidermonkey/**/*.OBJ"]
