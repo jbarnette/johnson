@@ -10,6 +10,7 @@ ext/spidermonkey/spidermonkey.h
 lib/johnson.rb
 lib/johnson/version.rb
 test/helper.rb
+test/johnson/error_test.rb
 test/johnson/version_test.rb
 vendor/spidermonkey/Makefile.in
 vendor/spidermonkey/Makefile.ref
