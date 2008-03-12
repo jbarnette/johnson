@@ -2,6 +2,8 @@ History.txt
 Manifest.txt
 README.txt
 Rakefile
+ext/spidermonkey/extconf.rb
+ext/spidermonkey/spidermonkey.c
 lib/johnson.rb
 test/test_johnson.rb
 vendor/spidermonkey/Makefile.in
