@@ -1,3 +1,2 @@
-class Johnson
-  VERSION = "1.0.0"
-end
+require "johnson/version"
+require "johnson/spidermonkey"
