@@ -10,3 +10,14 @@ end
 Rake rescue Dir.chdir(File.dirname(__FILE__) + "/..") { %x(rake extensions) }
 
 require "johnson"
+
+module Johnson
+  class TestCase < Test::Unit::TestCase
+    def default_test; end
+    
+    def assert_js(expression, options={})
+      context = options[:context] || @context
+      assert(@context.evaluate(expression), "Expected JS expression [#{expression}] to be true.")
+    end
+  end
+end

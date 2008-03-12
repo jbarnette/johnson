@@ -1,7 +1,7 @@
 require File.expand_path(File.join(File.dirname(__FILE__), "/../helper"))
 
 module Johnson
-  class ContextTest < Test::Unit::TestCase
+  class ContextTest < Johnson::TestCase
     def setup
       @context = Johnson::Context.new
     end
@@ -13,14 +13,29 @@ module Johnson
     def test_delegates_public_ops
       delegate = mock()
       delegate.expects(:evaluate).with("expression").returns("result")
-      delegate.expects(:[]).with(:key).returns("value")
-      delegate.expects(:[]=).with(:key, "value").returns("value")
+      delegate.expects(:[]).with("key").returns("value")
+      delegate.expects(:[]=).with("key", "value").returns("value")
       
-      context = Johnson::Context.new(delegate)
+      ctx = Johnson::Context.new(delegate)
       
-      assert_equal("result", context.evaluate("expression"))
-      assert_equal("value", context[:key])
-      assert_equal("value", context[:key] = "value")
+      assert_equal("result", ctx.evaluate("expression"))
+      assert_equal("value", ctx[:key])
+      assert_equal("value", ctx[:key] = "value")
+    end
+    
+    def test_evaluate_returns_nil_for_nil_expression
+      assert_nil(@context.evaluate(nil))
+    end
+    
+    def test_converts_keys_to_strings_for_get_and_set
+      delegate = mock()
+      delegate.expects(:[]).with("key")
+      delegate.expects(:[]=).with("key", "value")
+      
+      ctx = Johnson::Context.new(delegate)
+      
+      value = ctx[:key]
+      ctx[:key] = "value"
     end
   end
 end

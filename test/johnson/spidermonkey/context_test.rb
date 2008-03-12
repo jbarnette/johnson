@@ -2,7 +2,7 @@ require File.expand_path(File.join(File.dirname(__FILE__), "/../../helper"))
 
 module Johnson
   module SpiderMonkey
-    class ContextTest < Test::Unit::TestCase
+    class ContextTest < Johnson::TestCase
       def setup
         @context = Johnson::SpiderMonkey::Context.new
       end
