@@ -2,6 +2,22 @@
 #include "conversions.h"
 #include "error.h"
 
+static JSHashNumber id_key_hash(const void *key)
+{
+  // just use the jsval's address
+  return (JSHashNumber)key;
+}
+
+static intN id_key_comparator(const void *v1, const void *v2)
+{
+  return (jsid)v1 == (jsid)v2;
+}
+
+static intN id_value_comparator(const void* v1, const void* v2)
+{
+  return (VALUE)v1 == (VALUE)v2;
+}
+
 static VALUE evaluate(VALUE self, VALUE script)
 {
   Check_Type(script, T_STRING);
@@ -90,8 +106,14 @@ static void error(JSContext* js, const char* message, JSErrorReport* report)
 
 static void deallocate(OurContext* context)
 {
+  JS_SetContextPrivate(context->js, 0);
+  
+  assert(JS_RemoveRoot(context->js, &(context->ids)));
+  JS_HashTableDestroy(context->ids);
+  
   JS_DestroyContext(context->js);
   JS_DestroyRuntime(context->runtime);
+  
   free(context);
 }
 
@@ -100,13 +122,18 @@ static VALUE allocate(VALUE klass)
   OurContext* context = calloc(1, sizeof(OurContext));
   
   // FIXME: Don't hardcode these values, possibly move to initialize
-  // FIXME: why do we need a runtime for each context?
-
-  assert(context->runtime = JS_NewRuntime(0x100000));
+  assert(context->runtime  = JS_NewRuntime(0x100000));
   assert(context->js = JS_NewContext(context->runtime, 8192));
-  assert(context->global = JS_NewObject(context->js, &OurGlobalClass, NULL, NULL));
-  assert(JS_InitStandardClasses(context->js, context->global));
   
+  assert(context->ids = JS_NewHashTable(0,
+    id_key_hash, id_key_comparator, id_value_comparator, NULL, NULL));
+  
+  assert(context->gcthings = JS_NewObject(context->js, NULL, 0, 0));
+  assert(context->global = JS_NewObject(context->js, &OurGlobalClass, NULL, NULL));
+  
+  assert(JS_InitStandardClasses(context->js, context->global));
+  assert(JS_AddRoot(context->js, &(context->ids)));
+    
   VALUE self = Data_Wrap_Struct(klass, 0, deallocate, context);
 
   JS_SetErrorReporter(context->js, error);

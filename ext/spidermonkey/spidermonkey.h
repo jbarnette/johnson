@@ -6,5 +6,6 @@
 
 #include <ruby.h>
 #include "jsapi.h"
+#include "jshash.h"
 
 #endif

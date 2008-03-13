@@ -10,6 +10,9 @@ typedef struct {
   JSObject *global;
   JSRuntime *runtime;
   
+  JSHashTable *ids;
+  JSObject *gcthings;
+  
   jsval ex; // an exception value
   char msg[MAX_EXCEPTION_MESSAGE_SIZE]; // the 'backup' message
   
