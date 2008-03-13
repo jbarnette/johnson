@@ -17,7 +17,12 @@ module Johnson
     
     def assert_js(expression, options={})
       context = options[:context] || @context
-      assert(@context.evaluate(expression), "Expected JS expression [#{expression}] to be true.")
+      assert(context.evaluate(expression), "Expected JS expression [#{expression}] to be true.")
+    end
+    
+    def assert_js_equal(expected, expression, options={})
+      context = options[:context] || @context
+      assert_equal(expected, context.evaluate(expression))
     end
   end
 end
