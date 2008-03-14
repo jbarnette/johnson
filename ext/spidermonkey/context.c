@@ -1,22 +1,7 @@
 #include "context.h"
 #include "conversions.h"
 #include "error.h"
-
-static JSHashNumber id_key_hash(const void *key)
-{
-  // just use the jsid
-  return (JSHashNumber)key;
-}
-
-static intN id_key_comparator(const void *v1, const void *v2)
-{
-  return (jsid)v1 == (jsid)v2;
-}
-
-static intN id_value_comparator(const void* v1, const void* v2)
-{
-  return (VALUE)v1 == (VALUE)v2;
-}
+#include "idhash.h"
 
 static VALUE evaluate(VALUE self, VALUE script)
 {
@@ -38,8 +23,7 @@ static VALUE evaluate(VALUE self, VALUE script)
   if (!ok)
   {
     // FIXME: this is lame. It'd be a lot better to do a richer hierarchy
-    // on the Ruby side and convert some of these. Maybe even autogenerate
-    // some sort of Johnson::Errors:: hierarchy at raise-time?
+    // on the Ruby side and convert some of these.
     
     if (JS_IsExceptionPending(context->js))
     {
@@ -124,10 +108,8 @@ static VALUE allocate(VALUE klass)
   // FIXME: Don't hardcode these values, possibly move to initialize
   assert(context->runtime  = JS_NewRuntime(0x100000));
   assert(context->js = JS_NewContext(context->runtime, 8192));
-  
-  assert(context->ids = JS_NewHashTable(0,
-    id_key_hash, id_key_comparator, id_value_comparator, NULL, NULL));
-  
+
+  assert(context->ids = new_idhash());  
   assert(context->gcthings = JS_NewObject(context->js, NULL, 0, 0));
   assert(context->global = JS_NewObject(context->js, &OurGlobalClass, NULL, NULL));
   
