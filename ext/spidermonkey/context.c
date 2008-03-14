@@ -4,7 +4,7 @@
 
 static JSHashNumber id_key_hash(const void *key)
 {
-  // just use the jsval's address
+  // just use the jsid
   return (JSHashNumber)key;
 }
 
