@@ -1,6 +1,7 @@
 #include "spidermonkey.h"
 #include "context.h"
 #include "error.h"
+#include "proxy.h"
 
 void Init_spidermonkey()
 {
@@ -9,6 +10,7 @@ void Init_spidermonkey()
   
   init_Johnson_Error(johnson);
   init_Johnson_SpiderMonkey_Context(spidermonkey);
+  init_Johnson_SpiderMonkey_Proxy(spidermonkey);
   
   rb_define_const(spidermonkey, "VERSION",
     rb_obj_freeze(rb_str_new2(JS_GetImplementationVersion())));
