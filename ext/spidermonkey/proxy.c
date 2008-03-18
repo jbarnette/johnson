@@ -60,7 +60,7 @@ static VALUE call(int argc, VALUE* argv, VALUE self)
   jsval js;
   
   assert(JS_CallFunctionValue(proxy->context->js,
-    proxy->context->global, proxy->value, argc, argv, &js));
+    proxy->context->global, proxy->value, argc, args, &js));
   
   return convert_to_ruby(proxy->context, js);
 }

@@ -36,6 +36,13 @@ module Johnson
         assert_equal(42, k.call(42))
       end
       
+      def test_functions_can_be_used_as_procs
+        k = @context.evaluate("function(x) { return x; }")
+        a = %w(a b c)
+        
+        assert_equal(a, a.collect(&k))
+      end
+      
       def test_proxies_can_be_indexed_by_string
         proxy = @context.evaluate("x = { foo: 42 }")
         assert_kind_of(Johnson::SpiderMonkey::Proxy, proxy)

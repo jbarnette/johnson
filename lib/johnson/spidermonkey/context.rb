@@ -1,8 +1,6 @@
 module Johnson
   module SpiderMonkey
-    
-    # Also see ext/spidermonkey/context.c
-    class Context
+    class Context # native
     end
   end
 end
