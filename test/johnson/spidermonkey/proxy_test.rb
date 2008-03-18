@@ -57,6 +57,7 @@ module Johnson
         proxy["foo"] = 99
         proxy["bar"] = 42
         
+        assert_js_equal(99, "x.foo")
         assert_equal(99, proxy["foo"])
         assert_equal(42, proxy["bar"])
       end
@@ -78,13 +79,18 @@ module Johnson
         assert(proxy.respond_to?(:bar=))
       end
       
-      def test_simple_accessors_work
+      def test_simple_accessor
         proxy = @context.evaluate("x = { foo: 42 }")
         assert_equal(42, proxy.foo)
       end
       
-      # FIXME: more tests on accessors/mutators here!
-      
+      def test_simple_assignment
+        proxy = @context.evaluate("x = {}")
+        proxy.foo = 42
+        
+        assert_js_equal(42, "x.foo")
+        assert_equal(42, proxy.foo)
+      end      
     end
   end
 end

@@ -6,8 +6,20 @@ module Johnson
       end
       
       def method_missing(sym, *args)
-        # FIXME: SO much to do here
-        return self[sym.to_s] if args.empty?
+        name = sym.to_s
+        assignment = "=" == name[-1, 1]
+        
+        # default behavior if the slot's not there
+        return super unless assignment || respond_to?(sym)
+        
+        # for arity 0, treat it as a get
+        return self[name] if args.empty?
+        
+        # arity 1 and quacking like an assignment, treat it as a set
+        return self[name[0..-2]] = args[0] if assignment && 1 == args.size
+        
+        # okay, must really be a function (native code)
+        call_property(name, *args) # FIXME
       end
     end
   end
