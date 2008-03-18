@@ -79,18 +79,33 @@ module Johnson
         assert(proxy.respond_to?(:bar=))
       end
       
-      def test_simple_accessor
+      def test_accessor
         proxy = @context.evaluate("x = { foo: 42 }")
         assert_equal(42, proxy.foo)
       end
       
-      def test_simple_assignment
+      def test_mutator
         proxy = @context.evaluate("x = {}")
         proxy.foo = 42
         
         assert_js_equal(42, "x.foo")
         assert_equal(42, proxy.foo)
-      end      
+      end
+      
+      def test_method_with_no_arguments
+        proxy = @context.evaluate("x = { foo: function() { return 42 } }")
+        assert_equal(42, proxy.foo)
+      end
+      
+      def test_method_with_one_argument
+        proxy = @context.evaluate("k = { k: function(x) { return x } }")
+        assert_equal(42, proxy.k(42))
+      end
+      
+      def test_method_with_simple_arguments
+        proxy = @context.evaluate("x = { add: function(x, y) { return x + y } }")
+        assert_equal(42, proxy.add(40, 2))
+      end
     end
   end
 end

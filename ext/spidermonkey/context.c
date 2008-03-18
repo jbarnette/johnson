@@ -92,7 +92,7 @@ static void deallocate(OurContext* context)
 {
   JS_SetContextPrivate(context->js, 0);
   
-  assert(JS_RemoveRoot(context->js, &(context->ids)));
+  assert(JS_RemoveRoot(context->js, &(context->gcthings)));
   JS_HashTableDestroy(context->ids);
   
   JS_DestroyContext(context->js);
@@ -114,7 +114,7 @@ static VALUE allocate(VALUE klass)
   assert(context->global = JS_NewObject(context->js, &OurGlobalClass, NULL, NULL));
   
   assert(JS_InitStandardClasses(context->js, context->global));
-  assert(JS_AddRoot(context->js, &(context->ids)));
+  assert(JS_AddRoot(context->js, &(context->gcthings)));
     
   VALUE self = Data_Wrap_Struct(klass, 0, deallocate, context);
 
