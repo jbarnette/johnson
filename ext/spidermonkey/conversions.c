@@ -70,7 +70,9 @@ VALUE convert_to_ruby(OurContext* context, jsval js)
           rb_intern("ObjectSpace")), rb_intern("_id2ref"), 1, id);
       }
       else
-      {        
+      {
+        // FIXME: do we need to root things for GC on the Ruby side, too?
+        
         // otherwise create one and cache it
         VALUE proxy = proxify(context, js); 
         
