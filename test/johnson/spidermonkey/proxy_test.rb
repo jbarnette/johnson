@@ -11,8 +11,9 @@ module Johnson
         assert_raise(Johnson::Error) { Johnson::SpiderMonkey::Proxy.new }
       end
       
-      def test_something
-        proxy = @context.evaluate("x = { foo: 42 }")
+      def test_objects_get_wrapped_as_proxies
+        assert_kind_of(Johnson::SpiderMonkey::Proxy, @context.evaluate("x = {}"))
+        assert_kind_of(Johnson::SpiderMonkey::Proxy, @context.evaluate("new Object()"))
       end
     end
   end

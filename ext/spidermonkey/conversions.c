@@ -70,14 +70,14 @@ VALUE convert_to_ruby(OurContext* context, jsval js)
           rb_intern("ObjectSpace")), rb_intern("_id2ref"), 1, id);
       }
       else
-      {
+      {        
         // otherwise create one and cache it
         VALUE proxy = proxify(context, js); 
-      	
+        
       	// put the proxy OID in the id map
         assert(JS_HashTableAdd(context->ids, (void *)js, (void *)rb_obj_id(proxy)));
         
-        // root the js value for GC
+        // root the value for JS GC
         char key[10];
       	sprintf(key, "%x", (int)js);
       	JS_SetProperty(context->js, context->gcthings, key, &js);

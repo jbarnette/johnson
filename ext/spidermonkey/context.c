@@ -9,16 +9,16 @@ static VALUE evaluate(VALUE self, VALUE script)
   
   OurContext* context;
   Data_Get_Struct(self, OurContext, context);
-  
-  char* cscript = StringValuePtr(script);
-  jsval js_value;
-  
+    
   // clean things up first
   context->ex = 0;
   memset(context->msg, 0, MAX_EXCEPTION_MESSAGE_SIZE);  
+  
+  char* scriptz = StringValuePtr(script);
+  jsval js;
     
   JSBool ok = JS_EvaluateScript(context->js, context->global,
-    cscript, strlen(cscript), NULL, 1, &js_value);
+    scriptz, strlen(scriptz), NULL, 1, &js);
 
   if (!ok)
   {
@@ -41,7 +41,7 @@ static VALUE evaluate(VALUE self, VALUE script)
     return Johnson_Error_raise(msg);
   }
 
-  return convert_to_ruby(context, js_value);
+  return convert_to_ruby(context, js);
 }
 
 static VALUE get(VALUE self, VALUE name)

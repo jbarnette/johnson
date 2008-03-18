@@ -19,7 +19,7 @@ static void deallocate(OurRubyProxy* proxy)
     char key[10];
   	sprintf(key, "%x", (int)proxy->value);
     JS_DeleteProperty(proxy->context->js, proxy->context->gcthings, key);
-
+    
     proxy->context = 0;
   }
   
@@ -29,11 +29,15 @@ static void deallocate(OurRubyProxy* proxy)
 
 VALUE proxify(OurContext* context, jsval value)
 {
+  
   OurRubyProxy* proxy;
+  
+  VALUE rbproxy = Data_Make_Struct(proxy_class, OurRubyProxy, 0, deallocate, proxy);
+  
   proxy->value = value;
   proxy->context = context;
   
-  return Data_Make_Struct(proxy_class, OurRubyProxy, 0, deallocate, proxy);
+  return rbproxy;
 }
 
 void init_Johnson_SpiderMonkey_Proxy(VALUE spidermonkey)
