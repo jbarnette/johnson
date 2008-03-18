@@ -1,13 +1,12 @@
 module Johnson
   module SpiderMonkey
-    
-    # FIXME: make me enumerable!
     class Proxy # native
+      include Enumerable
+      
       def to_proc
         @proc ||= Proc.new { |*args| call(*args) }
       end
       
-      # FIXME: if an arity 0 prop is a function, should call it, not return proxy
       def method_missing(sym, *args)
         name = sym.to_s
         assignment = "=" == name[-1, 1]

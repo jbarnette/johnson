@@ -4,7 +4,7 @@
 
 == DESCRIPTION:
 
-FIX (describe your package)
+Johnson wraps JavaScript in a loving Ruby embrace.
 
 == FEATURES/PROBLEMS:
 
@@ -20,7 +20,7 @@ FIX (describe your package)
 
 == INSTALL:
 
-* FIX (sudo gem install, anything else)
+  sudo gem install johnson
 
 == LICENSE:
 

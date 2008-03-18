@@ -106,6 +106,13 @@ module Johnson
         proxy = @context.evaluate("x = { add: function(x, y) { return x + y } }")
         assert_equal(42, proxy.add(40, 2))
       end
+      
+      # def test_supports_each_if_enumerable
+      #   proxy = @context.evaluate("[1, 2, 3]")
+      #   values = []
+      #   
+      #   proxy.each { |n| values << n }
+      # end
     end
   end
 end
