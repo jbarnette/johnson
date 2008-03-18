@@ -34,6 +34,37 @@ static VALUE set(VALUE self, VALUE name, VALUE value)
   return value;
 }
 
+static VALUE function_p(VALUE self)
+{
+  OurRubyProxy* proxy;
+  Data_Get_Struct(self, OurRubyProxy, proxy);
+  return JS_TypeOfValue(proxy->context->js, proxy->value) == JSTYPE_FUNCTION;
+}
+
+static VALUE call(int argc, VALUE* argv, VALUE self)
+{
+  if (!function_p(self))
+    Johnson_Error_raise("This Johnson::SpiderMonkey::Proxy isn't a function.");
+
+  OurRubyProxy* proxy;
+  Data_Get_Struct(self, OurRubyProxy, proxy);
+  
+  jsval args[10];  
+  int i;
+
+  for(i = 0; i < argc; ++i)
+    args[i] = convert_to_js(proxy->context, argv[i]);
+  
+  // FIXME: exception handling here?
+
+  jsval js;
+  
+  assert(JS_CallFunctionValue(proxy->context->js,
+    proxy->context->global, proxy->value, argc, argv, &js));
+  
+  return convert_to_ruby(proxy->context, js);
+}
+
 static VALUE initialize(VALUE self)
 {
   return Johnson_Error_raise("Johnson::SpiderMonkey::Proxy is an internal support class.");
@@ -59,11 +90,9 @@ static void deallocate(OurRubyProxy* proxy)
   free(proxy);
 }
 
-VALUE proxify(OurContext* context, jsval value)
+VALUE make_proxy(OurContext* context, jsval value)
 {
-  
-  OurRubyProxy* proxy;
-  
+  OurRubyProxy* proxy; 
   VALUE rbproxy = Data_Make_Struct(proxy_class, OurRubyProxy, 0, deallocate, proxy);
   
   proxy->value = value;
@@ -79,4 +108,6 @@ void init_Johnson_SpiderMonkey_Proxy(VALUE spidermonkey)
 
   rb_define_method(proxy_class, "[]", get, 1);
   rb_define_method(proxy_class, "[]=", set, 2);
+  rb_define_method(proxy_class, "function?", function_p, 0);
+  rb_define_method(proxy_class, "call", call, -1);
 }

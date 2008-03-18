@@ -58,6 +58,7 @@ VALUE convert_to_ruby(OurContext* context, jsval js)
     case JSTYPE_VOID:
       return Qnil;
       
+    case JSTYPE_FUNCTION:  
     case JSTYPE_OBJECT:
       if (JSVAL_NULL == js) return Qnil;
       
@@ -73,8 +74,8 @@ VALUE convert_to_ruby(OurContext* context, jsval js)
       {
         // FIXME: do we need to root things for GC on the Ruby side, too?
         
-        // otherwise create one and cache it
-        VALUE proxy = proxify(context, js); 
+        // otherwise make one and cache it
+        VALUE proxy = make_proxy(context, js); 
         
       	// put the proxy OID in the id map
         assert(JS_HashTableAdd(context->ids, (void *)js, (void *)rb_obj_id(proxy)));
@@ -97,10 +98,6 @@ VALUE convert_to_ruby(OurContext* context, jsval js)
       if (JSVAL_IS_INT(js)) return INT2FIX(JSVAL_TO_INT(js));
       else return rb_float_new(*JSVAL_TO_DOUBLE(js));
 
-    // UNIMPLEMENTED BELOW THIS LINE
-
-    case JSTYPE_FUNCTION:
-      
     default:
       Johnson_Error_raise("unknown js type in switch");
   }

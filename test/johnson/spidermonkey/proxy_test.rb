@@ -16,6 +16,26 @@ module Johnson
         assert_kind_of(Johnson::SpiderMonkey::Proxy, @context.evaluate("new Object()"))
       end
       
+      def test_functions_get_wrapped_as_proxies
+        f = @context.evaluate("function() {}")
+        assert_kind_of(Johnson::SpiderMonkey::Proxy, f)
+        assert(f.function?)
+      end
+      
+      def test_calling_non_functions_complains
+        assert_raise(Johnson::Error) { @context.evaluate("new Object()").call }
+      end
+      
+      def test_functions_can_be_called
+        f = @context.evaluate("function() { return 42; }")
+        assert_equal(42, f.call)
+      end
+      
+      def test_functions_can_be_called_with_args
+        k = @context.evaluate("function(x) { return x; }")
+        assert_equal(42, k.call(42))
+      end
+      
       def test_proxies_can_be_indexed_by_string
         proxy = @context.evaluate("x = { foo: 42 }")
         assert_kind_of(Johnson::SpiderMonkey::Proxy, proxy)
@@ -38,6 +58,9 @@ module Johnson
         proxy = @context.evaluate("x = { foo: 42 }")
         assert_equal(42, proxy.foo)
       end
+      
+      # FIXME: more tests on accessors/mutators here!
+      
     end
   end
 end

@@ -4,9 +4,11 @@
 #include "spidermonkey.h"
 #include "context.h"
 
-#endif
-
 typedef struct {
   jsval value;
   OurContext* context;
 } OurRubyProxy;
+
+VALUE make_proxy(OurContext* context, jsval value);
+
+#endif
