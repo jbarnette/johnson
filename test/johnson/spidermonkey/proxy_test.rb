@@ -32,20 +32,20 @@ module Johnson
       end
       
       def test_functions_can_be_called_with_args
-        k = @context.evaluate("function(x) { return x; }")
-        assert_equal(42, k.call(42))
+        f = @context.evaluate("function(x) { return x * 2; }")
+        assert_equal(84, f.call(42))
       end
       
       def test_functions_can_be_used_as_procs
-        k = @context.evaluate("function(x) { return x * 2; }")
+        f = @context.evaluate("function(x) { return x * 2; }")
         a = [1, 2, 3]
         
-        assert_equal([2, 4, 6], a.collect(&k))
+        assert_equal([2, 4, 6], a.collect(&f))
       end
       
       def test_function_proxies_are_called_with_a_global_this
-        fx = @context.evaluate("x = 42; function() { return this.x; }")
-        assert_equal(42, fx.call)
+        f = @context.evaluate("x = 42; function() { return this.x; }")
+        assert_equal(42, f.call)
       end
       
       def test_can_be_indexed_by_string
@@ -98,11 +98,11 @@ module Johnson
       end
       
       def test_method_with_one_argument
-        proxy = @context.evaluate("k = { k: function(x) { return x } }")
-        assert_equal(42, proxy.k(42))
+        proxy = @context.evaluate("f = { f: function(x) { return x * 2 } }")
+        assert_equal(84, proxy.f(42))
       end
       
-      def test_method_with_simple_arguments
+      def test_method_with_multiple_arguments
         proxy = @context.evaluate("x = { add: function(x, y) { return x + y } }")
         assert_equal(42, proxy.add(40, 2))
       end
