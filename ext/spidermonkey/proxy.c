@@ -41,6 +41,26 @@ static VALUE function_p(VALUE self)
   return JS_TypeOfValue(proxy->context->js, proxy->value) == JSTYPE_FUNCTION;
 }
 
+static VALUE respond_to_p(VALUE self, VALUE sym)
+{
+  OurRubyProxy* proxy;
+  Data_Get_Struct(self, OurRubyProxy, proxy);
+  
+  char* name = rb_id2name(SYM2ID(sym));
+  
+  // assignment is always okay
+  if (name[strlen(name) - 1] == '=')
+    return Qtrue;
+  
+  JSObject *obj;
+  JSBool found;
+  
+  assert(JS_ValueToObject(proxy->context->js, proxy->value, &obj));
+  assert(JS_HasProperty(proxy->context->js, obj, name, &found));
+
+  return found ? Qtrue : rb_call_super(1, &sym);
+}
+
 static VALUE call(int argc, VALUE* argv, VALUE self)
 {
   if (!function_p(self))
@@ -110,4 +130,5 @@ void init_Johnson_SpiderMonkey_Proxy(VALUE spidermonkey)
   rb_define_method(proxy_class, "[]=", set, 2);
   rb_define_method(proxy_class, "function?", function_p, 0);
   rb_define_method(proxy_class, "call", call, -1);
+  rb_define_method(proxy_class, "respond_to?", respond_to_p, 1);
 }

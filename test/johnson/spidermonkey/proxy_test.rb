@@ -43,7 +43,12 @@ module Johnson
         assert_equal(a, a.collect(&k))
       end
       
-      def test_proxies_can_be_indexed_by_string
+      def test_function_proxies_are_called_with_a_global_this
+        fx = @context.evaluate("x = 42; function() { return this.x; }")
+        assert_equal(42, fx.call)
+      end
+      
+      def test_can_be_indexed_by_string
         proxy = @context.evaluate("x = { foo: 42 }")
         assert_kind_of(Johnson::SpiderMonkey::Proxy, proxy)
         
@@ -57,8 +62,20 @@ module Johnson
       end
       
       def test_multilevel_indexing_works
-        proxy = @context.evaluate("x = { foo: { bar: 42 } }")
+        proxy = @context.evaluate("x = { foo: { bar: 42 , baz: function() { return 42 } } }")
         assert_equal(42, proxy["foo"]["bar"])
+        assert_equal(42, proxy["foo"]["baz"].call)
+      end
+      
+      def test_respond_to_works
+        proxy = @context.evaluate("x = { foo: 42 }")
+        assert(!proxy.respond_to?(:bar))
+        assert(proxy.respond_to?(:foo))
+      end
+      
+      def test_respond_to_always_returns_true_for_assignment
+        proxy = @context.evaluate("x = {}")
+        assert(proxy.respond_to?(:bar=))
       end
       
       def test_simple_accessors_work
