@@ -37,10 +37,10 @@ module Johnson
       end
       
       def test_functions_can_be_used_as_procs
-        k = @context.evaluate("function(x) { return x; }")
-        a = %w(a b c)
+        k = @context.evaluate("function(x) { return x * 2; }")
+        a = [1, 2, 3]
         
-        assert_equal(a, a.collect(&k))
+        assert_equal([2, 4, 6], a.collect(&k))
       end
       
       def test_function_proxies_are_called_with_a_global_this
