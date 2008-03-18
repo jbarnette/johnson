@@ -4,6 +4,7 @@ static VALUE proxy_class = Qnil;
 
 static VALUE get(VALUE self, VALUE name)
 {
+  // FIXME: support lookup by symbol
   Check_Type(name, T_STRING);
   
   OurRubyProxy* proxy;
@@ -19,6 +20,7 @@ static VALUE get(VALUE self, VALUE name)
 
 static VALUE set(VALUE self, VALUE name, VALUE value)
 {
+  // FIXME: support lookup by symbol
   Check_Type(name, T_STRING);
   
   OurRubyProxy* proxy;
