@@ -28,6 +28,16 @@ module Johnson
         assert_equal(99, proxy["foo"])
         assert_equal(42, proxy["bar"])
       end
+      
+      def test_multilevel_indexing_works
+        proxy = @context.evaluate("x = { foo: { bar: 42 } }")
+        assert_equal(42, proxy["foo"]["bar"])
+      end
+      
+      def test_simple_accessors_work
+        proxy = @context.evaluate("x = { foo: 42 }")
+        assert_equal(42, proxy.foo)
+      end
     end
   end
 end
