@@ -90,6 +90,79 @@ call(int argc, VALUE* argv, VALUE self)
   return convert_to_ruby(proxy->context, js);
 }
 
+// VALUE
+// rb_ary_each(ary)
+//     VALUE ary;
+// {
+//     long i;
+// 
+//     for (i=0; i<RARRAY(ary)->len; i++) {
+//  rb_yield(RARRAY(ary)->ptr[i]);
+//     }
+//     return ary;
+// }
+
+static VALUE /* each(&block) */ 
+each(VALUE self)
+{
+  OurRubyProxy* proxy;
+  Data_Get_Struct(self, OurRubyProxy, proxy);
+  
+  JSObject* value = JSVAL_TO_OBJECT(proxy->value);
+  
+  // arrays behave like you'd expect, indexes in order
+  if (JS_IsArrayObject(proxy->context->js, value))
+  {
+    jsuint length;
+    assert(JS_GetArrayLength(proxy->context->js, value, &length));
+    
+    int i = 0;
+    for (i = 0; i < length; ++i)
+    {
+      jsval element;
+      assert(JS_GetElement(proxy->context->js, value, i, &element));  
+      rb_yield(convert_to_ruby(proxy->context, element));
+    }
+  }
+  else
+  {
+    // not an array? behave like each on Hash; yield [key, value]
+    JSIdArray *ids = JS_Enumerate(proxy->context->js, value);
+    assert(ids != NULL);
+  
+    int i;
+    for(i = 0; i < ids->length; ++i)
+    {
+      jsval js_key, js_value;
+
+      assert(JS_IdToValue(proxy->context->js, ids->vector[i], &js_key));
+
+      if (JSVAL_IS_STRING(js_key))
+      {
+        // regular properties have string keys
+        assert(JS_GetProperty(proxy->context->js, value,
+          JS_GetStringBytes(JSVAL_TO_STRING(js_key)), &js_value));        
+      }
+      else
+      {
+        // it's a numeric property, use array access
+        assert(JS_GetElement(proxy->context->js, value,
+          JSVAL_TO_INT(js_key), &js_value));
+      }
+    
+      VALUE key = convert_to_ruby(proxy->context, js_key);
+      VALUE value = convert_to_ruby(proxy->context, js_value);
+
+      rb_yield(rb_ary_new3(2, key, value));
+    }
+  
+    // FIXME: ensure that this runs if either yield raises?
+    JS_DestroyIdArray(proxy->context->js, ids);
+  }
+  
+  return self; 
+}
+
 /* private */ static VALUE /* function_property?(name) */
 function_property_p(VALUE self, VALUE name)
 {
@@ -187,6 +260,7 @@ void init_Johnson_SpiderMonkey_Proxy(VALUE spidermonkey)
   rb_define_method(proxy_class, "function?", function_p, 0);
   rb_define_method(proxy_class, "respond_to?", respond_to_p, 1);
   rb_define_method(proxy_class, "call", call, -1);
+  rb_define_method(proxy_class, "each", each, 0);
 
   rb_define_private_method(proxy_class, "initialize", initialize, 0);
   rb_define_private_method(proxy_class, "function_property?", function_property_p, 1);

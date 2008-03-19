@@ -107,12 +107,28 @@ module Johnson
         assert_equal(42, proxy.add(40, 2))
       end
       
-      # def test_supports_each_if_enumerable
-      #   proxy = @context.evaluate("[1, 2, 3]")
-      #   values = []
-      #   
-      #   proxy.each { |n| values << n }
-      # end
+      def test_supports_each_on_arrays
+        proxy = @context.evaluate("[1, 2, 3]")
+        values = []
+        
+        proxy.each { |n| values << n }
+        assert_equal([1, 2, 3], values)
+      end
+      
+      def test_supports_each_on_things_that_arent_arrays
+        proxy = @context.evaluate("x = { foo: 'fooval', bar: 'barval' }; x[0] = 42; x")
+        values = {}
+        
+        proxy.each { |k, v| values[k] = v }
+        assert_equal({ 'foo' => 'fooval', 'bar' => 'barval', 0 => 42 }, values)
+      end
+      
+      def test_is_enumerable
+        proxy = @context.evaluate("[1, 2, 3]")
+        assert_kind_of(Enumerable, proxy)
+        
+        assert_equal([2, 4, 6], proxy.collect { |n| n * 2 })
+      end
     end
   end
 end
