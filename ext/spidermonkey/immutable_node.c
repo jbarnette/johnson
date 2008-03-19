@@ -1,25 +1,6 @@
 #include "immutable_node.h"
-#include "context.h"
 
 static VALUE cNode;
-
-static void error(JSContext* js, const char* message, JSErrorReport* report)
-{
-  // first we find ourselves
-  VALUE self = (VALUE)JS_GetContextPrivate(js);
-  
-  // then we find our bridge
-  ImmutableNodeContext* context;
-  Data_Get_Struct(self, ImmutableNodeContext, context);
-  
-  // NOTE: SpiderMonkey REALLY doesn't like being interrupted. If we
-  // jump over to Ruby and raise here, segfaults and such ensue.
-  // Instead, we store the exception (if any) and the error message
-  // on the context. They're dealt with in the if (!ok) block of evaluate().
-  
-  strncpy(context->msg, message, MAX_EXCEPTION_MESSAGE_SIZE);
-  JS_GetPendingException(context->js, &context->ex);
-}
 
 static void deallocate(ImmutableNodeContext* context)
 {
@@ -42,9 +23,6 @@ static VALUE allocate(VALUE klass)
 
   assert(context->runtime = JS_NewRuntime(0x100000));
   assert(context->js = JS_NewContext(context->runtime, 8192));
-
-  JS_SetErrorReporter(context->js, error);
-  JS_SetContextPrivate(context->js, (void *)self);
 
   return self;
 }
@@ -71,7 +49,7 @@ static VALUE parse_io(VALUE klass, VALUE stream) {
       NULL, "boner", 0));
 
   context->node = js_ParseScript(context->js, 
-      JS_NewObject(context->js, &OurGlobalClass, NULL, NULL),
+      JS_NewObject(context->js, NULL, NULL, NULL),
       context->pc);
 
   return self;

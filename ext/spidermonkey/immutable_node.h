@@ -9,18 +9,13 @@
 #include "jsfun.h"
 #include "jscntxt.h"
 
-#define MAX_EXCEPTION_MESSAGE_SIZE 2048
-
-void init_Johnson_SpiderMonkey_Immutable_Node(VALUE spidermonkey);
-
 typedef struct {
   JSParseContext * pc;
   JSParseNode * node;
   JSContext * js;
   JSRuntime * runtime;
-
-  jsval ex; // an exception value
-  char msg[MAX_EXCEPTION_MESSAGE_SIZE]; // the 'backup' message
 } ImmutableNodeContext;
+
+void init_Johnson_SpiderMonkey_Immutable_Node(VALUE spidermonkey);
 
 #endif
