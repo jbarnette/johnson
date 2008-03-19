@@ -1,5 +1,8 @@
 #include "proxy.h"
 
+// FIXME: implement size/length to go along with Enumerable
+// FIXME: implement <=> for Enumerable
+
 static VALUE proxy_class = Qnil;
 
 static VALUE /* [] */
@@ -90,18 +93,6 @@ call(int argc, VALUE* argv, VALUE self)
   return convert_to_ruby(proxy->context, js);
 }
 
-// VALUE
-// rb_ary_each(ary)
-//     VALUE ary;
-// {
-//     long i;
-// 
-//     for (i=0; i<RARRAY(ary)->len; i++) {
-//  rb_yield(RARRAY(ary)->ptr[i]);
-//     }
-//     return ary;
-// }
-
 static VALUE /* each(&block) */ 
 each(VALUE self)
 {
@@ -131,7 +122,7 @@ each(VALUE self)
     assert(ids != NULL);
   
     int i;
-    for(i = 0; i < ids->length; ++i)
+    for (i = 0; i < ids->length; ++i)
     {
       jsval js_key, js_value;
 
@@ -156,7 +147,7 @@ each(VALUE self)
       rb_yield(rb_ary_new3(2, key, value));
     }
   
-    // FIXME: ensure that this runs if either yield raises?
+    // FIXME: ensure that this runs if either yield raises
     JS_DestroyIdArray(proxy->context->js, ids);
   }
   
