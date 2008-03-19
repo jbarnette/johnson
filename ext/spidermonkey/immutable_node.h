@@ -14,10 +14,10 @@
 void init_Johnson_SpiderMonkey_Immutable_Node(VALUE spidermonkey);
 
 typedef struct {
-  JSParseContext pc;
+  JSParseContext * pc;
   JSParseNode * node;
   JSContext * js;
-  JSRuntime *runtime;
+  JSRuntime * runtime;
 
   jsval ex; // an exception value
   char msg[MAX_EXCEPTION_MESSAGE_SIZE]; // the 'backup' message
