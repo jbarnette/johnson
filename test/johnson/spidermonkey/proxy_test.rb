@@ -129,6 +129,26 @@ module Johnson
         
         assert_equal([2, 4, 6], proxy.collect { |n| n * 2 })
       end
+      
+      def test_has_a_length
+        proxy = @context.evaluate("[1, 2, 3]")
+        assert_equal(3, proxy.length)
+      end
+      
+      def test_length_is_aliased_as_size
+        proxy = @context.evaluate("[1, 2, 3]")
+        assert_equal(3, proxy.size)
+      end
+      
+      def test_length_for_arrays_ignores_non_numeric_properties
+        proxy = @context.evaluate("x = [1, 2, 3]; x['foo'] = 'bar'; x")
+        assert_equal(3, proxy.length)
+      end
+      
+      def test_length_for_objects_includes_all_properties
+        proxy = @context.evaluate("x = { foo: 'foo', bar: 'bar', 0: 42 }")
+        assert_equal(3, proxy.length)
+      end
     end
   end
 end

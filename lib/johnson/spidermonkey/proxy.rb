@@ -3,6 +3,8 @@ module Johnson
     class Proxy # native
       include Enumerable
       
+      alias_method :size, :length
+      
       def to_proc
         @proc ||= Proc.new { |*args| call(*args) }
       end

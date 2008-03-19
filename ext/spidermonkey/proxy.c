@@ -154,6 +154,33 @@ each(VALUE self)
   return self; 
 }
 
+// FIXME: length/size have a bunch of potential masking problems
+
+static VALUE
+length(VALUE self)
+{
+  OurRubyProxy* proxy;
+  Data_Get_Struct(self, OurRubyProxy, proxy);
+  
+  JSObject* value = JSVAL_TO_OBJECT(proxy->value);
+  
+  if (JS_IsArrayObject(proxy->context->js, value))
+  {
+    jsuint length;
+    assert(JS_GetArrayLength(proxy->context->js, value, &length));
+
+    return INT2FIX(length);
+  }
+  else
+  {
+    JSIdArray *ids = JS_Enumerate(proxy->context->js, value);
+    VALUE length = INT2FIX(ids->length);
+    
+    JS_DestroyIdArray(proxy->context->js, ids);
+    return length;
+  }
+}
+
 /* private */ static VALUE /* function_property?(name) */
 function_property_p(VALUE self, VALUE name)
 {
@@ -252,6 +279,7 @@ void init_Johnson_SpiderMonkey_Proxy(VALUE spidermonkey)
   rb_define_method(proxy_class, "respond_to?", respond_to_p, 1);
   rb_define_method(proxy_class, "call", call, -1);
   rb_define_method(proxy_class, "each", each, 0);
+  rb_define_method(proxy_class, "length", length, 0);
 
   rb_define_private_method(proxy_class, "initialize", initialize, 0);
   rb_define_private_method(proxy_class, "function_property?", function_property_p, 1);

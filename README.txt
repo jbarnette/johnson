@@ -16,7 +16,7 @@ Johnson wraps JavaScript in a loving Ruby embrace.
 
 == REQUIREMENTS:
 
-* FIX (list of requirements)
+* Mocha (only for development)
 
 == INSTALL:
 
