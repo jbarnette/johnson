@@ -138,7 +138,12 @@ module Johnson #:nodoc:
         when :tok_lb
           visitor.visit_BracketAccess(self)
         when :tok_colon
-          visitor.visit_Property(self)
+          m = {
+            :jsop_getter  => :visit_GetterProperty,
+            :jsop_nop     => :visit_Property
+          }[pn_op]
+          raise "Unknown assign op #{pn_op}" unless m
+          visitor.send(m, self)
         else
           raise "Unknown binary type: #{pn_type}"
         end

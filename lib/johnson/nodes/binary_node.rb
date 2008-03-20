@@ -17,6 +17,7 @@ module Johnson
       OpMultiplyEqual
       OpPlusEqual
       Property
+      GetterProperty
     }
 
     class BinaryNode < Node

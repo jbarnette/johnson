@@ -98,6 +98,7 @@ module Johnson
       ### BINARY NODES ###
       {
         'Property'        => :property,
+        'GetterProperty'  => :getter,
         'OpEqual'         => :op_equal,
         'OpMultiplyEqual' => :op_multiply_equal,
         'OpPlusEqual'     => :op_plus_equal,
