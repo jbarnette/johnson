@@ -1,6 +1,7 @@
 module Johnson
   module Nodes
     SINGLE_NODES = %w{
+      Delete
       False
       Name
       Null

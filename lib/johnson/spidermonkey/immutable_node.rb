@@ -45,6 +45,8 @@ module Johnson #:nodoc:
         case pn_type
         when :tok_throw
           visitor.visit_Throw(self)
+        when :tok_delete
+          visitor.visit_Delete(self)
         when :tok_rp
           visitor.visit_Parenthesis(self)
         when :tok_inc

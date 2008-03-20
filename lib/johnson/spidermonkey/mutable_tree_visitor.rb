@@ -53,6 +53,10 @@ module Johnson
         Throw.new(ro_node.line, ro_node.index, ro_node.pn_kid.accept(self))
       end
 
+      def visit_Delete(ro_node)
+        Delete.new(ro_node.line, ro_node.index, ro_node.pn_kid.accept(self))
+      end
+
       def visit_Number(ro_node)
         Number.new(ro_node.line, ro_node.index, ro_node.pn_dval)
       end
