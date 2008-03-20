@@ -49,7 +49,8 @@ module Johnson #:nodoc:
           visitor.visit_Delete(self)
         when :tok_unaryop
           m = {
-            :jsop_void  => :visit_Void,
+            :jsop_void    => :visit_Void,
+            :jsop_typeof  => :visit_Typeof,
           }[pn_op]
           raise "Unknown tok_unaryop type: #{pn_op}" unless m
           visitor.send(m, self)

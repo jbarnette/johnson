@@ -16,6 +16,7 @@ module Johnson
       This
       Throw
       True
+      Typeof
       Void
     }
     class Node

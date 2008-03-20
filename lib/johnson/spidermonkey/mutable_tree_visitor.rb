@@ -61,6 +61,10 @@ module Johnson
         Void.new(ro_node.line, ro_node.index, ro_node.pn_kid.accept(self))
       end
 
+      def visit_Typeof(ro_node)
+        Typeof.new(ro_node.line, ro_node.index, ro_node.pn_kid.accept(self))
+      end
+
       def visit_Number(ro_node)
         Number.new(ro_node.line, ro_node.index, ro_node.pn_dval)
       end

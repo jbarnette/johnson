@@ -86,16 +86,15 @@ module Johnson
       end
 
       ### UNARY NODES ###
-      def visit_Throw(o)
-        [:throw, o.value.accept(self)]
-      end
-
-      def visit_Delete(o)
-        [:delete, o.value.accept(self)]
-      end
-
-      def visit_Void(o)
-        [:void, o.value.accept(self)]
+      {
+        'Throw'   => :throw,
+        'Delete'  => :delete,
+        'Void'    => :void,
+        'Typeof'  => :typeof,
+      }.each do |node,ident|
+        define_method(:"visit_#{node}") do |o|
+          [ident, o.value.accept(self)]
+        end
       end
 
       ### FUNCTION NODES ###
