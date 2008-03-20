@@ -51,6 +51,10 @@ module Johnson #:nodoc:
           m = {
             :jsop_void    => :visit_Void,
             :jsop_typeof  => :visit_Typeof,
+            :jsop_pos     => :visit_UnaryPositive,
+            :jsop_neg     => :visit_UnaryNegative,
+            :jsop_bitnot  => :visit_BitwiseNot,
+            :jsop_not     => :visit_Not,
           }[pn_op]
           raise "Unknown tok_unaryop type: #{pn_op}" unless m
           visitor.send(m, self)

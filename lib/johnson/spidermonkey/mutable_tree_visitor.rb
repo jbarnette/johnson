@@ -49,22 +49,6 @@ module Johnson
                        )
       end
 
-      def visit_Throw(ro_node)
-        Throw.new(ro_node.line, ro_node.index, ro_node.pn_kid.accept(self))
-      end
-
-      def visit_Delete(ro_node)
-        Delete.new(ro_node.line, ro_node.index, ro_node.pn_kid.accept(self))
-      end
-
-      def visit_Void(ro_node)
-        Void.new(ro_node.line, ro_node.index, ro_node.pn_kid.accept(self))
-      end
-
-      def visit_Typeof(ro_node)
-        Typeof.new(ro_node.line, ro_node.index, ro_node.pn_kid.accept(self))
-      end
-
       def visit_Number(ro_node)
         Number.new(ro_node.line, ro_node.index, ro_node.pn_dval)
       end
@@ -85,34 +69,26 @@ module Johnson
         This.new(ro_node.line, ro_node.index, 'this')
       end
 
-      def visit_Parenthesis(ro_node)
-        Parenthesis.new(  ro_node.line,
-                          ro_node.index,
-                          ro_node.pn_kid.accept(self))
-      end
-
-      def visit_PostfixIncrement(ro_node)
-        PostfixIncrement.new( ro_node.line,
-                              ro_node.index,
-                              ro_node.pn_kid.accept(self))
-      end
-
-      def visit_PrefixIncrement(ro_node)
-        PrefixIncrement.new(  ro_node.line,
-                              ro_node.index,
-                              ro_node.pn_kid.accept(self))
-      end
-
-      def visit_PostfixDecrement(ro_node)
-        PostfixDecrement.new( ro_node.line,
-                              ro_node.index,
-                              ro_node.pn_kid.accept(self))
-      end
-
-      def visit_PrefixDecrement(ro_node)
-        PrefixDecrement.new(  ro_node.line,
-                              ro_node.index,
-                              ro_node.pn_kid.accept(self))
+      %w{
+        BitwiseNot
+        Delete
+        Not
+        Parenthesis
+        PostfixDecrement
+        PostfixIncrement
+        PrefixDecrement
+        PrefixIncrement
+        Throw
+        Typeof
+        UnaryNegative
+        UnaryPositive
+        Void
+      }.each do |node|
+        define_method(:"visit_#{node}") do |ro_node|
+          Nodes.const_get(node).new(ro_node.line,
+                                    ro_node.index,
+                                    ro_node.pn_kid.accept(self))
+        end
       end
 
       def visit_String(ro_node)

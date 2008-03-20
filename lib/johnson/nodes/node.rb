@@ -1,9 +1,11 @@
 module Johnson
   module Nodes
     SINGLE_NODES = %w{
+      BitwiseNot
       Delete
       False
       Name
+      Not
       Null
       Number
       Parenthesis
@@ -17,6 +19,8 @@ module Johnson
       Throw
       True
       Typeof
+      UnaryNegative
+      UnaryPositive
       Void
     }
     class Node
