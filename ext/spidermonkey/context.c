@@ -22,9 +22,6 @@ static VALUE evaluate(VALUE self, VALUE script)
 
   if (!ok)
   {
-    // FIXME: this is lame. It'd be a lot better to do a richer hierarchy
-    // on the Ruby side and convert some of these.
-    
     if (JS_IsExceptionPending(context->js))
     {
       // If there's an exception pending here, it's a syntax error.
@@ -37,7 +34,6 @@ static VALUE evaluate(VALUE self, VALUE script)
     // toString() whatever the exception object is (if we have one)
     if (context->ex) msg = JS_GetStringBytes(JS_ValueToString(context->js, context->ex));
     
-    // FIXME: this is lame
     return Johnson_Error_raise(msg);
   }
 
@@ -105,7 +101,6 @@ static VALUE allocate(VALUE klass)
 {
   OurContext* context = calloc(1, sizeof(OurContext));
   
-  // FIXME: Don't hardcode these values, possibly move to initialize
   assert(context->runtime  = JS_NewRuntime(0x100000));
   assert(context->js = JS_NewContext(context->runtime, 8192));
 

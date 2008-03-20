@@ -1,14 +1,10 @@
 #include "proxy.h"
 
-// FIXME: implement size/length to go along with Enumerable
-// FIXME: implement <=> for Enumerable
-
 static VALUE proxy_class = Qnil;
 
 static VALUE /* [] */
 get(VALUE self, VALUE name)
 {
-  // FIXME: support lookup by symbol
   Check_Type(name, T_STRING);
   
   OurRubyProxy* proxy;
@@ -25,7 +21,6 @@ get(VALUE self, VALUE name)
 static VALUE /* []= */
 set(VALUE self, VALUE name, VALUE value)
 {
-  // FIXME: support lookup by symbol
   Check_Type(name, T_STRING);
   
   OurRubyProxy* proxy;
@@ -83,8 +78,6 @@ call(int argc, VALUE* argv, VALUE self)
   for(i = 0; i < argc; ++i)
     args[i] = convert_to_js(proxy->context, argv[i]);
   
-  // FIXME: exception handling here
-
   jsval js;
   
   assert(JS_CallFunctionValue(proxy->context->js,
@@ -147,14 +140,11 @@ each(VALUE self)
       rb_yield(rb_ary_new3(2, key, value));
     }
   
-    // FIXME: ensure that this runs if either yield raises
     JS_DestroyIdArray(proxy->context->js, ids);
   }
   
   return self; 
 }
-
-// FIXME: length/size have a bunch of potential masking problems
 
 static VALUE
 length(VALUE self)
@@ -218,8 +208,6 @@ call_function_property(int argc, VALUE* argv, VALUE self)
   for(i = 1; i < argc; ++i)
     args[i - 1] = convert_to_js(proxy->context, argv[i]);
     
-  // FIXME: exception handling here
-  
   jsval js;
   
   assert(JS_CallFunctionValue(proxy->context->js,

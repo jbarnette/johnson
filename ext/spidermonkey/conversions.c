@@ -72,8 +72,6 @@ VALUE convert_to_ruby(OurContext* context, jsval js)
       }
       else
       {
-        // FIXME: do we need to root things for GC on the Ruby side, too?
-        
         // otherwise make one and cache it
         VALUE proxy = make_proxy(context, js); 
         
