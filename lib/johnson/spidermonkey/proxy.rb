@@ -3,6 +3,12 @@ module Johnson #:nodoc:
     class Proxy # native
       include Enumerable
       
+      def initialize
+        raise Johnson::Error, "#{self.class.name} is an internal support class."
+      end
+      
+      private :initialize
+      
       alias_method :size, :length
       
       def to_proc

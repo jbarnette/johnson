@@ -216,12 +216,6 @@ call_function_property(int argc, VALUE* argv, VALUE self)
   return convert_to_ruby(proxy->context, js);
 }
 
-/* private */ static VALUE
-initialize(VALUE self)
-{
-  return Johnson_Error_raise("Johnson::SpiderMonkey::Proxy is an internal support class.");
-}
-
 ///////////////////////////////////////////////////////////////////////////
 //// INFRASTRUCTURE BELOW HERE ////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////
@@ -269,7 +263,6 @@ void init_Johnson_SpiderMonkey_Proxy(VALUE spidermonkey)
   rb_define_method(proxy_class, "each", each, 0);
   rb_define_method(proxy_class, "length", length, 0);
 
-  rb_define_private_method(proxy_class, "initialize", initialize, 0);
   rb_define_private_method(proxy_class, "function_property?", function_property_p, 1);
   rb_define_private_method(proxy_class, "call_function_property", call_function_property, -1);
 }
