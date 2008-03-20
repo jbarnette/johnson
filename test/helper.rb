@@ -25,4 +25,17 @@ module Johnson
       assert_equal(expected, context.evaluate(expression))
     end
   end
+
+  class NodeTestCase < Test::Unit::TestCase
+    include Johnson::Nodes
+  
+    undef :default_test
+    def setup
+      @parser = Johnson::Parser
+    end
+  
+    def assert_sexp(expected, actual)
+      assert_equal(expected, actual.to_sexp)
+    end
+  end
 end
