@@ -33,26 +33,6 @@ module Johnson
         [:name, o.value]
       end
 
-      def visit_Parenthesis(o)
-        [:paren, o.value.accept(self)]
-      end
-
-      def visit_PostfixIncrement(o)
-        [:postfix_inc, o.value.accept(self)]
-      end
-
-      def visit_PrefixIncrement(o)
-        [:prefix_inc, o.value.accept(self)]
-      end
-
-      def visit_PostfixDecrement(o)
-        [:postfix_dec, o.value.accept(self)]
-      end
-
-      def visit_PrefixDecrement(o)
-        [:prefix_dec, o.value.accept(self)]
-      end
-
       def visit_Number(o)
         [:lit, o.value]
       end
@@ -87,10 +67,15 @@ module Johnson
 
       ### UNARY NODES ###
       {
-        'Throw'   => :throw,
-        'Delete'  => :delete,
-        'Void'    => :void,
-        'Typeof'  => :typeof,
+        'Throw'             => :throw,
+        'Delete'            => :delete,
+        'Void'              => :void,
+        'Typeof'            => :typeof,
+        'PrefixDecrement'   => :prefix_dec,
+        'PostfixDecrement'  => :postfix_dec,
+        'PrefixIncrement'   => :prefix_inc,
+        'PostfixIncrement'  => :postfix_inc,
+        'Parenthesis'       => :paren,
       }.each do |node,ident|
         define_method(:"visit_#{node}") do |o|
           [ident, o.value.accept(self)]
