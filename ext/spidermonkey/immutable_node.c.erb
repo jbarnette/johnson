@@ -100,13 +100,11 @@ pn_type(VALUE self) {
   ImmutableNodeContext * ctx;
 
   Data_Get_Struct(self, ImmutableNodeContext, ctx);
-    /*
   switch(ctx->node->pn_type) {
     <% tokens.each do |token| %>
     case <%= token %>: return ID2SYM(rb_intern("<%= token.downcase %>"));
     <% end %>
   }
-    */
   return INT2NUM(ctx->node->pn_type);
 }
 
@@ -158,11 +156,9 @@ data_pn_op(VALUE self) {
 
   Data_Get_Struct(self, ImmutableNodeContext, ctx);
   switch(ctx->node->pn_op) {
-    /*
     <% jsops.each do |jsop| %>
     case <%= jsop %>: return ID2SYM(rb_intern("<%= jsop.downcase %>"));
     <% end %>
-    */
   }
   return INT2NUM(ctx->node->pn_op);
 }

@@ -1,9 +1,12 @@
 require "rubygems"
 require "hoe"
+require 'erb'
 require "./lib/johnson/version.rb"
 
 # what sort of extension are we building?
 kind = Config::CONFIG["DLEXT"]
+
+GENERATED_NODE = "ext/spidermonkey/immutable_node.c"
 
 Hoe.new("johnson", Johnson::VERSION) do |p|
   p.rubyforge_name = "johnson"
@@ -18,6 +21,7 @@ Hoe.new("johnson", Johnson::VERSION) do |p|
     "lib/johnson/spidermonkey.#{kind}",
     "ext/spidermonkey/Makefile",
     "ext/spidermonkey/*.{o,so,bundle,log}",
+    GENERATED_NODE,
     "vendor/spidermonkey/**/*.OBJ"]
     
   p.test_globs = ["test/**/*_test.rb"]
@@ -39,6 +43,39 @@ file "lib/johnson/spidermonkey.#{kind}" =>
   sh "cp ext/spidermonkey/spidermonkey.#{kind} lib/johnson/spidermonkey.#{kind}"
 end
 
-file "ext/spidermonkey/Makefile" => "ext/spidermonkey/extconf.rb" do
+file "ext/spidermonkey/Makefile" =>
+  [GENERATED_NODE, "ext/spidermonkey/extconf.rb"] do
   Dir.chdir("ext/spidermonkey") { ruby "extconf.rb" }
+end
+
+def jsops
+  ops = []
+  File.open('vendor/spidermonkey/jsopcode.tbl', 'rb') { |f|
+    f.each_line do |line|
+      if line =~ /^OPDEF\((\w+),/
+        ops << $1
+      end
+    end
+  }
+  ops
+end
+
+def tokens
+  toks = []
+  File.open('vendor/spidermonkey/jsscan.h', 'rb') { |f|
+    f.each_line do |line|
+      line.scan(/TOK_\w+/).each do |token|
+        next if token == 'TOK_ERROR'
+        toks << token
+      end
+    end
+  }
+  toks.uniq
+end
+
+file GENERATED_NODE => "ext/spidermonkey/immutable_node.c.erb" do |t|
+  template = ERB.new(File.open(t.prerequisites.first, 'rb') { |x| x.read })
+  File.open(GENERATED_NODE, 'wb') { |f|
+    f.write template.result(binding)
+  }
 end
