@@ -1,5 +1,5 @@
-module Johnson
-  module SpiderMonkey
+module Johnson #:nodoc:
+  module SpiderMonkey #:nodoc:
     class Proxy # native
       include Enumerable
       

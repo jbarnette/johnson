@@ -1,6 +1,7 @@
 = johnson
 
 * http://johnson.rubyforge.org
+* http://johnson.lighthouseapp.com
 
 == DESCRIPTION:
 
