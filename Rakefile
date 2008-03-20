@@ -31,6 +31,10 @@ end
 
 # make sure the C bits are up-to-date when testing
 Rake::Task[:test].prerequisites << :extensions
+Rake::Task[:check_manifest].prerequisites << GENERATED_NODE
+
+# gem depends on the native extension actually building
+Rake::Task[:gem].prerequisites << :extensions
 
 desc "Our johnson requires extensions."
 task :extensions => "lib/johnson/spidermonkey.#{kind}"

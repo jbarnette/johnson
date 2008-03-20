@@ -11,6 +11,7 @@ ext/spidermonkey/error.h
 ext/spidermonkey/extconf.rb
 ext/spidermonkey/idhash.c
 ext/spidermonkey/idhash.h
+ext/spidermonkey/immutable_node.c
 ext/spidermonkey/immutable_node.c.erb
 ext/spidermonkey/immutable_node.h
 ext/spidermonkey/proxy.c
