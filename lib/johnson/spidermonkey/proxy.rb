@@ -9,7 +9,9 @@ module Johnson #:nodoc:
         @proc ||= Proc.new { |*args| call(*args) }
       end
       
-      def method_missing(sym, *args)
+      def method_missing(sym, *args, &block)
+        args << block if block_given?
+        
         name = sym.to_s
         assignment = "=" == name[-1, 1]
         
