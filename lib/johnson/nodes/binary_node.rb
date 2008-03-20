@@ -15,7 +15,8 @@ module Johnson
       OpRShiftEqual
       OpURShiftEqual
       OpMultiplyEqual
-      OpPlusEqual
+      OpAddEqual
+      OpSubtractEqual
       Property
       GetterProperty
       SetterProperty

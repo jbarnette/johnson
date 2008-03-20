@@ -128,7 +128,8 @@ module Johnson
         OpBitAndEqual
         OpBitXorEqual
         OpBitOrEqual
-        OpPlusEqual
+        OpAddEqual
+        OpSubtractEqual
         OpModEqual
         OpMultiplyEqual
         OpDivideEqual

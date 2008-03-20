@@ -121,7 +121,8 @@ module Johnson #:nodoc:
         case pn_type
         when :tok_assign
           m = {
-            :jsop_add     => :visit_OpPlusEqual,
+            :jsop_add     => :visit_OpAddEqual,
+            :jsop_sub     => :visit_OpSubtractEqual,
             :jsop_nop     => :visit_OpEqual,
             :jsop_mul     => :visit_OpMultiplyEqual,
             :jsop_div     => :visit_OpDivideEqual,
