@@ -94,6 +94,10 @@ module Johnson
         [:delete, o.value.accept(self)]
       end
 
+      def visit_Void(o)
+        [:void, o.value.accept(self)]
+      end
+
       ### FUNCTION NODES ###
       def visit_Function(o)
         [:func_expr, o.name, o.arguments, o.body.accept(self)]

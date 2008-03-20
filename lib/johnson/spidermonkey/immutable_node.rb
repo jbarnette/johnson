@@ -47,6 +47,12 @@ module Johnson #:nodoc:
           visitor.visit_Throw(self)
         when :tok_delete
           visitor.visit_Delete(self)
+        when :tok_unaryop
+          m = {
+            :jsop_void  => :visit_Void,
+          }[pn_op]
+          raise "Unknown tok_unaryop type: #{pn_op}" unless m
+          visitor.send(m, self)
         when :tok_rp
           visitor.visit_Parenthesis(self)
         when :tok_inc

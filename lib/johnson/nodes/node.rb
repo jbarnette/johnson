@@ -16,6 +16,7 @@ module Johnson
       This
       Throw
       True
+      Void
     }
     class Node
       include Johnson::Visitable
