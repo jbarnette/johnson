@@ -166,8 +166,6 @@ data_pn_op(VALUE self) {
 static VALUE /* pn_left */
 data_pn_left(VALUE self) {
   ImmutableNodeContext * ctx;
-  JSFunction * f;
-  JSObject * object;
 
   Data_Get_Struct(self, ImmutableNodeContext, ctx);
 
@@ -265,8 +263,6 @@ static VALUE /* pn_right */
 data_pn_right(VALUE self)
 {
   ImmutableNodeContext * ctx;
-  JSFunction * f;
-  JSObject * object;
 
   Data_Get_Struct(self, ImmutableNodeContext, ctx);
 
