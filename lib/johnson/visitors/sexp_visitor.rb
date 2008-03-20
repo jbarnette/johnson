@@ -99,6 +99,7 @@ module Johnson
       {
         'Property'        => :property,
         'GetterProperty'  => :getter,
+        'SetterProperty'  => :setter,
         'OpEqual'         => :op_equal,
         'OpMultiplyEqual' => :op_multiply_equal,
         'OpPlusEqual'     => :op_plus_equal,

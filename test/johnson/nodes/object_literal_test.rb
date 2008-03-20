@@ -46,6 +46,17 @@ class ObjectLiteralTest < Johnson::NodeTestCase
                 ]],
                 @parser.parse('var foo = { get a() { } }'))
   end
+
+  def test_object_literal_setter
+    assert_sexp(
+                [[:var,
+                  [[:assign,
+                    [:name, "foo"],
+                    [:object, [[:setter, [:name, 'a'], [:func_expr, nil, ["bar"], []]]]]
+                  ]]
+                ]],
+                @parser.parse('var foo = { set a(bar) { } }'))
+  end
   
   def test_to_sexp_multi_property
     assert_sexp(

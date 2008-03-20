@@ -140,6 +140,7 @@ module Johnson #:nodoc:
         when :tok_colon
           m = {
             :jsop_getter  => :visit_GetterProperty,
+            :jsop_setter  => :visit_SetterProperty,
             :jsop_nop     => :visit_Property
           }[pn_op]
           raise "Unknown assign op #{pn_op}" unless m
