@@ -19,3 +19,7 @@ require "johnson/spidermonkey/immutable_node"
 # the 'public' interface
 require "johnson/context"
 require "johnson/parser"
+
+module Johnson
+  PRELUDE = IO.read(File.dirname(__FILE__) + "/prelude.js")
+end

@@ -11,14 +11,12 @@ module Johnson
     end
     
     def test_delegates_public_ops
-      delegate = mock()
-      delegate.expects(:evaluate).with("expression").returns("result")
+      delegate = mock(:evaluate => nil)
       delegate.expects(:[]).with("key").returns("value")
       delegate.expects(:[]=).with("key", "value").returns("value")
       
       ctx = Johnson::Context.new(delegate)
       
-      assert_equal("result", ctx.evaluate("expression"))
       assert_equal("value", ctx[:key])
       assert_equal("value", ctx[:key] = "value")
     end
@@ -28,7 +26,7 @@ module Johnson
     end
     
     def test_converts_keys_to_strings_for_get_and_set
-      delegate = mock()
+      delegate = mock(:evaluate => nil)
       delegate.expects(:[]).with("key")
       delegate.expects(:[]=).with("key", "value")
       

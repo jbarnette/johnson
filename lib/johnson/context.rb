@@ -4,6 +4,7 @@ module Johnson
     
     def initialize(delegate=Johnson::SpiderMonkey::Context)
       @delegate = delegate.is_a?(Class) ? delegate.new : delegate
+      evaluate(Johnson::PRELUDE)
     end
     
     def [](key)

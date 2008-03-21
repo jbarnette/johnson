@@ -31,6 +31,8 @@ jsval convert_to_js(OurContext* context, VALUE ruby)
   	case T_BIGNUM:
       return convert_float_or_bignum_to_js(context, ruby);
 
+    case T_SYMBOL:
+      
     // UNIMPLEMENTED BELOW THIS LINE
 
   	case T_OBJECT:
@@ -42,7 +44,6 @@ jsval convert_to_js(OurContext* context, VALUE ruby)
   	case T_ARRAY:
   	case T_HASH:
   	case T_DATA:
-  	case T_SYMBOL: 
     
     default:
       Johnson_Error_raise("unknown ruby type in switch");
