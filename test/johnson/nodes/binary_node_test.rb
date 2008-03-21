@@ -30,6 +30,10 @@ class BinaryNodeTest < Johnson::NodeTestCase
     :not_equal          => '!=',
     :equal              => '==',
     :strict_equal       => '===',
+    :lt                 => '<',
+    :lt_equal           => '<=',
+    :gt                 => '>',
+    :gt_equal           => '>=',
   }.each do |op,sym|
     define_method(:"test_#{op}_to_sexp") do
       assert_sexp(

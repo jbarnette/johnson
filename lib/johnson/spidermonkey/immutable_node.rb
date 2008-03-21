@@ -198,6 +198,15 @@ module Johnson #:nodoc:
           }[pn_op]
           raise "Unknown assign op #{pn_op}" unless m
           visitor.send(m, self)
+        when :tok_relop
+          m = {
+            :jsop_ge  => :visit_GreaterThanOrEqual,
+            :jsop_le  => :visit_LessThanOrEqual,
+            :jsop_gt  => :visit_GreaterThan,
+            :jsop_lt  => :visit_LessThan,
+          }[pn_op]
+          raise "Unknown rel op #{pn_op}" unless m
+          visitor.send(m, self)
         else
           raise "Unknown binary type: #{pn_type}"
         end

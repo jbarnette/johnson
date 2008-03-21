@@ -116,6 +116,10 @@ module Johnson
         BracketAccess
         Equal
         GetterProperty
+        GreaterThan
+        LessThan
+        GreaterThanOrEqual
+        LessThanOrEqual
         NotEqual
         OpAdd
         OpAddEqual

@@ -8,6 +8,10 @@ module Johnson
       Equal
       GetterProperty
       Label
+      GreaterThan
+      LessThan
+      GreaterThanOrEqual
+      LessThanOrEqual
       NotEqual
       OpAdd
       OpAddEqual
