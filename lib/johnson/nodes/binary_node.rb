@@ -6,36 +6,36 @@ module Johnson
       BracketAccess
       DotAccessor
       Equal
-      NotEqual
-      StrictEqual
+      GetterProperty
       Label
-      OpBitAndEqual
+      NotEqual
+      OpAdd
+      OpAddEqual
       OpBitAnd
-      OpBitXorEqual
+      OpBitAndEqual
+      OpBitOr
       OpBitOrEqual
       OpBitXor
-      OpBitOr
+      OpBitXorEqual
       OpDivide
       OpDivideEqual
       OpEqual
-      OpModEqual
-      OpMod
-      OpMultiply
-      OpLShiftEqual
-      OpRShiftEqual
-      OpURShiftEqual
       OpLShift
-      OpRShift
-      OpURShift
+      OpLShiftEqual
+      OpMod
+      OpModEqual
+      OpMultiply
       OpMultiplyEqual
-      OpAddEqual
-      OpSubtractEqual
-      OpAdd
+      OpRShift
+      OpRShiftEqual
       OpSubtract
+      OpSubtractEqual
+      OpURShift
+      OpURShiftEqual
       Or
       Property
-      GetterProperty
       SetterProperty
+      StrictEqual
     }
 
     class BinaryNode < Node

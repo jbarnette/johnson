@@ -113,37 +113,37 @@ module Johnson
 
       %w{
         And
+        BracketAccess
         Equal
+        GetterProperty
         NotEqual
-        StrictEqual
-        OpEqual
-        OpBitAndEqual
+        OpAdd
+        OpAddEqual
         OpBitAnd
-        OpBitXorEqual
+        OpBitAndEqual
+        OpBitOr
         OpBitOrEqual
         OpBitXor
-        OpBitOr
-        OpAddEqual
-        OpSubtractEqual
-        OpAdd
-        OpSubtract
-        OpModEqual
+        OpBitXorEqual
+        OpDivide
+        OpDivideEqual
+        OpEqual
+        OpLShift
+        OpLShiftEqual
         OpMod
+        OpModEqual
         OpMultiply
         OpMultiplyEqual
-        OpDivideEqual
-        OpDivide
-        OpLShiftEqual
-        OpRShiftEqual
-        OpURShiftEqual
-        OpLShift
         OpRShift
+        OpRShiftEqual
+        OpSubtract
+        OpSubtractEqual
         OpURShift
+        OpURShiftEqual
         Or
-        BracketAccess
         Property
-        GetterProperty
         SetterProperty
+        StrictEqual
       }.each do |bin_op|
         define_method(:"visit_#{bin_op}") do |ro_node|
           self.class.const_get(bin_op).new(
