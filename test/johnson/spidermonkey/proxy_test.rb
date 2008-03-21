@@ -5,6 +5,7 @@ module Johnson
     class ProxyTest < Johnson::TestCase
       def setup
         @context = Johnson::SpiderMonkey::Context.new
+        @context.evaluate(Johnson::PRELUDE)
       end
       
       def test_constructing_a_proxy_directly_asplodes

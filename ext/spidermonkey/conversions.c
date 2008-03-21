@@ -8,6 +8,22 @@ static jsval convert_float_or_bignum_to_js(OurContext* context, VALUE float_or_b
   return js;
 }
 
+static jsval convert_symbol_to_js(OurContext* context, VALUE symbol)
+{
+  VALUE to_s = rb_funcall(symbol, rb_intern("to_s"), 0);
+  jsval name = STRING_TO_JSVAL(JS_NewStringCopyZ(context->js, StringValuePtr(to_s)));
+
+  // calls Ruby.symbolize(name) in JS-land. See prelude.js.
+
+  jsval nsRuby;    
+  assert(JS_GetProperty(context->js, context->global, "Ruby", &nsRuby) || JSVAL_VOID == nsRuby);
+
+  jsval js = JSVAL_NULL;    
+  assert(JS_CallFunctionName(context->js, JSVAL_TO_OBJECT(nsRuby), "symbolize", 1, &name, &js));
+
+  return js;
+}
+
 jsval convert_to_js(OurContext* context, VALUE ruby)
 {
   switch(TYPE(ruby))
@@ -32,6 +48,7 @@ jsval convert_to_js(OurContext* context, VALUE ruby)
       return convert_float_or_bignum_to_js(context, ruby);
 
     case T_SYMBOL:
+      return convert_symbol_to_js(context, ruby);
       
     // UNIMPLEMENTED BELOW THIS LINE
 
@@ -52,6 +69,23 @@ jsval convert_to_js(OurContext* context, VALUE ruby)
   return JSVAL_NULL;
 }
 
+static JSBool jsval_is_a_symbol(OurContext* context, jsval maybe_symbol)
+{
+  jsval nsRuby, cSymbol;
+
+  assert(JS_GetProperty(context->js, context->global, "Ruby", &nsRuby));
+  if(JSVAL_VOID == nsRuby) Johnson_Error_raise("aaaaaaaugh!");
+  
+  assert(JS_GetProperty(context->js, JSVAL_TO_OBJECT(nsRuby), "Symbol", &cSymbol));
+  assert(JSVAL_VOID != cSymbol);
+  
+  JSBool is_a_symbol;
+  assert(JS_HasInstance(context->js, JSVAL_TO_OBJECT(cSymbol), maybe_symbol, &is_a_symbol));
+
+  return is_a_symbol;
+}
+
+
 VALUE convert_to_ruby(OurContext* context, jsval js)
 {
   switch (JS_TypeOfValue(context->js, js))
@@ -62,6 +96,9 @@ VALUE convert_to_ruby(OurContext* context, jsval js)
     case JSTYPE_FUNCTION:  
     case JSTYPE_OBJECT:
       if (JSVAL_NULL == js) return Qnil;
+      
+      if (jsval_is_a_symbol(context, js))
+        return ID2SYM(rb_intern(JS_GetStringBytes(JS_ValueToString(context->js, js))));
       
       VALUE id = (VALUE)JS_HashTableLookup(context->ids, (void *)js);
       
