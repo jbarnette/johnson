@@ -114,13 +114,19 @@ module Johnson
       %w{
         OpEqual
         OpBitAndEqual
+        OpBitAnd
         OpBitXorEqual
         OpBitOrEqual
         OpAddEqual
         OpSubtractEqual
+        OpAdd
+        OpSubtract
         OpModEqual
+        OpMod
+        OpMultiply
         OpMultiplyEqual
         OpDivideEqual
+        OpDivide
         OpLShiftEqual
         OpRShiftEqual
         OpURShiftEqual

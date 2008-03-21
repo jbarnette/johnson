@@ -149,8 +149,23 @@ module Johnson #:nodoc:
           }[pn_op]
           raise "Unknown assign op #{pn_op}" unless m
           visitor.send(m, self)
+        when :tok_divop
+          m = {
+            :jsop_div => :visit_OpDivide,
+            :jsop_mod => :visit_OpMod,
+          }[pn_op]
+          raise "Unknown assign op #{pn_op}" unless m
+          visitor.send(m, self)
+        when :tok_bitand
+          visitor.visit_OpBitAnd(self)
+        when :tok_plus
+          visitor.visit_OpAdd(self)
+        when :tok_minus
+          visitor.visit_OpSubtract(self)
         when :tok_lb
           visitor.visit_BracketAccess(self)
+        when :tok_star
+          visitor.visit_OpMultiply(self)
         when :tok_colon
           m = {
             :jsop_getter  => :visit_GetterProperty,

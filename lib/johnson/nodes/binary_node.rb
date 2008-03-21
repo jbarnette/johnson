@@ -6,17 +6,23 @@ module Johnson
       DotAccessor
       Label
       OpBitAndEqual
+      OpBitAnd
       OpBitXorEqual
       OpBitOrEqual
+      OpDivide
       OpDivideEqual
       OpEqual
       OpLShiftEqual
       OpModEqual
+      OpMod
+      OpMultiply
       OpRShiftEqual
       OpURShiftEqual
       OpMultiplyEqual
       OpAddEqual
       OpSubtractEqual
+      OpAdd
+      OpSubtract
       Property
       GetterProperty
       SetterProperty
