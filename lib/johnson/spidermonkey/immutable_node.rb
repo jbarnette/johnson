@@ -156,8 +156,20 @@ module Johnson #:nodoc:
           }[pn_op]
           raise "Unknown assign op #{pn_op}" unless m
           visitor.send(m, self)
+        when :tok_shop
+          m = {
+            :jsop_ursh  => :visit_OpURShift,
+            :jsop_rsh   => :visit_OpRShift,
+            :jsop_lsh   => :visit_OpLShift,
+          }[pn_op]
+          raise "Unknown assign op #{pn_op}" unless m
+          visitor.send(m, self)
         when :tok_bitand
           visitor.visit_OpBitAnd(self)
+        when :tok_bitxor
+          visitor.visit_OpBitXor(self)
+        when :tok_bitor
+          visitor.visit_OpBitOr(self)
         when :tok_plus
           visitor.visit_OpAdd(self)
         when :tok_minus

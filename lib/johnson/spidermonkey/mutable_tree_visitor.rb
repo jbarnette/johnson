@@ -117,6 +117,8 @@ module Johnson
         OpBitAnd
         OpBitXorEqual
         OpBitOrEqual
+        OpBitXor
+        OpBitOr
         OpAddEqual
         OpSubtractEqual
         OpAdd
@@ -130,6 +132,9 @@ module Johnson
         OpLShiftEqual
         OpRShiftEqual
         OpURShiftEqual
+        OpLShift
+        OpRShift
+        OpURShift
         BracketAccess
         Property
         GetterProperty

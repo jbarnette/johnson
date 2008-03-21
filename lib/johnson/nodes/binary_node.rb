@@ -9,15 +9,20 @@ module Johnson
       OpBitAnd
       OpBitXorEqual
       OpBitOrEqual
+      OpBitXor
+      OpBitOr
       OpDivide
       OpDivideEqual
       OpEqual
-      OpLShiftEqual
       OpModEqual
       OpMod
       OpMultiply
+      OpLShiftEqual
       OpRShiftEqual
       OpURShiftEqual
+      OpLShift
+      OpRShift
+      OpURShift
       OpMultiplyEqual
       OpAddEqual
       OpSubtractEqual
