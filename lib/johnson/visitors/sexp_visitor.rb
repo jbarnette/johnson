@@ -122,6 +122,11 @@ module Johnson
         'AssignExpr'      => :assign,
         'BracketAccess'   => :bracket_access,
         'DotAccessor'     => :dot_accessor,
+        'Equal'           => :equal,
+        'NotEqual'        => :not_equal,
+        'Or'              => :or,
+        'And'             => :and,
+        'StrictEqual'     => :strict_equal,
         'Label'           => :label,
       }.each do |node,ident|
         define_method(:"visit_#{node}") do |o|

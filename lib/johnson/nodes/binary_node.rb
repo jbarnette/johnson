@@ -1,9 +1,13 @@
 module Johnson
   module Nodes
     BINARY_NODES = %w{
+      And
       AssignExpr
       BracketAccess
       DotAccessor
+      Equal
+      NotEqual
+      StrictEqual
       Label
       OpBitAndEqual
       OpBitAnd
@@ -28,6 +32,7 @@ module Johnson
       OpSubtractEqual
       OpAdd
       OpSubtract
+      Or
       Property
       GetterProperty
       SetterProperty

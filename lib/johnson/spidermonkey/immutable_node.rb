@@ -162,7 +162,7 @@ module Johnson #:nodoc:
             :jsop_rsh   => :visit_OpRShift,
             :jsop_lsh   => :visit_OpLShift,
           }[pn_op]
-          raise "Unknown assign op #{pn_op}" unless m
+          raise "Unknown shift op #{pn_op}" unless m
           visitor.send(m, self)
         when :tok_bitand
           visitor.visit_OpBitAnd(self)
@@ -178,6 +178,18 @@ module Johnson #:nodoc:
           visitor.visit_BracketAccess(self)
         when :tok_star
           visitor.visit_OpMultiply(self)
+        when :tok_or
+          visitor.visit_Or(self)
+        when :tok_and
+          visitor.visit_And(self)
+        when :tok_eqop
+          m = {
+            :jsop_stricteq  => :visit_StrictEqual,
+            :jsop_ne        => :visit_NotEqual,
+            :jsop_eq        => :visit_Equal,
+          }[pn_op]
+          raise "Unknown equal op #{pn_op}" unless m
+          visitor.send(m, self)
         when :tok_colon
           m = {
             :jsop_getter  => :visit_GetterProperty,

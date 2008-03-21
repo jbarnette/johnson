@@ -25,6 +25,11 @@ class BinaryNodeTest < Johnson::NodeTestCase
     :op_urshift         => '>>>',
     :op_bitxor          => '^',
     :op_bitor           => '|',
+    :and                => '&&',
+    :or                 => '||',
+    :not_equal          => '!=',
+    :equal              => '==',
+    :strict_equal       => '===',
   }.each do |op,sym|
     define_method(:"test_#{op}_to_sexp") do
       assert_sexp(

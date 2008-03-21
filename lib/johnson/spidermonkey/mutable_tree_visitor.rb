@@ -112,6 +112,10 @@ module Johnson
       end
 
       %w{
+        And
+        Equal
+        NotEqual
+        StrictEqual
         OpEqual
         OpBitAndEqual
         OpBitAnd
@@ -135,6 +139,7 @@ module Johnson
         OpLShift
         OpRShift
         OpURShift
+        Or
         BracketAccess
         Property
         GetterProperty
