@@ -65,6 +65,21 @@ module Johnson
         [:semicolon]
       end
 
+      def visit_For(o)
+        [ :for,
+          o.init.accept(self),
+          o.cond.accept(self),
+          o.update.accept(self),
+          o.body.accept(self)
+        ]
+      end
+
+      def visit_ForIn(o)
+        [ :for_in,
+          o.in_cond.accept(self),
+          o.body.accept(self)
+        ]
+      end
       ### UNARY NODES ###
       {
         'Throw'             => :throw,
@@ -93,6 +108,7 @@ module Johnson
 
       ### BINARY NODES ###
       {
+        'In'                  => :in,
         'Property'            => :property,
         'GreaterThanOrEqual'  => :gt_equal,
         'LessThanOrEqual'     => :lt_equal,

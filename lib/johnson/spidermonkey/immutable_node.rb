@@ -182,6 +182,8 @@ module Johnson #:nodoc:
           visitor.visit_Or(self)
         when :tok_and
           visitor.visit_And(self)
+        when :tok_in
+          visitor.visit_In(self)
         when :tok_eqop
           m = {
             :jsop_stricteq  => :visit_StrictEqual,
@@ -207,6 +209,12 @@ module Johnson #:nodoc:
           }[pn_op]
           raise "Unknown rel op #{pn_op}" unless m
           visitor.send(m, self)
+        when :tok_for
+          if pn_left.pn_type == :tok_in
+            visitor.visit_ForIn(self)
+          else
+            visitor.visit_For(self)
+          end
         else
           raise "Unknown binary type: #{pn_type}"
         end

@@ -2,6 +2,7 @@ module Johnson
   module Nodes
     BINARY_NODES = %w{
       And
+      In
       AssignExpr
       BracketAccess
       DotAccessor
