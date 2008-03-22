@@ -13,7 +13,11 @@ Johnson wraps JavaScript in a loving Ruby embrace.
 
 == SYNOPSIS:
 
-  FIX (code sample of usage)
+  # FIXME: write a decent first example
+  require "johnson"
+  
+  ctx = Johnson::Context.new
+  puts ctx.evaluate("function() { return 'you got JS in my Ruby!' }").call
 
 == REQUIREMENTS:
 
@@ -24,6 +28,8 @@ Johnson wraps JavaScript in a loving Ruby embrace.
   sudo gem install johnson
 
 == LICENSE:
+
+FIXME: ruby-spidermonkey shoutout
 
 (The MIT License)
 
