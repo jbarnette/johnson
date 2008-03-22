@@ -109,6 +109,7 @@ module Johnson
       ### BINARY NODES ###
       {
         'In'                  => :in,
+        'InstanceOf'          => :instanceof,
         'Property'            => :property,
         'GreaterThanOrEqual'  => :gt_equal,
         'LessThanOrEqual'     => :lt_equal,

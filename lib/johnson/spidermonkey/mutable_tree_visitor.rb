@@ -134,6 +134,7 @@ module Johnson
         BracketAccess
         Equal
         In
+        InstanceOf
         GetterProperty
         GreaterThan
         LessThan

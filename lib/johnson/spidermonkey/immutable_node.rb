@@ -184,6 +184,8 @@ module Johnson #:nodoc:
           visitor.visit_And(self)
         when :tok_in
           visitor.visit_In(self)
+        when :tok_instanceof
+          visitor.visit_InstanceOf(self)
         when :tok_eqop
           m = {
             :jsop_stricteq  => :visit_StrictEqual,
