@@ -27,6 +27,8 @@ module Johnson #:nodoc:
           handle_nullary(visitor)
         when :pn_func
           visitor.visit_Function(self)
+        when :pn_ternary
+          visitor.visit_Ternary(self)
         else
           raise "unkown arity: #{pn_arity}"
         end

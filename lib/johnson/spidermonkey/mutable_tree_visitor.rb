@@ -87,6 +87,15 @@ module Johnson
         This.new(ro_node.line, ro_node.index, 'this')
       end
 
+      def visit_Ternary(ro_node)
+        Ternary.new(  ro_node.line,
+                      ro_node.index,
+                      ro_node.pn_kid1.accept(self),
+                      ro_node.pn_kid2.accept(self),
+                      ro_node.pn_kid3.accept(self)
+                   )
+      end
+
       %w{
         BitwiseNot
         Delete

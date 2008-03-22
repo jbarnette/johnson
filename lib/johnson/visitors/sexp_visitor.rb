@@ -80,6 +80,14 @@ module Johnson
           o.body.accept(self)
         ]
       end
+
+      def visit_Ternary(o)
+        [ :ternary,
+          o.cond.accept(self),
+          o.b_then.accept(self),
+          o.b_else.accept(self)
+        ]
+      end
       ### UNARY NODES ###
       {
         'Throw'             => :throw,
