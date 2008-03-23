@@ -9,6 +9,8 @@ typedef struct {
   OurContext* context;
 } OurRubyProxy;
 
+JSBool ruby_value_is_proxy(VALUE maybe_proxy);
+jsval unwrap_proxy(OurContext* context, VALUE proxy);
 VALUE make_proxy(OurContext* context, jsval value);
 
 #endif

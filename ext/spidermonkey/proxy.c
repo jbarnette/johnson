@@ -240,6 +240,11 @@ static void deallocate(OurRubyProxy* proxy)
   free(proxy);
 }
 
+JSBool ruby_value_is_proxy(VALUE maybe_proxy)
+{
+  return proxy_class == CLASS_OF(maybe_proxy); 
+}
+
 VALUE make_proxy(OurContext* context, jsval value)
 {
   OurRubyProxy* proxy; 
@@ -249,6 +254,16 @@ VALUE make_proxy(OurContext* context, jsval value)
   proxy->context = context;
   
   return rbproxy;
+}
+
+jsval unwrap_proxy(OurContext* context, VALUE wrapped)
+{
+  assert(ruby_value_is_proxy(wrapped));
+  
+  OurRubyProxy* proxy;
+  Data_Get_Struct(wrapped, OurRubyProxy, proxy);
+  
+  return proxy->value; 
 }
 
 void init_Johnson_SpiderMonkey_Proxy(VALUE spidermonkey)

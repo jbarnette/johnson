@@ -49,6 +49,10 @@ jsval convert_to_js(OurContext* context, VALUE ruby)
 
     case T_SYMBOL:
       return convert_symbol_to_js(context, ruby);
+
+  	case T_DATA:
+  	  if (ruby_value_is_proxy(ruby))
+        return unwrap_proxy(context, ruby);
       
     // UNIMPLEMENTED BELOW THIS LINE
 
@@ -60,7 +64,6 @@ jsval convert_to_js(OurContext* context, VALUE ruby)
   	case T_REGEXP:
   	case T_ARRAY:
   	case T_HASH:
-  	case T_DATA:
     
     default:
       Johnson_Error_raise("unknown ruby type in switch");

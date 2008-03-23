@@ -17,6 +17,12 @@ module Johnson
         assert_kind_of(Johnson::SpiderMonkey::Proxy, @context.evaluate("new Object()"))
       end
       
+      def test_proxies_get_unwrapped_when_roundtripping
+        proxy = @context.evaluate("x = {}")
+        @context["y"] = proxy
+        assert(@context.evaluate("x === y"))
+      end
+      
       def test_functions_get_wrapped_as_proxies
         f = @context.evaluate("function() {}")
         assert_kind_of(Johnson::SpiderMonkey::Proxy, f)
