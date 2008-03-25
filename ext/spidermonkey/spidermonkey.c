@@ -1,7 +1,7 @@
 #include "spidermonkey.h"
 #include "context.h"
 #include "error.h"
-#include "proxy.h"
+#include "ruby_proxy.h"
 #include "immutable_node.h"
 
 void Init_spidermonkey()

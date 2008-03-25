@@ -1,5 +1,5 @@
 #include "conversions.h"
-#include "proxy.h"
+#include "ruby_proxy.h"
 
 static jsval convert_float_or_bignum_to_js(OurContext* context, VALUE float_or_bignum)
 {

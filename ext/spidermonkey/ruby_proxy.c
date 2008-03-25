@@ -1,4 +1,4 @@
-#include "proxy.h"
+#include "ruby_proxy.h"
 
 static VALUE proxy_class = Qnil;
 
