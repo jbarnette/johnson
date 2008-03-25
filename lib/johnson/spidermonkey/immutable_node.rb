@@ -1,5 +1,3 @@
-require 'stringio'
-
 module Johnson #:nodoc:
   module SpiderMonkey #:nodoc:
     class ImmutableNode
