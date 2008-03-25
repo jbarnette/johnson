@@ -245,7 +245,7 @@ JSBool ruby_value_is_proxy(VALUE maybe_proxy)
   return proxy_class == CLASS_OF(maybe_proxy); 
 }
 
-VALUE make_proxy(OurContext* context, jsval value)
+VALUE make_ruby_proxy(OurContext* context, jsval value)
 {
   OurRubyProxy* proxy; 
   VALUE rbproxy = Data_Make_Struct(proxy_class, OurRubyProxy, 0, deallocate, proxy);
@@ -256,7 +256,7 @@ VALUE make_proxy(OurContext* context, jsval value)
   return rbproxy;
 }
 
-jsval unwrap_proxy(OurContext* context, VALUE wrapped)
+jsval unwrap_ruby_proxy(OurContext* context, VALUE wrapped)
 {
   assert(ruby_value_is_proxy(wrapped));
   

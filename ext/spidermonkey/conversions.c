@@ -52,7 +52,7 @@ jsval convert_to_js(OurContext* context, VALUE ruby)
 
   	case T_DATA:
   	  if (ruby_value_is_proxy(ruby))
-        return unwrap_proxy(context, ruby);
+        return unwrap_ruby_proxy(context, ruby);
       
     // UNIMPLEMENTED BELOW THIS LINE
 
@@ -114,7 +114,7 @@ VALUE convert_to_ruby(OurContext* context, jsval js)
       else
       {
         // otherwise make one and cache it
-        VALUE proxy = make_proxy(context, js); 
+        VALUE proxy = make_ruby_proxy(context, js); 
         
       	// put the proxy OID in the id map
         assert(JS_HashTableAdd(context->ids, (void *)js, (void *)rb_obj_id(proxy)));
