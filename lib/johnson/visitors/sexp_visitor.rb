@@ -81,12 +81,17 @@ module Johnson
         ]
       end
 
-      def visit_Ternary(o)
-        [ :ternary,
-          o.cond.accept(self),
-          o.b_then.accept(self),
-          o.b_else.accept(self)
-        ]
+      {
+        'Ternary' => :ternary,
+        'If'      => :if,
+      }.each do |node,ident|
+        define_method(:"visit_#{node}") do |o|
+          [ ident,
+            o.cond.accept(self),
+            o.b_then ? o.b_then.accept(self) : nil,
+            o.b_else ? o.b_else.accept(self) : nil
+          ]
+        end
       end
       ### UNARY NODES ###
       {

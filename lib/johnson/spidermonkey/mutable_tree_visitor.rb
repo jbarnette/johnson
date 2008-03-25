@@ -87,13 +87,19 @@ module Johnson
         This.new(ro_node.line, ro_node.index, 'this')
       end
 
-      def visit_Ternary(ro_node)
-        Ternary.new(  ro_node.line,
-                      ro_node.index,
-                      ro_node.pn_kid1.accept(self),
-                      ro_node.pn_kid2.accept(self),
-                      ro_node.pn_kid3.accept(self)
-                   )
+      %w{
+        Ternary
+        If
+      }.each do |node|
+        define_method(:"visit_#{node}") do |ro_node|
+          Nodes.const_get(node).new(
+            ro_node.line,
+            ro_node.index,
+            ro_node.pn_kid1 ? ro_node.pn_kid1.accept(self) : nil,
+            ro_node.pn_kid2 ? ro_node.pn_kid2.accept(self) : nil,
+            ro_node.pn_kid3 ? ro_node.pn_kid3.accept(self) : nil
+          )
+        end
       end
 
       %w{

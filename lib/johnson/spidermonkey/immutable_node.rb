@@ -28,7 +28,12 @@ module Johnson #:nodoc:
         when :pn_func
           visitor.visit_Function(self)
         when :pn_ternary
-          visitor.visit_Ternary(self)
+          m = {
+            :tok_hook => :visit_Ternary,
+            :tok_if   => :visit_If,
+          }[pn_type]
+          raise "Unknown ternary #{pn_type}" unless m
+          visitor.send(m, self)
         else
           raise "unkown arity: #{pn_arity}"
         end

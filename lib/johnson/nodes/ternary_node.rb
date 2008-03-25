@@ -1,6 +1,10 @@
 module Johnson
   module Nodes
-    class Ternary < Node
+    TERNARY_NODES = %w{
+      Ternary
+      If
+    }
+    class TernaryNode < Node
       alias :b_else :value
       attr_accessor :cond, :b_then
       def initialize(line, column, cond, b_then, b_else)
@@ -9,5 +13,6 @@ module Johnson
         @b_then = b_then
       end
     end
+    TERNARY_NODES.each { |bn| const_set(bn.to_sym, Class.new(TernaryNode)) }
   end
 end
