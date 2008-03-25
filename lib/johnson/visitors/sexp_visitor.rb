@@ -123,6 +123,7 @@ module Johnson
       {
         'In'                  => :in,
         'InstanceOf'          => :instanceof,
+        'With'                => :with,
         'DoWhile'             => :do_while,
         'While'               => :while,
         'Property'            => :property,

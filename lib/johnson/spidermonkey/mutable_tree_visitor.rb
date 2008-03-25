@@ -141,6 +141,7 @@ module Johnson
         BracketAccess
         DoWhile
         While
+        With
         Equal
         In
         InstanceOf

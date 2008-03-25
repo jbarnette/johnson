@@ -4,6 +4,7 @@ module Johnson
       And
       DoWhile
       While
+      With
       In
       InstanceOf
       AssignExpr
