@@ -2,6 +2,8 @@ module Johnson
   module Nodes
     BINARY_NODES = %w{
       And
+      DoWhile
+      While
       In
       InstanceOf
       AssignExpr

@@ -24,19 +24,11 @@ module Johnson
       def visit_For(ro_node)
         For.new(  ro_node.line,
                   ro_node.index,
-                  ro_node.pn_left.pn_kid1.accept(self),
-                  ro_node.pn_left.pn_kid2.accept(self),
-                  ro_node.pn_left.pn_kid3.accept(self),
+                  ro_node.pn_left.pn_kid1 ? ro_node.pn_left.pn_kid1.accept(self) : nil,
+                  ro_node.pn_left.pn_kid2 ? ro_node.pn_left.pn_kid2.accept(self) : nil,
+                  ro_node.pn_left.pn_kid3 ? ro_node.pn_left.pn_kid3.accept(self) : nil,
                   ro_node.pn_right.accept(self)
                )
-      end
-
-      def visit_ForIn(ro_node)
-        ForIn.new(  ro_node.line,
-                    ro_node.index,
-                    ro_node.pn_left.accept(self),
-                    ro_node.pn_right.accept(self)
-                 )
       end
 
       def visit_Name(ro_node)
@@ -147,10 +139,13 @@ module Johnson
       %w{
         And
         BracketAccess
+        DoWhile
+        While
         Equal
         In
         InstanceOf
         GetterProperty
+        ForIn
         GreaterThan
         LessThan
         GreaterThanOrEqual

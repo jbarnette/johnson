@@ -67,9 +67,9 @@ module Johnson
 
       def visit_For(o)
         [ :for,
-          o.init.accept(self),
-          o.cond.accept(self),
-          o.update.accept(self),
+          o.init ? o.init.accept(self) : nil,
+          o.cond ? o.cond.accept(self) : nil,
+          o.update ? o.update.accept(self) : nil,
           o.body.accept(self)
         ]
       end
@@ -123,6 +123,8 @@ module Johnson
       {
         'In'                  => :in,
         'InstanceOf'          => :instanceof,
+        'DoWhile'             => :do_while,
+        'While'               => :while,
         'Property'            => :property,
         'GreaterThanOrEqual'  => :gt_equal,
         'LessThanOrEqual'     => :lt_equal,

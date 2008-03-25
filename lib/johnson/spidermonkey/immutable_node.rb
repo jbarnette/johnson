@@ -193,6 +193,10 @@ module Johnson #:nodoc:
           visitor.visit_In(self)
         when :tok_instanceof
           visitor.visit_InstanceOf(self)
+        when :tok_do
+          visitor.visit_DoWhile(self)
+        when :tok_while
+          visitor.visit_While(self)
         when :tok_eqop
           m = {
             :jsop_stricteq  => :visit_StrictEqual,
