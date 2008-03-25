@@ -123,6 +123,9 @@ module Johnson
       {
         'In'                  => :in,
         'InstanceOf'          => :instanceof,
+        'Switch'              => :switch,
+        'Case'                => :case,
+        'Default'             => :default,
         'With'                => :with,
         'DoWhile'             => :do_while,
         'While'               => :while,
@@ -167,7 +170,7 @@ module Johnson
         'Label'               => :label,
       }.each do |node,ident|
         define_method(:"visit_#{node}") do |o|
-          [ident, o.left.accept(self), o.right.accept(self)]
+          [ident, o.left && o.left.accept(self), o.right &&o.right.accept(self)]
         end
       end
 

@@ -3,9 +3,12 @@ module Johnson
     BINARY_NODES = %w{
       And
       DoWhile
+      Case
+      Default
       While
       With
       In
+      Switch
       InstanceOf
       AssignExpr
       BracketAccess

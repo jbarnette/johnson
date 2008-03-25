@@ -87,9 +87,9 @@ module Johnson
           Nodes.const_get(node).new(
             ro_node.line,
             ro_node.index,
-            ro_node.pn_kid1 ? ro_node.pn_kid1.accept(self) : nil,
-            ro_node.pn_kid2 ? ro_node.pn_kid2.accept(self) : nil,
-            ro_node.pn_kid3 ? ro_node.pn_kid3.accept(self) : nil
+            ro_node.pn_kid1 && ro_node.pn_kid1.accept(self),
+            ro_node.pn_kid2 && ro_node.pn_kid2.accept(self),
+            ro_node.pn_kid3 && ro_node.pn_kid3.accept(self)
           )
         end
       end
@@ -140,9 +140,12 @@ module Johnson
         And
         BracketAccess
         DoWhile
+        Case
+        Default
         While
         With
         Equal
+        Switch
         In
         InstanceOf
         GetterProperty
@@ -184,8 +187,8 @@ module Johnson
           self.class.const_get(bin_op).new(
                         ro_node.line,
                         ro_node.index,
-                        ro_node.pn_left.accept(self),
-                        ro_node.pn_right.accept(self)
+                        ro_node.pn_left && ro_node.pn_left.accept(self),
+                        ro_node.pn_right && ro_node.pn_right.accept(self)
                      )
         end
       end

@@ -193,6 +193,12 @@ module Johnson #:nodoc:
           visitor.visit_InstanceOf(self)
         when :tok_do
           visitor.visit_DoWhile(self)
+        when :tok_switch
+          visitor.visit_Switch(self)
+        when :tok_case
+          visitor.visit_Case(self)
+        when :tok_default
+          visitor.visit_Default(self)
         when :tok_with
           visitor.visit_With(self)
         when :tok_while
