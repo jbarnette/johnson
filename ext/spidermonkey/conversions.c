@@ -13,7 +13,7 @@ static jsval convert_symbol_to_js(OurContext* context, VALUE symbol)
   VALUE to_s = rb_funcall(symbol, rb_intern("to_s"), 0);
   jsval name = STRING_TO_JSVAL(JS_NewStringCopyZ(context->js, StringValuePtr(to_s)));
 
-  // calls Ruby.symbolize(name) in JS-land. See prelude.js.
+  // calls Ruby.symbolize(name) in JS-land. See lib/prelude.js
 
   jsval nsRuby;    
   assert(JS_GetProperty(context->js, context->global, "Ruby", &nsRuby) || JSVAL_VOID == nsRuby);
@@ -22,6 +22,11 @@ static jsval convert_symbol_to_js(OurContext* context, VALUE symbol)
   assert(JS_CallFunctionName(context->js, JSVAL_TO_OBJECT(nsRuby), "symbolize", 1, &name, &js));
 
   return js;
+}
+
+static jsval convert_object_to_js(OurContext* context, VALUE symbol)
+{
+  return JSVAL_NULL;
 }
 
 jsval convert_to_js(OurContext* context, VALUE ruby)
@@ -50,13 +55,15 @@ jsval convert_to_js(OurContext* context, VALUE ruby)
     case T_SYMBOL:
       return convert_symbol_to_js(context, ruby);
 
-  	case T_DATA:
+    case T_OBJECT:
+      return convert_object_to_js(context, ruby);
+
+  	case T_DATA: // keep T_DATA last for fall-through
   	  if (ruby_value_is_proxy(ruby))
         return unwrap_ruby_proxy(context, ruby);
       
     // UNIMPLEMENTED BELOW THIS LINE
 
-  	case T_OBJECT:
   	case T_CLASS:
   	case T_FILE:
   	case T_STRUCT:
