@@ -1,4 +1,5 @@
 #include "conversions.h"
+#include "js_proxy.h"
 #include "ruby_proxy.h"
 
 static jsval convert_float_or_bignum_to_js(OurContext* context, VALUE float_or_bignum)
@@ -24,9 +25,10 @@ static jsval convert_symbol_to_js(OurContext* context, VALUE symbol)
   return js;
 }
 
-static jsval convert_object_to_js(OurContext* context, VALUE symbol)
+static jsval convert_object_to_js(OurContext* context, VALUE object)
 {
-  return JSVAL_NULL;
+  // FIXME: all the checking the cache and stuff
+  return make_js_proxy(context, object);
 }
 
 jsval convert_to_js(OurContext* context, VALUE ruby)
@@ -55,6 +57,7 @@ jsval convert_to_js(OurContext* context, VALUE ruby)
     case T_SYMBOL:
       return convert_symbol_to_js(context, ruby);
 
+  	case T_CLASS:
     case T_OBJECT:
       return convert_object_to_js(context, ruby);
 
@@ -64,7 +67,6 @@ jsval convert_to_js(OurContext* context, VALUE ruby)
       
     // UNIMPLEMENTED BELOW THIS LINE
 
-  	case T_CLASS:
   	case T_FILE:
   	case T_STRUCT:
   	case T_MODULE:
@@ -109,6 +111,8 @@ VALUE convert_to_ruby(OurContext* context, jsval js)
       
       if (jsval_is_a_symbol(context, js))
         return ID2SYM(rb_intern(JS_GetStringBytes(JS_ValueToString(context->js, js))));
+      
+      // FIXME: if it's wrapping a Ruby object, unwrap and return it
       
       VALUE id = (VALUE)JS_HashTableLookup(context->ids, (void *)js);
       
