@@ -27,7 +27,6 @@ static jsval convert_symbol_to_js(OurContext* context, VALUE symbol)
 
 static jsval convert_object_to_js(OurContext* context, VALUE object)
 {
-  // FIXME: all the checking the cache and stuff
   return make_js_proxy(context, object);
 }
 
@@ -59,6 +58,7 @@ jsval convert_to_js(OurContext* context, VALUE ruby)
 
   	case T_CLASS:
     case T_OBJECT:
+      // FIXME: if it's a wrapped JS object, return it
       return convert_object_to_js(context, ruby);
 
   	case T_DATA: // keep T_DATA last for fall-through

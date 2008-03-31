@@ -8,14 +8,29 @@ module Johnson
         def bar; 10; end
         def baz(arg); arg; end
       end
+      
+      class Indexable
+        def [](key)
+          10
+        end
+        
+        def key?(key)
+          true
+        end
+      end
 
       def setup
         @context = Johnson::SpiderMonkey::Context.new
       end
       
-      def test_proxies_instances
+      def test_0_arity_method_available_as_proxy
         @context["foo"] = Foo.new
-        assert_js_equal(10, "foo.bar()")
+        assert_js_equal(10, "foo.bar")
+      end
+      
+      def test_indexable_object_with_key_proxies
+        @context["foo"] = Indexable.new
+        assert_js_equal(10, "foo.bar")
       end
       
       # def test_index_func_call_from_ruby
