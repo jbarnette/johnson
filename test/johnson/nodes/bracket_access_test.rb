@@ -11,5 +11,6 @@ class BracketAccessTest < Johnson::NodeTestCase
         ]
       ],
       @parser.parse('var a = foo[10];'))
+    assert_ecma("var a = foo[10];", @parser.parse('var a = foo[10];'))
   end
 end

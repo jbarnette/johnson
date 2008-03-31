@@ -42,6 +42,10 @@ module Johnson
         end
       end
 
+      def visit_BracketAccess(o)
+        "#{o.left.accept(self)}[#{o.right.accept(self)}]"
+      end
+
       {
         'OpEqual'             => '=',
         'StrictNotEqual'      => '!==',
