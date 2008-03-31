@@ -224,6 +224,15 @@ data_pn_left(VALUE self) {
   return Qnil;
 }
 
+static VALUE /* pn_extra */
+data_pn_extra(VALUE self) {
+  ImmutableNodeContext * ctx;
+
+  Data_Get_Struct(self, ImmutableNodeContext, ctx);
+
+  return INT2NUM(ctx->node->pn_extra);
+}
+
 static VALUE /* name */
 name(VALUE self) {
   ImmutableNodeContext * ctx;
@@ -359,6 +368,7 @@ void init_Johnson_SpiderMonkey_Immutable_Node(VALUE spidermonkey)
   rb_define_method(cNode, "pn_dval", data_pn_dval, 0);
   rb_define_method(cNode, "pn_op", data_pn_op, 0);
   rb_define_method(cNode, "pn_left", data_pn_left, 0);
+  rb_define_method(cNode, "pn_extra", data_pn_extra, 0);
   rb_define_method(cNode, "name", name, 0);
   rb_define_method(cNode, "regexp", regexp, 0);
   rb_define_method(cNode, "function_name", function_name, 0);

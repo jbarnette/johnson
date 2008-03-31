@@ -48,6 +48,7 @@ module Johnson
       Property
       SetterProperty
       StrictEqual
+      StrictNotEqual
     }
 
     class BinaryNode < Node

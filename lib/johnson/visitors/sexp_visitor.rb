@@ -29,6 +29,14 @@ module Johnson
         [:function_call, o.value.map { |x| x.accept(self) }]
       end
 
+      def visit_Import(o)
+        [:import, o.value.map { |x| x.accept(self) }]
+      end
+
+      def visit_Export(o)
+        [:export, o.value.map { |x| x.accept(self) }]
+      end
+
       def visit_Name(o)
         [:name, o.value]
       end
@@ -43,6 +51,14 @@ module Johnson
 
       def visit_String(o)
         [:str, o.value]
+      end
+
+      def visit_Break(o)
+        [:break]
+      end
+
+      def visit_Continue(o)
+        [:continue]
       end
 
       def visit_Null(o)
@@ -81,9 +97,18 @@ module Johnson
         ]
       end
 
+      def visit_Try(o)
+        [ :try,
+          o.cond.accept(self),
+          o.b_then ? o.b_then.map { |x| x.accept(self) } : nil,
+          o.b_else ? o.b_else.accept(self) : nil
+        ]
+      end
+
       {
         'Ternary' => :ternary,
         'If'      => :if,
+        'Catch'   => :catch,
       }.each do |node,ident|
         define_method(:"visit_#{node}") do |o|
           [ ident,
@@ -104,13 +129,14 @@ module Johnson
         'PrefixIncrement'   => :prefix_inc,
         'PostfixIncrement'  => :postfix_inc,
         'Parenthesis'       => :paren,
+        'Return'            => :return,
         'UnaryNegative'     => :u_neg,
         'UnaryPositive'     => :u_pos,
         'BitwiseNot'        => :bitwise_not,
         'Not'               => :not,
       }.each do |node,ident|
         define_method(:"visit_#{node}") do |o|
-          [ident, o.value.accept(self)]
+          [ident, o.value && o.value.accept(self)]
         end
       end
 
@@ -167,6 +193,7 @@ module Johnson
         'Or'                  => :or,
         'And'                 => :and,
         'StrictEqual'         => :strict_equal,
+        'StrictNotEqual'      => :strict_not_equal,
         'Label'               => :label,
       }.each do |node,ident|
         define_method(:"visit_#{node}") do |o|

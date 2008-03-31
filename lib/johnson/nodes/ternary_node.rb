@@ -3,6 +3,8 @@ module Johnson
     TERNARY_NODES = %w{
       Ternary
       If
+      Try
+      Catch
     }
     class TernaryNode < Node
       alias :b_else :value

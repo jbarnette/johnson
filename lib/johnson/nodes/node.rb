@@ -2,6 +2,8 @@ module Johnson
   module Nodes
     SINGLE_NODES = %w{
       BitwiseNot
+      Break
+      Continue
       Delete
       False
       Name
@@ -14,6 +16,7 @@ module Johnson
       PostfixDecrement
       PrefixDecrement
       Regexp
+      Return
       String
       This
       Throw

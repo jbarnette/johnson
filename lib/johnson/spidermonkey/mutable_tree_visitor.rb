@@ -11,22 +11,24 @@ module Johnson
         ArrayLiteral
         New
         FunctionCall
+        Import
+        Export
       }.each do |list_op|
         define_method(:"visit_#{list_op}") do |ro_node|
           Nodes.const_get(list_op).new( ro_node.line,
                                         ro_node.index,
                                         ro_node.children.map { |c|
                                           c.accept(self)
-                                        })
+                                        }.compact)
         end
       end
 
       def visit_For(ro_node)
         For.new(  ro_node.line,
                   ro_node.index,
-                  ro_node.pn_left.pn_kid1 ? ro_node.pn_left.pn_kid1.accept(self) : nil,
-                  ro_node.pn_left.pn_kid2 ? ro_node.pn_left.pn_kid2.accept(self) : nil,
-                  ro_node.pn_left.pn_kid3 ? ro_node.pn_left.pn_kid3.accept(self) : nil,
+                  ro_node.pn_left.pn_kid1 && ro_node.pn_left.pn_kid1.accept(self),
+                  ro_node.pn_left.pn_kid2 && ro_node.pn_left.pn_kid2.accept(self),
+                  ro_node.pn_left.pn_kid3 && ro_node.pn_left.pn_kid3.accept(self),
                   ro_node.pn_right.accept(self)
                )
       end
@@ -79,9 +81,29 @@ module Johnson
         This.new(ro_node.line, ro_node.index, 'this')
       end
 
+      def visit_Try(ro_node)
+        Try.new(
+          ro_node.line,
+          ro_node.index,
+          ro_node.pn_kid1 && ro_node.pn_kid1.accept(self),
+          if ro_node.pn_kid2
+            case ro_node.pn_kid2.pn_type
+            when :tok_reserved
+              ro_node.pn_kid2.children.map { |x| x.pn_expr.accept(self) }
+            else
+              raise
+            end
+          else
+            nil
+          end,
+          ro_node.pn_kid3 && ro_node.pn_kid3.accept(self)
+        )
+      end
+
       %w{
         Ternary
         If
+        Catch
       }.each do |node|
         define_method(:"visit_#{node}") do |ro_node|
           Nodes.const_get(node).new(
@@ -103,6 +125,7 @@ module Johnson
         PostfixIncrement
         PrefixDecrement
         PrefixIncrement
+        Return
         Throw
         Typeof
         UnaryNegative
@@ -112,7 +135,7 @@ module Johnson
         define_method(:"visit_#{node}") do |ro_node|
           Nodes.const_get(node).new(ro_node.line,
                                     ro_node.index,
-                                    ro_node.pn_kid.accept(self))
+                                    ro_node.pn_kid && ro_node.pn_kid.accept(self))
         end
       end
 
@@ -126,6 +149,18 @@ module Johnson
         Regexp.new( ro_node.line,
                     ro_node.index,
                     ro_node.regexp )
+      end
+
+      def visit_Continue(ro_node)
+        Continue.new( ro_node.line,
+                      ro_node.index,
+                      'continue' )
+      end
+
+      def visit_Break(ro_node)
+        Break.new(  ro_node.line,
+                    ro_node.index,
+                    'break' )
       end
 
       def visit_Function(ro_node)
@@ -182,14 +217,35 @@ module Johnson
         Property
         SetterProperty
         StrictEqual
+        StrictNotEqual
       }.each do |bin_op|
         define_method(:"visit_#{bin_op}") do |ro_node|
-          self.class.const_get(bin_op).new(
-                        ro_node.line,
-                        ro_node.index,
-                        ro_node.pn_left && ro_node.pn_left.accept(self),
-                        ro_node.pn_right && ro_node.pn_right.accept(self)
-                     )
+          if ro_node.children.length > 1
+            kids = ro_node.children.reverse
+            tree = self.class.const_get(bin_op).new(
+                          ro_node.line,
+                          ro_node.index,
+                          kids[1].accept(self),
+                          kids[0].accept(self)
+            )
+            2.times { kids.shift }
+            kids.each do |kid|
+              tree = self.class.const_get(bin_op).new(
+                            ro_node.line,
+                            ro_node.index,
+                            kid.accept(self),
+                            tree
+              )
+            end
+            tree
+          else
+            self.class.const_get(bin_op).new(
+                          ro_node.line,
+                          ro_node.index,
+                          ro_node.pn_left && ro_node.pn_left.accept(self),
+                          ro_node.pn_right && ro_node.pn_right.accept(self)
+                       )
+          end
         end
       end
 
