@@ -6,6 +6,10 @@ class ArrayLiteralNodeTest < Johnson::NodeTestCase
                 [[:var, [[:assign, [:name, "foo"], [:array, [[:lit, 1]]]]]]],
                 @parser.parse('var foo = [1];')
                )
+    assert_ecma(
+                'var foo = [1];',
+                @parser.parse('var foo = [1];')
+               )
   end
 
   def test_array_with_commas
@@ -17,6 +21,10 @@ class ArrayLiteralNodeTest < Johnson::NodeTestCase
                 ]]]]]],
                 @parser.parse('var foo = [,,1];')
                )
+    assert_ecma(
+                'var foo = [null, null, 1];',
+                @parser.parse('var foo = [,,1];')
+               )
     assert_sexp(
                 [[:var, [[:assign, [:name, "foo"], [:array, [
                   [:str, 'foo'],
@@ -25,12 +33,20 @@ class ArrayLiteralNodeTest < Johnson::NodeTestCase
                 ]]]]]],
                 @parser.parse('var foo = ["foo",,1];')
                )
+    assert_ecma(
+                'var foo = ["foo", null, 1];',
+                @parser.parse('var foo = ["foo",,1];')
+               )
     assert_sexp(
                 [[:var, [[:assign, [:name, "foo"], [:array, [
                   [:name, 'bar'],
                   [:nil],
                   [:lit, 1]
                 ]]]]]],
+                @parser.parse('var foo = [bar,,1];')
+               )
+    assert_ecma(
+                'var foo = [bar, null, 1];',
                 @parser.parse('var foo = [bar,,1];')
                )
   end

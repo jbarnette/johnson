@@ -11,9 +11,34 @@ module Johnson
           (@depth == 0 ? '' : '}')
       end
 
-      %w{ Name Number Regexp String }.each do |type|
+      def visit_VarStatement(o)
+        "var #{o.value.map { |x| x.accept(self) }.join(', ')};"
+      end
+
+      def visit_ArrayLiteral(o)
+        "[#{o.value.map { |x| x.accept(self) }.join(', ')}]"
+      end
+
+      %w{ Name Number Regexp }.each do |type|
         define_method(:"visit_#{type}") do |o|
           o.value
+        end
+      end
+
+      def visit_String(o)
+        "\"#{o.value}\""
+      end
+
+      {
+        'Break'     => 'break;',
+        'Continue'  => 'continue;',
+        'Null'      => 'null',
+        'True'      => 'true',
+        'False'     => 'false',
+        'This'      => 'this',
+      }.each do |type,sym|
+        define_method(:"visit_#{type}") do |o|
+          sym
         end
       end
 
@@ -52,6 +77,7 @@ module Johnson
         'And'                 => '&&',
         'InstanceOf'          => 'instanceof',
         'Equal'               => '==',
+        'AssignExpr'          => '=',
       }.each do |type,op|
         define_method(:"visit_#{type}") do |o|
           "#{o.left && o.left.accept(self)}" \
