@@ -29,6 +29,10 @@ module Johnson
         [:function_call, o.value.map { |x| x.accept(self) }]
       end
 
+      def visit_Import(o)
+        [:import, o.value.map { |x| x.accept(self) }]
+      end
+
       def visit_Name(o)
         [:name, o.value]
       end

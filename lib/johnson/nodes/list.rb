@@ -8,6 +8,7 @@ module Johnson
       ArrayLiteral
       New
       FunctionCall
+      Import
     }
     # This is an abstract node used for nodes of list type
     # see SourceElements

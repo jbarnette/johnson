@@ -11,6 +11,7 @@ module Johnson
         ArrayLiteral
         New
         FunctionCall
+        Import
       }.each do |list_op|
         define_method(:"visit_#{list_op}") do |ro_node|
           Nodes.const_get(list_op).new( ro_node.line,

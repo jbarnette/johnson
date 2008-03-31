@@ -105,6 +105,7 @@ module Johnson #:nodoc:
           :tok_rb     => :visit_ArrayLiteral,
           :tok_new    => :visit_New,
           :tok_lp     => :visit_FunctionCall,
+          :tok_import => :visit_Import,
         }[pn_type]
         raise "Unknown type: #{pn_type}" unless m
         visitor.send(m, self)
