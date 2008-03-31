@@ -10,6 +10,7 @@ module Johnson
       FunctionCall
       Import
       Export
+      Plus
     }
     # This is an abstract node used for nodes of list type
     # see SourceElements

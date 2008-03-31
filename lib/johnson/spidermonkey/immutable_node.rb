@@ -109,8 +109,9 @@ module Johnson #:nodoc:
           :tok_lp     => :visit_FunctionCall,
           :tok_import => :visit_Import,
           :tok_export => :visit_Export,
+          :tok_plus   => :visit_Plus,
         }[pn_type]
-        raise "Unknown type: #{pn_type}" unless m
+        raise "Unknown type: #{pn_type} at (#{line}, #{index})" unless m
         visitor.send(m, self)
       end
 
