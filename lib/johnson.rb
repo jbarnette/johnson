@@ -12,6 +12,7 @@ require "johnson/nodes"
 
 # the SpiderMonkey bits written in Ruby
 require "johnson/spidermonkey/context"
+require "johnson/spidermonkey/js_proxy"
 require "johnson/spidermonkey/ruby_proxy"
 require "johnson/spidermonkey/mutable_tree_visitor"
 require "johnson/spidermonkey/immutable_node"

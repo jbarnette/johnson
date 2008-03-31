@@ -24,6 +24,10 @@ module Johnson
         def gets_an_unspecified_block
           block_given?
         end
+        
+        def runs_block(arg, &block)
+          yield(arg)
+        end
       end
       
       class Indexable
@@ -96,6 +100,16 @@ module Johnson
       def test_calls_class_method
         @context["Foo"] = Foo
         assert_js_equal(Foo.bar, "Foo.bar()")
+      end
+      
+      def test_jsend_deals_with_blocks
+        func = @context.evaluate("function() {}")
+        assert(JSProxy.jsend(Foo.new, :gets_an_unspecified_block, [func]))
+      end
+      
+      def test_jsend_deals_with_specified_blocks
+        func = @context.evaluate("function(x) { return x * 2 }")
+        assert_equal(4, JSProxy.jsend(Foo.new, :runs_block, [2, func]))
       end
     end
   end
