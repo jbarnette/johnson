@@ -1,4 +1,5 @@
 #include "conversions.h"
+#include "js_proxy.h"
 #include "ruby_proxy.h"
 
 static jsval convert_float_or_bignum_to_js(OurContext* context, VALUE float_or_bignum)
@@ -13,7 +14,7 @@ static jsval convert_symbol_to_js(OurContext* context, VALUE symbol)
   VALUE to_s = rb_funcall(symbol, rb_intern("to_s"), 0);
   jsval name = STRING_TO_JSVAL(JS_NewStringCopyZ(context->js, StringValuePtr(to_s)));
 
-  // calls Ruby.symbolize(name) in JS-land. See prelude.js.
+  // calls Ruby.symbolize(name) in JS-land. See lib/prelude.js
 
   jsval nsRuby;    
   assert(JS_GetProperty(context->js, context->global, "Ruby", &nsRuby) || JSVAL_VOID == nsRuby);
@@ -22,6 +23,11 @@ static jsval convert_symbol_to_js(OurContext* context, VALUE symbol)
   assert(JS_CallFunctionName(context->js, JSVAL_TO_OBJECT(nsRuby), "symbolize", 1, &name, &js));
 
   return js;
+}
+
+static jsval convert_object_to_js(OurContext* context, VALUE object)
+{
+  return make_js_proxy(context, object);
 }
 
 jsval convert_to_js(OurContext* context, VALUE ruby)
@@ -50,14 +56,17 @@ jsval convert_to_js(OurContext* context, VALUE ruby)
     case T_SYMBOL:
       return convert_symbol_to_js(context, ruby);
 
-  	case T_DATA:
+  	case T_CLASS:
+    case T_OBJECT:
+      // FIXME: if it's a wrapped JS object, return it
+      return convert_object_to_js(context, ruby);
+
+  	case T_DATA: // keep T_DATA last for fall-through
   	  if (ruby_value_is_proxy(ruby))
         return unwrap_ruby_proxy(context, ruby);
       
     // UNIMPLEMENTED BELOW THIS LINE
 
-  	case T_OBJECT:
-  	case T_CLASS:
   	case T_FILE:
   	case T_STRUCT:
   	case T_MODULE:
@@ -77,7 +86,7 @@ static JSBool jsval_is_a_symbol(OurContext* context, jsval maybe_symbol)
   jsval nsRuby, cSymbol;
 
   assert(JS_GetProperty(context->js, context->global, "Ruby", &nsRuby));
-  if(JSVAL_VOID == nsRuby) Johnson_Error_raise("aaaaaaaugh!");
+  assert(JSVAL_VOID != nsRuby);
   
   assert(JS_GetProperty(context->js, JSVAL_TO_OBJECT(nsRuby), "Symbol", &cSymbol));
   assert(JSVAL_VOID != cSymbol);
@@ -102,6 +111,8 @@ VALUE convert_to_ruby(OurContext* context, jsval js)
       
       if (jsval_is_a_symbol(context, js))
         return ID2SYM(rb_intern(JS_GetStringBytes(JS_ValueToString(context->js, js))));
+      
+      // FIXME: if it's wrapping a Ruby object, unwrap and return it
       
       VALUE id = (VALUE)JS_HashTableLookup(context->ids, (void *)js);
       

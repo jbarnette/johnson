@@ -13,7 +13,7 @@ require "johnson"
 
 module Johnson
   class TestCase < Test::Unit::TestCase
-    def default_test; end
+    undef :default_test
     
     def assert_js(expression, options={})
       context = options[:context] || @context
@@ -30,6 +30,7 @@ module Johnson
     include Johnson::Nodes
   
     undef :default_test
+    
     def setup
       @parser = Johnson::Parser
     end

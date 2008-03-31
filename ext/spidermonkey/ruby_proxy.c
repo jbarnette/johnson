@@ -268,7 +268,7 @@ jsval unwrap_ruby_proxy(OurContext* context, VALUE wrapped)
 
 void init_Johnson_SpiderMonkey_Proxy(VALUE spidermonkey)
 {
-  proxy_class = rb_define_class_under(spidermonkey, "Proxy", rb_cObject);
+  proxy_class = rb_define_class_under(spidermonkey, "RubyProxy", rb_cObject);
 
   rb_define_method(proxy_class, "[]", get, 1);
   rb_define_method(proxy_class, "[]=", set, 2);
