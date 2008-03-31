@@ -40,20 +40,23 @@ static void finalize(JSContext* context, JSObject* obj)
 static JSBool get(JSContext* js_context, JSObject* obj, jsval id, jsval* retval)
 {
   // pull out our Ruby object, which is embedded in js_context
+  
   VALUE ruby_context;
   assert(ruby_context = (VALUE)JS_GetContextPrivate(js_context));
   
   // get our struct, which is embedded in ruby_context
+  
   OurContext* context;
   Data_Get_Struct(ruby_context, OurContext, context);
-  
-  char* key = JS_GetStringBytes(JSVAL_TO_STRING(id));
-  
+    
   // get the Ruby object that backs this proxy
+  
   VALUE self;
   assert(self = (VALUE)JS_GetInstancePrivate(context->js, obj, &JSProxyClass, NULL));
   
+  char* key = JS_GetStringBytes(JSVAL_TO_STRING(id));
   VALUE ruby_id = rb_intern(key);
+  
   VALUE is_method = rb_funcall(self, rb_intern("respond_to?"), 1, ID2SYM(ruby_id));
   
   if (is_method)
@@ -82,52 +85,56 @@ static JSBool get(JSContext* js_context, JSObject* obj, jsval id, jsval* retval)
   return JS_TRUE;
 }
 
-static JSBool set(JSContext* context, JSObject* obj, jsval id, jsval* retval)
+static JSBool set(JSContext* js_context, JSObject* obj, jsval id, jsval* value)
 {
-  *retval = JSVAL_NULL;
+  // pull out our Ruby object, which is embedded in js_context
+  
+  VALUE ruby_context;
+  assert(ruby_context = (VALUE)JS_GetContextPrivate(js_context));
+  
+  // get our struct, which is embedded in ruby_context
+  
+  OurContext* context;
+  Data_Get_Struct(ruby_context, OurContext, context);
+    
+  // get the Ruby object that backs this proxy
+  
+  VALUE self;
+  assert(self = (VALUE)JS_GetInstancePrivate(context->js, obj, &JSProxyClass, NULL));
+  
+  char* key = JS_GetStringBytes(JSVAL_TO_STRING(id));
+  VALUE ruby_key = rb_str_new2(key);
+  
+  VALUE setter = rb_str_append(rb_str_new3(ruby_key), rb_str_new2("="));
+  VALUE setter_id = rb_intern(StringValuePtr(setter));
+  
+  VALUE has_setter = rb_funcall(self, rb_intern("respond_to?"), 1, ID2SYM(setter_id));
+  
+  if (has_setter)
+  {
+    VALUE method = rb_funcall(self, rb_intern("method"), 1, ID2SYM(setter_id));
+    int arity = NUM2INT(rb_funcall(method, rb_intern("arity"), 0));
+    
+    // if the Ruby object has a 1-arity method named "property=",
+    // call it with the converted value
+    
+    if (arity == 1)
+      rb_funcall(self, setter_id, 1, convert_to_ruby(context, *value));
+  }
+  else
+  {
+    // otherwise, if the Ruby object quacks sorta like a hash for assignment
+    // (it responds to "[]="), assign it by key
+    
+    VALUE is_index_assignable =
+      rb_funcall(self, rb_intern("respond_to?"), 1, ID2SYM(rb_intern("[]=")));
+    
+    if (is_index_assignable)
+      rb_funcall(self, rb_intern("[]="), 2, ruby_key, convert_to_ruby(context, *value));
+  }
+  
   return JS_TRUE;
 }
-
-// JSBool Johnson_RubyProxy_set( JSContext * js_context,
-//                                           JSObject * obj,
-//                                           jsval id,
-//                                           jsval *vp )
-// {
-//   char * keyname;
-//   VALUE ruby_obj;
-//   VALUE rb_keyname;
-//   VALUE setter;
-//   CombinedContext* context;
-//   ID rid;
-// 
-//   VALUE self = (VALUE)JS_GetContextPrivate(js_context);
-//   Data_Get_Struct(self, CombinedContext, context);
-// 
-//   keyname = JS_GetStringBytes(JSVAL_TO_STRING(id));
-//   ruby_obj = (VALUE)JS_GetPrivate(js_context, obj);
-//   rb_keyname = rb_str_new2(keyname);
-// 
-//   setter = rb_str_append(rb_str_new3(rb_keyname), rb_str_new2("="));
-//   rid = rb_intern(StringValuePtr(setter));
-// 
-//   if(rb_funcall(ruby_obj, rb_intern("respond_to?"), 1, ID2SYM(rid))) {
-//     VALUE method = rb_funcall(ruby_obj, rb_intern("method"), 1,ID2SYM(rid));
-//     int arity = NUM2INT(rb_funcall(method, rb_intern("arity"), 0));
-//     if(arity == 1)
-//       convert_ruby_to_jsval(context,
-//         rb_funcall(ruby_obj, rid, 1, convert_jsval_to_ruby(context, *vp))
-//       );
-//   } else if(
-//     rb_funcall(ruby_obj, rb_intern("respond_to?"), 1, ID2SYM(rb_intern("[]=")))
-//   )
-//   {
-//     rb_funcall(ruby_obj, rb_intern("[]="), 2, rb_keyname,
-//         convert_jsval_to_ruby(context, *vp)
-//     );
-//   }
-//   return JS_TRUE;
-// }
-// 
 
 static JSBool method_missing(JSContext* context, JSObject* obj, uintN argc, jsval* argv, jsval* retval)
 {

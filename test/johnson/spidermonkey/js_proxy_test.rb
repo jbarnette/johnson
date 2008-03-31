@@ -4,18 +4,28 @@ module Johnson
   module SpiderMonkey
     class JSProxyTest < Johnson::TestCase
       class Foo
-        def self.bar; 10; end
-        def bar; 10; end
-        def baz(arg); arg; end
+        attr_accessor :bar
+        
+        def initialize
+          @bar = 10
+        end
       end
       
       class Indexable
+        def initialize
+          @store = {}
+        end
+        
         def [](key)
-          10
+          @store[key]
+        end
+        
+        def []=(key, value)
+          @store[key] = value
         end
         
         def key?(key)
-          true
+          @store.key?(key)
         end
       end
 
@@ -23,14 +33,33 @@ module Johnson
         @context = Johnson::SpiderMonkey::Context.new
       end
       
-      def test_0_arity_method_available_as_proxy
+      def test_getter_calls_0_arity_method
         @context["foo"] = Foo.new
         assert_js_equal(10, "foo.bar")
       end
       
-      def test_indexable_object_with_key_proxies
-        @context["foo"] = Indexable.new
+      def test_getter_calls_indexer
+        @context["foo"] = indexable = Indexable.new
+        indexable["bar"] = 10
+        
         assert_js_equal(10, "foo.bar")
+      end
+      
+      def test_getter_returns_nil_for_unknown_properties
+        @context["foo"] = Foo.new
+        assert_js_equal(nil, "foo.quux")
+      end
+
+      def test_setter_calls_key=
+        @context["foo"] = foo = Foo.new
+        assert_js_equal(42, "foo.bar = 42")
+        assert_equal(42, foo.bar)
+      end
+      
+      def test_setter_calls_indexer
+        @context["foo"] = indexable = Indexable.new
+        assert_js_equal(42, "foo.monkey = 42")
+        assert_equal(42, indexable["monkey"])
       end
       
       # def test_index_func_call_from_ruby
