@@ -6,13 +6,15 @@ module Johnson
       end
 
       def visit_SourceElements(o)
-        (@depth == 0 ? '' : '{') +
-          o.value.map { |x| "#{indent}#{x.accept(self)}" }.join("\n") +
-          (@depth == 0 ? '' : '}')
+        (@depth == 0 ? '' : "{\n") +
+          indent(){
+            o.value.map { |x| "#{indent}#{x.accept(self)};" }.join("\n")
+          } +
+          (@depth == 0 ? '' : "\n}")
       end
 
       def visit_VarStatement(o)
-        "var #{o.value.map { |x| x.accept(self) }.join(', ')};"
+        "var #{o.value.map { |x| x.accept(self) }.join(', ')}"
       end
 
       def visit_ArrayLiteral(o)
@@ -44,6 +46,19 @@ module Johnson
 
       def visit_BracketAccess(o)
         "#{o.left.accept(self)}[#{o.right.accept(self)}]"
+      end
+      
+      def visit_DoWhile(o)
+        semi = o.left.is_a?(Nodes::SourceElements) ? '' : ';'
+        "do #{o.left.accept(self)}#{semi} while(#{o.right.accept(self)})"
+      end
+
+      def visit_Delete(o)
+        "delete #{o.value.accept(self)}"
+      end
+
+      def visit_DotAccessor(o)
+        "#{o.right.accept(self)}.#{o.left.accept(self)}"
       end
 
       {
@@ -95,7 +110,16 @@ module Johnson
       end
 
       private
-      def indent; ' ' * @depth * 2; end
+      def indent
+        if block_given?
+          @depth += 1
+          x = yield
+          @depth -= 1
+          x
+        else
+          ' ' * (@depth - 1) * 2
+        end
+      end
     end
   end
 end

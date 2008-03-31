@@ -9,7 +9,7 @@ module Johnson
     def test_default_delegate_is_spidermonkey
       assert_equal(Johnson::SpiderMonkey::Context, @context.delegate.class)
     end
-    
+
     def test_delegates_public_ops
       delegate = mock(:evaluate => nil)
       delegate.expects(:[]).with("key").returns("value")

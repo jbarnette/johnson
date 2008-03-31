@@ -6,5 +6,6 @@ class DeleteNodeTest < Johnson::NodeTestCase
       [[:delete, [:name, 'foo']]],
       @parser.parse('delete foo;')
     )
+    assert_ecma('delete foo;', @parser.parse('delete foo;'))
   end
 end

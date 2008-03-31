@@ -10,5 +10,6 @@ class DotAccessorTest < Johnson::NodeTestCase
                 [[:dot_accessor, [:name, "bar"], [:name, "foo"]]],
                 @parser.parse('foo.bar')
                )
+    assert_ecma('foo.bar;', @parser.parse('foo.bar;'))
   end
 end

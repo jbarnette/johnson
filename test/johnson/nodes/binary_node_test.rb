@@ -53,9 +53,9 @@ class BinaryNodeTest < Johnson::NodeTestCase
     end
 
     define_method(:"test_#{op}_to_ecma") do
-      assert_ecma("i #{sym} 10", @parser.parse("i #{sym} 10"))
-      assert_ecma("i #{sym} j #{sym} k",
-                  @parser.parse("i #{sym} j #{sym} k"))
+      assert_ecma("i #{sym} 10;", @parser.parse("i #{sym} 10;"))
+      assert_ecma("i #{sym} j #{sym} k;",
+                  @parser.parse("i #{sym} j #{sym} k;"))
     end
   end
 end
