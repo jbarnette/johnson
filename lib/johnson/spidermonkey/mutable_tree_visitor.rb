@@ -19,16 +19,16 @@ module Johnson
                                         ro_node.index,
                                         ro_node.children.map { |c|
                                           c.accept(self)
-                                        })
+                                        }.compact)
         end
       end
 
       def visit_For(ro_node)
         For.new(  ro_node.line,
                   ro_node.index,
-                  ro_node.pn_left.pn_kid1 ? ro_node.pn_left.pn_kid1.accept(self) : nil,
-                  ro_node.pn_left.pn_kid2 ? ro_node.pn_left.pn_kid2.accept(self) : nil,
-                  ro_node.pn_left.pn_kid3 ? ro_node.pn_left.pn_kid3.accept(self) : nil,
+                  ro_node.pn_left.pn_kid1 && ro_node.pn_left.pn_kid1.accept(self),
+                  ro_node.pn_left.pn_kid2 && ro_node.pn_left.pn_kid2.accept(self),
+                  ro_node.pn_left.pn_kid3 && ro_node.pn_left.pn_kid3.accept(self),
                   ro_node.pn_right.accept(self)
                )
       end
@@ -85,7 +85,7 @@ module Johnson
         Try.new(
           ro_node.line,
           ro_node.index,
-          ro_node.pn_kid1 ? ro_node.pn_kid1.accept(self) : nil,
+          ro_node.pn_kid1 && ro_node.pn_kid1.accept(self),
           if ro_node.pn_kid2
             case ro_node.pn_kid2.pn_type
             when :tok_reserved
@@ -96,7 +96,7 @@ module Johnson
           else
             nil
           end,
-          ro_node.pn_kid3 ? ro_node.pn_kid3.accept(self) : nil
+          ro_node.pn_kid3 && ro_node.pn_kid3.accept(self)
         )
       end
 
