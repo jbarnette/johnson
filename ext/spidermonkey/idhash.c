@@ -16,7 +16,7 @@ static intN value_comparator(const void* v1, const void* v2)
   return (VALUE)v1 == (VALUE)v2;
 }
 
-JSHashTable * new_idhash()
+JSHashTable * create_jsids_hash()
 {
   return JS_NewHashTable(0, key_hash, key_comparator, value_comparator, NULL, NULL);  
 }
