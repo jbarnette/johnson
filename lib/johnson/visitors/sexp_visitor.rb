@@ -5,80 +5,43 @@ module Johnson
         o.value.map { |x| x.accept(self) }
       end
 
-      def visit_VarStatement(o)
-        [:var, o.value.map { |x| x.accept(self) }]
+      {
+        'VarStatement'  => :var,
+        'Comma'         => :comma,
+        'ObjectLiteral' => :object,
+        'ArrayLiteral'  => :array,
+        'New'           => :new,
+        'FunctionCall'  => :function_call,
+        'Import'        => :import,
+        'Export'        => :export,
+      }.each do |type,sym|
+        define_method(:"visit_#{type}") do |o|
+          [sym, o.value.map { |x| x.accept(self) }]
+        end
       end
 
-      def visit_Comma(o)
-        [:comma, o.value.map { |x| x.accept(self) }]
+      { 
+        'Name'    => :name,
+        'Number'  => :lit,
+        'Regexp'  => :lit,
+        'String'  => :str 
+      }.each do |type,sym|
+        define_method(:"visit_#{type}") do |o|
+          [sym, o.value]
+        end
       end
 
-      def visit_ObjectLiteral(o)
-        [:object, o.value.map { |x| x.accept(self) }]
-      end
-
-      def visit_ArrayLiteral(o)
-        [:array, o.value.map { |x| x.accept(self) }]
-      end
-
-      def visit_New(o)
-        [:new, o.value.map { |x| x.accept(self) }]
-      end
-
-      def visit_FunctionCall(o)
-        [:function_call, o.value.map { |x| x.accept(self) }]
-      end
-
-      def visit_Import(o)
-        [:import, o.value.map { |x| x.accept(self) }]
-      end
-
-      def visit_Export(o)
-        [:export, o.value.map { |x| x.accept(self) }]
-      end
-
-      def visit_Name(o)
-        [:name, o.value]
-      end
-
-      def visit_Number(o)
-        [:lit, o.value]
-      end
-
-      def visit_Regexp(o)
-        [:lit, o.value]
-      end
-
-      def visit_String(o)
-        [:str, o.value]
-      end
-
-      def visit_Break(o)
-        [:break]
-      end
-
-      def visit_Continue(o)
-        [:continue]
-      end
-
-      def visit_Null(o)
-        [:nil]
-      end
-
-      def visit_True(o)
-        [:true]
-      end
-
-      def visit_False(o)
-        [:false]
-      end
-
-      def visit_This(o)
-        [:this]
-      end
-
-      def visit_Semicolon(o)
-        [:semicolon]
+      {
+        'Break'     => :break,
+        'Continue'  => :continue,
+        'Null'      => :nil,
+        'True'      => :true,
+        'False'     => :false,
+        'This'      => :this,
+      }.each do |type,sym|
+        define_method(:"visit_#{type}") do |o|
+          [sym]
+        end
       end
 
       def visit_For(o)
