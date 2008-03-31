@@ -172,6 +172,16 @@ static JSClass JSProxyClass = {
   finalize
 };
 
+JSBool js_value_is_proxy(jsval maybe_proxy)
+{
+  return JS_FALSE;
+}
+
+VALUE unwrap_js_proxy(OurContext* context, jsval proxy)
+{
+  return Qnil;
+}
+
 // static jsval convert_ruby_object_to_jsval(CombinedContext* context, VALUE ruby)
 // {
 //   VALUE self = (VALUE)JS_GetContextPrivate(context->js);
