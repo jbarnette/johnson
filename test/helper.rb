@@ -37,5 +37,9 @@ module Johnson
     def assert_sexp(expected, actual)
       assert_equal(expected, actual.to_sexp)
     end
+
+    def assert_ecma(expected, actual)
+      assert_equal(expected, actual.to_ecma)
+    end
   end
 end

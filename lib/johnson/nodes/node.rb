@@ -41,6 +41,10 @@ module Johnson
       def to_sexp
         SexpVisitor.new.accept(self)
       end
+
+      def to_ecma
+        EcmaVisitor.new.accept(self)
+      end
     end
     SINGLE_NODES.each { |se| const_set(se.to_sym, Class.new(Node)) }
   end
