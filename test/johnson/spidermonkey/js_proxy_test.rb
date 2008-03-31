@@ -20,6 +20,10 @@ module Johnson
         def add(*args)
           args.inject { |m,n| m += n }
         end
+        
+        def gets_an_unspecified_block
+          block_given?
+        end
       end
       
       class Indexable
@@ -93,25 +97,6 @@ module Johnson
         @context["Foo"] = Foo
         assert_js_equal(Foo.bar, "Foo.bar()")
       end
-      
-      
-      # FIXME: class methods
-      
-      # def test_index_func_call_from_ruby
-      #   @context[:Foo] = Foo
-      #   assert_equal(10, @context.evaluate("Foo.bar()"))
-      # 
-      #   @context[:Foo] = Foo
-      #   assert_equal(Foo, @context.evaluate("Foo"))
-      # 
-      #   x = Foo.new
-      #   @context[:foo] = x
-      #   assert_equal(10, @context.evaluate("foo.bar()"))
-      #   assert_equal(x, @context.evaluate("foo"))
-      #   assert_equal(10, @context.evaluate("foo.baz(10)"))
-      #   assert_equal([10, 9], @context.evaluate("foo.baz([10, 9])"))
-      # end
-                  
     end
   end
 end

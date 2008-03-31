@@ -9,12 +9,12 @@ module Johnson
       end
       
       def test_constructing_a_proxy_directly_asplodes
-        assert_raise(Johnson::Error) { Johnson::SpiderMonkey::Proxy.new }
+        assert_raise(Johnson::Error) { Johnson::SpiderMonkey::RubyProxy.new }
       end
       
       def test_objects_get_wrapped_as_proxies
-        assert_kind_of(Johnson::SpiderMonkey::Proxy, @context.evaluate("x = {}"))
-        assert_kind_of(Johnson::SpiderMonkey::Proxy, @context.evaluate("new Object()"))
+        assert_kind_of(Johnson::SpiderMonkey::RubyProxy, @context.evaluate("x = {}"))
+        assert_kind_of(Johnson::SpiderMonkey::RubyProxy, @context.evaluate("new Object()"))
       end
       
       def test_proxies_get_unwrapped_when_roundtripping
@@ -25,7 +25,7 @@ module Johnson
       
       def test_functions_get_wrapped_as_proxies
         f = @context.evaluate("function() {}")
-        assert_kind_of(Johnson::SpiderMonkey::Proxy, f)
+        assert_kind_of(Johnson::SpiderMonkey::RubyProxy, f)
         assert(f.function?)
       end
       
@@ -57,7 +57,7 @@ module Johnson
       
       def test_can_be_indexed_by_string
         proxy = @context.evaluate("x = { foo: 42 }")
-        assert_kind_of(Johnson::SpiderMonkey::Proxy, proxy)
+        assert_kind_of(Johnson::SpiderMonkey::RubyProxy, proxy)
         
         assert_equal(42, proxy["foo"])
         

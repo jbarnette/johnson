@@ -1,6 +1,6 @@
 module Johnson #:nodoc:
   module SpiderMonkey #:nodoc:
-    class Proxy # native
+    class RubyProxy # native
       include Enumerable
       
       def initialize
