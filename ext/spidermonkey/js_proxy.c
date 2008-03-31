@@ -148,8 +148,10 @@ static JSBool method_missing(JSContext* js_context, JSObject* obj, uintN argc, j
   // FIXME: this could probably be a lot faster, to_a comes from enumerable on proxy
   VALUE args = rb_funcall(convert_to_ruby(context, argv[1]), rb_intern("to_a"), 0);
   
+  // Context#jsend: if the last arg is a function, it'll get passed along as a &block
+  
   *retval = convert_to_js(context,
-    rb_funcall2(self, ruby_id, RARRAY_LEN(args), RARRAY_PTR(args)));
+    rb_funcall(ruby_context, rb_intern("jsend"), 3, self, ID2SYM(ruby_id), args));
   
   return JS_TRUE;
 }

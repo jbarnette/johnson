@@ -21,12 +21,8 @@ module Johnson
           args.inject { |m,n| m += n }
         end
         
-        def gets_an_unspecified_block
-          block_given?
-        end
-        
-        def runs_block(arg, &block)
-          yield(arg)
+        def xform(arg)
+          yield(arg)          
         end
       end
       
@@ -100,7 +96,12 @@ module Johnson
       def test_calls_class_method
         @context["Foo"] = Foo
         assert_js_equal(Foo.bar, "Foo.bar()")
-      end      
+      end
+      
+      def test_dwims_blocks
+        @context["foo"] = Foo.new
+        assert_js_equal(4, "foo.xform(2, function(x) { return x * 2 })")
+      end    
     end
   end
 end
