@@ -33,6 +33,10 @@ module Johnson
         [:import, o.value.map { |x| x.accept(self) }]
       end
 
+      def visit_Export(o)
+        [:export, o.value.map { |x| x.accept(self) }]
+      end
+
       def visit_Name(o)
         [:name, o.value]
       end
