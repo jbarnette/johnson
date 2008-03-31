@@ -27,8 +27,10 @@ module Johnson #:nodoc:
           visitor.visit_Function(self)
         when :pn_ternary
           m = {
-            :tok_hook => :visit_Ternary,
-            :tok_if   => :visit_If,
+            :tok_hook   => :visit_Ternary,
+            :tok_if     => :visit_If,
+            :tok_try    => :visit_Try,
+            :tok_catch  => :visit_Catch,
           }[pn_type]
           raise "Unknown ternary #{pn_type}" unless m
           visitor.send(m, self)

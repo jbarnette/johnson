@@ -79,9 +79,29 @@ module Johnson
         This.new(ro_node.line, ro_node.index, 'this')
       end
 
+      def visit_Try(ro_node)
+        Try.new(
+          ro_node.line,
+          ro_node.index,
+          ro_node.pn_kid1 ? ro_node.pn_kid1.accept(self) : nil,
+          if ro_node.pn_kid2
+            case ro_node.pn_kid2.pn_type
+            when :tok_reserved
+              ro_node.pn_kid2.children.map { |x| x.pn_expr.accept(self) }
+            else
+              raise
+            end
+          else
+            nil
+          end,
+          ro_node.pn_kid3 ? ro_node.pn_kid3.accept(self) : nil
+        )
+      end
+
       %w{
         Ternary
         If
+        Catch
       }.each do |node|
         define_method(:"visit_#{node}") do |ro_node|
           Nodes.const_get(node).new(

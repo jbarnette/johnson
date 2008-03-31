@@ -81,9 +81,18 @@ module Johnson
         ]
       end
 
+      def visit_Try(o)
+        [ :try,
+          o.cond.accept(self),
+          o.b_then ? o.b_then.map { |x| x.accept(self) } : nil,
+          o.b_else ? o.b_else.accept(self) : nil
+        ]
+      end
+
       {
         'Ternary' => :ternary,
         'If'      => :if,
+        'Catch'   => :catch,
       }.each do |node,ident|
         define_method(:"visit_#{node}") do |o|
           [ ident,
