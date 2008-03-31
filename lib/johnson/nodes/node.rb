@@ -16,6 +16,7 @@ module Johnson
       PostfixDecrement
       PrefixDecrement
       Regexp
+      Return
       String
       This
       Throw

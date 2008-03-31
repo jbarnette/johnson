@@ -125,6 +125,7 @@ module Johnson
         PostfixIncrement
         PrefixDecrement
         PrefixIncrement
+        Return
         Throw
         Typeof
         UnaryNegative
@@ -134,7 +135,7 @@ module Johnson
         define_method(:"visit_#{node}") do |ro_node|
           Nodes.const_get(node).new(ro_node.line,
                                     ro_node.index,
-                                    ro_node.pn_kid.accept(self))
+                                    ro_node.pn_kid && ro_node.pn_kid.accept(self))
         end
       end
 

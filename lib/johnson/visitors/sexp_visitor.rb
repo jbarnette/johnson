@@ -129,13 +129,14 @@ module Johnson
         'PrefixIncrement'   => :prefix_inc,
         'PostfixIncrement'  => :postfix_inc,
         'Parenthesis'       => :paren,
+        'Return'            => :return,
         'UnaryNegative'     => :u_neg,
         'UnaryPositive'     => :u_pos,
         'BitwiseNot'        => :bitwise_not,
         'Not'               => :not,
       }.each do |node,ident|
         define_method(:"visit_#{node}") do |o|
-          [ident, o.value.accept(self)]
+          [ident, o.value && o.value.accept(self)]
         end
       end
 

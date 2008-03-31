@@ -54,6 +54,8 @@ module Johnson #:nodoc:
           visitor.visit_Throw(self)
         when :tok_delete
           visitor.visit_Delete(self)
+        when :tok_return
+          visitor.visit_Return(self)
         when :tok_unaryop
           m = {
             :jsop_void    => :visit_Void,
