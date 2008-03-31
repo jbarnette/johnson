@@ -3,6 +3,55 @@ module Johnson
     class MutableTreeVisitor
       include Johnson::Nodes
 
+      def visit_For(ro_node)
+        For.new(  ro_node.line,
+                  ro_node.index,
+                  ro_node.pn_left.pn_kid1 && ro_node.pn_left.pn_kid1.accept(self),
+                  ro_node.pn_left.pn_kid2 && ro_node.pn_left.pn_kid2.accept(self),
+                  ro_node.pn_left.pn_kid3 && ro_node.pn_left.pn_kid3.accept(self),
+                  ro_node.pn_right.accept(self)
+               )
+      end
+
+      def visit_Name(ro_node)
+        Name.new(ro_node.line, ro_node.index, ro_node.name)
+      end
+
+      def visit_Number(ro_node)
+        Number.new(ro_node.line, ro_node.index, ro_node.pn_dval)
+      end
+
+      def visit_String(ro_node)
+        Nodes::String.new(  ro_node.line,
+                            ro_node.index,
+                            ro_node.name )
+      end
+
+      def visit_Regexp(ro_node)
+        Regexp.new( ro_node.line,
+                    ro_node.index,
+                    ro_node.regexp )
+      end
+
+      def visit_Function(ro_node)
+        Function.new( ro_node.line,
+                      ro_node.index,
+                      ro_node.function_name,
+                      ro_node.function_args,
+                      ro_node.function_body.accept(self) )
+      end
+
+      %w{ Label AssignExpr DotAccessor }.each do |type|
+        define_method(:"visit_#{type}") do |ro_node|
+          Nodes.const_get(type).new(
+            ro_node.line,
+            ro_node.index,
+            Name.new(ro_node.line, ro_node.index, ro_node.name),
+            ro_node.pn_expr.accept(self)
+          )
+        end
+      end
+
       %w{
         SourceElements
         VarStatement
@@ -23,62 +72,21 @@ module Johnson
         end
       end
 
-      def visit_For(ro_node)
-        For.new(  ro_node.line,
-                  ro_node.index,
-                  ro_node.pn_left.pn_kid1 && ro_node.pn_left.pn_kid1.accept(self),
-                  ro_node.pn_left.pn_kid2 && ro_node.pn_left.pn_kid2.accept(self),
-                  ro_node.pn_left.pn_kid3 && ro_node.pn_left.pn_kid3.accept(self),
-                  ro_node.pn_right.accept(self)
-               )
-      end
-
-      def visit_Name(ro_node)
-        Name.new(ro_node.line, ro_node.index, ro_node.name)
-      end
-
-      def visit_Label(ro_node)
-        Label.new(  ro_node.line,
-                    ro_node.index,
-                    Name.new(ro_node.line, ro_node.index, ro_node.name),
-                    ro_node.pn_expr.accept(self)
-                 )
-      end
-
-      def visit_AssignExpr(ro_node)
-        AssignExpr.new( ro_node.line,
-                        ro_node.index,
-                        Name.new(ro_node.line, ro_node.index, ro_node.name),
-                        ro_node.pn_expr.accept(self)
-                      )
-      end
-
-      def visit_DotAccessor(ro_node)
-        DotAccessor.new(  ro_node.line,
-                          ro_node.index,
-                          Name.new(ro_node.line, ro_node.index, ro_node.name),
-                          ro_node.pn_expr.accept(self)
-                       )
-      end
-
-      def visit_Number(ro_node)
-        Number.new(ro_node.line, ro_node.index, ro_node.pn_dval)
-      end
-
-      def visit_Null(ro_node)
-        Null.new(ro_node.line, ro_node.index, nil)
-      end
-
-      def visit_True(ro_node)
-        True.new(ro_node.line, ro_node.index, true)
-      end
-
-      def visit_False(ro_node)
-        False.new(ro_node.line, ro_node.index, false)
-      end
-
-      def visit_This(ro_node)
-        This.new(ro_node.line, ro_node.index, 'this')
+      {
+        'Null'      => nil,
+        'True'      => true,
+        'False'     => false,
+        'This'      => 'this',
+        'Continue'  => 'continue',
+        'Break'     => 'break',
+      }.each do |type,val|
+        define_method(:"visit_#{type}") do |ro_node|
+          Nodes.const_get(type).new(
+                                    ro_node.line,
+                                    ro_node.index,
+                                    val
+                                   )
+        end
       end
 
       def visit_Try(ro_node)
@@ -91,7 +99,7 @@ module Johnson
             when :tok_reserved
               ro_node.pn_kid2.children.map { |x| x.pn_expr.accept(self) }
             else
-              raise
+              raise "HALP some other catch #{ro_node.line}, #{ro_node.index}"
             end
           else
             nil
@@ -137,38 +145,6 @@ module Johnson
                                     ro_node.index,
                                     ro_node.pn_kid && ro_node.pn_kid.accept(self))
         end
-      end
-
-      def visit_String(ro_node)
-        Nodes::String.new(  ro_node.line,
-                            ro_node.index,
-                            ro_node.name )
-      end
-
-      def visit_Regexp(ro_node)
-        Regexp.new( ro_node.line,
-                    ro_node.index,
-                    ro_node.regexp )
-      end
-
-      def visit_Continue(ro_node)
-        Continue.new( ro_node.line,
-                      ro_node.index,
-                      'continue' )
-      end
-
-      def visit_Break(ro_node)
-        Break.new(  ro_node.line,
-                    ro_node.index,
-                    'break' )
-      end
-
-      def visit_Function(ro_node)
-        Function.new( ro_node.line,
-                      ro_node.index,
-                      ro_node.function_name,
-                      ro_node.function_args,
-                      ro_node.function_body.accept(self) )
       end
 
       %w{
