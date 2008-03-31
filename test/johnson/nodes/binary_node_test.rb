@@ -42,6 +42,24 @@ class BinaryNodeTest < Johnson::NodeTestCase
                   [[op, [:name, 'i'], [:lit, 10]]],
                   @parser.parse("i #{sym} 10")
                  )
+
+      # Test optimized nodes. === and !== are not optimized
+      unless [:strict_equal, :strict_not_equal].include?(op)
+        assert_sexp(
+                    [[op, [:name, "h"], [op, [:name, 'i'], [:name, 'j']]]],
+                    @parser.parse("h #{sym} i #{sym} j")
+                   )
+      end
     end
+  end
+  {
+    :and                => '&&',
+    :or                 => '||',
+    :op_add             => '+',
+    :op_subtract        => '-',
+    :op_equal           => '=',
+    :op_bitor           => '|',
+    :op_bitxor          => '^',
+  }.each do |op,sym|
   end
 end

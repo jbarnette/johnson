@@ -99,20 +99,39 @@ module Johnson #:nodoc:
       end
 
       def handle_list(visitor)
-        m = {
-          :tok_lc     => :visit_SourceElements,
-          :tok_var    => :visit_VarStatement,
-          :tok_comma  => :visit_Comma,
-          :tok_rc     => :visit_ObjectLiteral,
-          :tok_rb     => :visit_ArrayLiteral,
-          :tok_new    => :visit_New,
-          :tok_lp     => :visit_FunctionCall,
-          :tok_import => :visit_Import,
-          :tok_export => :visit_Export,
-          :tok_plus   => :visit_Plus,
-        }[pn_type]
-        raise "Unknown type: #{pn_type} at (#{line}, #{index})" unless m
-        visitor.send(m, self)
+        case pn_type
+        when :tok_shop
+          handle_shiftop(visitor)
+        when :tok_divop
+          handle_divop(visitor)
+        when :tok_eqop
+          handle_eqop(visitor)
+        when :tok_relop
+          handle_relop(visitor)
+        else
+          m = {
+            :tok_lc         => :visit_SourceElements,
+            :tok_var        => :visit_VarStatement,
+            :tok_comma      => :visit_Comma,
+            :tok_rc         => :visit_ObjectLiteral,
+            :tok_rb         => :visit_ArrayLiteral,
+            :tok_new        => :visit_New,
+            :tok_lp         => :visit_FunctionCall,
+            :tok_import     => :visit_Import,
+            :tok_export     => :visit_Export,
+            :tok_plus       => :visit_OpAdd,
+            :tok_or         => :visit_Or,
+            :tok_minus      => :visit_OpSubtract,
+            :tok_and        => :visit_And,
+            :tok_bitand     => :visit_OpBitAnd,
+            :tok_bitor      => :visit_OpBitOr,
+            :tok_bitxor     => :visit_OpBitXor,
+            :tok_star       => :visit_OpMultiply,
+            :tok_instanceof => :visit_InstanceOf,
+          }[pn_type]
+          raise "Unknown type: #{pn_type} at (#{line}, #{index})" unless m
+          visitor.send(m, self)
+        end
       end
 
       OP_TO_METHOD = {
@@ -166,20 +185,9 @@ module Johnson #:nodoc:
           raise "Unknown assign op #{pn_op}" unless m
           visitor.send(m, self)
         when :tok_divop
-          m = {
-            :jsop_div => :visit_OpDivide,
-            :jsop_mod => :visit_OpMod,
-          }[pn_op]
-          raise "Unknown assign op #{pn_op}" unless m
-          visitor.send(m, self)
+          handle_divop(visitor)
         when :tok_shop
-          m = {
-            :jsop_ursh  => :visit_OpURShift,
-            :jsop_rsh   => :visit_OpRShift,
-            :jsop_lsh   => :visit_OpLShift,
-          }[pn_op]
-          raise "Unknown shift op #{pn_op}" unless m
-          visitor.send(m, self)
+          handle_shiftop(visitor)
         when :tok_bitand
           visitor.visit_OpBitAnd(self)
         when :tok_bitxor
@@ -215,14 +223,7 @@ module Johnson #:nodoc:
         when :tok_while
           visitor.visit_While(self)
         when :tok_eqop
-          m = {
-            :jsop_strictne  => :visit_StrictNotEqual,
-            :jsop_stricteq  => :visit_StrictEqual,
-            :jsop_ne        => :visit_NotEqual,
-            :jsop_eq        => :visit_Equal,
-          }[pn_op]
-          raise "Unknown equal op #{pn_op}" unless m
-          visitor.send(m, self)
+          handle_eqop(visitor)
         when :tok_colon
           m = {
             :jsop_getter  => :visit_GetterProperty,
@@ -232,14 +233,7 @@ module Johnson #:nodoc:
           raise "Unknown assign op #{pn_op}" unless m
           visitor.send(m, self)
         when :tok_relop
-          m = {
-            :jsop_ge  => :visit_GreaterThanOrEqual,
-            :jsop_le  => :visit_LessThanOrEqual,
-            :jsop_gt  => :visit_GreaterThan,
-            :jsop_lt  => :visit_LessThan,
-          }[pn_op]
-          raise "Unknown rel op #{pn_op}" unless m
-          visitor.send(m, self)
+          handle_relop(visitor)
         when :tok_for
           if pn_left.pn_type == :tok_in
             visitor.visit_ForIn(self)
@@ -249,6 +243,47 @@ module Johnson #:nodoc:
         else
           raise "Unknown binary type: #{pn_type}"
         end
+      end
+
+      def handle_shiftop(visitor)
+        m = {
+          :jsop_ursh  => :visit_OpURShift,
+          :jsop_rsh   => :visit_OpRShift,
+          :jsop_lsh   => :visit_OpLShift,
+        }[pn_op]
+        raise "Unknown shift op #{pn_op} at (#{line}, #{index})" unless m
+        visitor.send(m, self)
+      end
+
+      def handle_divop(visitor)
+        m = {
+          :jsop_div => :visit_OpDivide,
+          :jsop_mod => :visit_OpMod,
+        }[pn_op]
+        raise "Unknown assign op #{pn_op} at (#{line}, #{index})" unless m
+        visitor.send(m, self)
+      end
+
+      def handle_eqop(visitor)
+        m = {
+          :jsop_strictne  => :visit_StrictNotEqual,
+          :jsop_stricteq  => :visit_StrictEqual,
+          :jsop_ne        => :visit_NotEqual,
+          :jsop_eq        => :visit_Equal,
+        }[pn_op]
+        raise "Unknown equal op #{pn_op} at (#{line}, #{index})" unless m
+        visitor.send(m, self)
+      end
+
+      def handle_relop(visitor)
+        m = {
+          :jsop_ge  => :visit_GreaterThanOrEqual,
+          :jsop_le  => :visit_LessThanOrEqual,
+          :jsop_gt  => :visit_GreaterThan,
+          :jsop_lt  => :visit_LessThan,
+        }[pn_op]
+        raise "Unknown relop #{pn_op} at (#{line}, #{index})" unless m
+        visitor.send(m, self)
       end
     end
   end

@@ -13,7 +13,6 @@ module Johnson
         FunctionCall
         Import
         Export
-        Plus
       }.each do |list_op|
         define_method(:"visit_#{list_op}") do |ro_node|
           Nodes.const_get(list_op).new( ro_node.line,
@@ -221,12 +220,32 @@ module Johnson
         StrictNotEqual
       }.each do |bin_op|
         define_method(:"visit_#{bin_op}") do |ro_node|
-          self.class.const_get(bin_op).new(
-                        ro_node.line,
-                        ro_node.index,
-                        ro_node.pn_left && ro_node.pn_left.accept(self),
-                        ro_node.pn_right && ro_node.pn_right.accept(self)
-                     )
+          if ro_node.children.length > 1
+            kids = ro_node.children.reverse
+            tree = self.class.const_get(bin_op).new(
+                          ro_node.line,
+                          ro_node.index,
+                          kids[1].accept(self),
+                          kids[0].accept(self)
+            )
+            2.times { kids.shift }
+            kids.each do |kid|
+              tree = self.class.const_get(bin_op).new(
+                            ro_node.line,
+                            ro_node.index,
+                            kid.accept(self),
+                            tree
+              )
+            end
+            tree
+          else
+            self.class.const_get(bin_op).new(
+                          ro_node.line,
+                          ro_node.index,
+                          ro_node.pn_left && ro_node.pn_left.accept(self),
+                          ro_node.pn_right && ro_node.pn_right.accept(self)
+                       )
+          end
         end
       end
 
