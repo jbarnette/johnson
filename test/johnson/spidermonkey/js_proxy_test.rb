@@ -4,10 +4,21 @@ module Johnson
   module SpiderMonkey
     class JSProxyTest < Johnson::TestCase
       class Foo
+        
+        def self.bar; 10; end
+
         attr_accessor :bar
         
         def initialize
           @bar = 10
+        end
+        
+        def x2(x)
+          x * 2
+        end
+        
+        def add(*args)
+          args.inject { |m,n| m += n }
         end
       end
       
@@ -31,6 +42,7 @@ module Johnson
 
       def setup
         @context = Johnson::SpiderMonkey::Context.new
+        @context.evaluate(Johnson::PRELUDE)
       end
       
       def test_getter_calls_0_arity_method
@@ -61,6 +73,29 @@ module Johnson
         assert_js_equal(42, "foo.monkey = 42")
         assert_equal(42, indexable["monkey"])
       end
+      
+      def test_calls_0_arity_method
+        @context["foo"] = Foo.new
+        assert_js_equal(10, "foo.bar()")
+      end
+      
+      def test_calls_1_arity_method
+        @context["foo"] = Foo.new
+        assert_js_equal(10, "foo.x2(5)")
+      end
+      
+      def test_calls_n_arity_method
+        @context["foo"] = Foo.new
+        assert_js_equal(10, "foo.add(4, 2, 2, 1, 1)")
+      end
+      
+      def test_calls_class_method
+        @context["Foo"] = Foo
+        assert_js_equal(Foo.bar, "Foo.bar()")
+      end
+      
+      
+      # FIXME: class methods
       
       # def test_index_func_call_from_ruby
       #   @context[:Foo] = Foo

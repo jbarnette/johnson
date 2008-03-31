@@ -86,7 +86,7 @@ static JSBool jsval_is_a_symbol(OurContext* context, jsval maybe_symbol)
   jsval nsRuby, cSymbol;
 
   assert(JS_GetProperty(context->js, context->global, "Ruby", &nsRuby));
-  if(JSVAL_VOID == nsRuby) Johnson_Error_raise("aaaaaaaugh!");
+  assert(JSVAL_VOID != nsRuby);
   
   assert(JS_GetProperty(context->js, JSVAL_TO_OBJECT(nsRuby), "Symbol", &cSymbol));
   assert(JSVAL_VOID != cSymbol);
