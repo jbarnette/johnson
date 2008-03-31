@@ -1,0 +1,15 @@
+/pkg
+/doc
+
+/ext/spidermonkey/*.bundle
+/ext/spidermonkey/Makefile
+/ext/spidermonkey/*.log
+/ext/spidermonkey/immutable_node.c
+/ext/spidermonkey/*.o
+
+/lib/johnson/*.bundle
+
+/vendor/spidermonkey/*.OBJ
+
+/vendor/spidermonkey/editline/*.OBJ
+
