@@ -10,7 +10,7 @@ typedef struct {
   JSObject *global;
   JSRuntime *runtime;
   
-  JSHashTable *ids;
+  JSHashTable *jsids; // jsid -> rbid
   JSObject *gcthings;
   
   jsval ex; // an exception value

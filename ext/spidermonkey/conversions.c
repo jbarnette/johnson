@@ -114,7 +114,7 @@ VALUE convert_to_ruby(OurContext* context, jsval js)
       
       // FIXME: if it's wrapping a Ruby object, unwrap and return it
       
-      VALUE id = (VALUE)JS_HashTableLookup(context->ids, (void *)js);
+      VALUE id = (VALUE)JS_HashTableLookup(context->jsids, (void *)js);
       
       if (id)
       {
@@ -128,7 +128,7 @@ VALUE convert_to_ruby(OurContext* context, jsval js)
         VALUE proxy = make_ruby_proxy(context, js); 
         
       	// put the proxy OID in the id map
-        assert(JS_HashTableAdd(context->ids, (void *)js, (void *)rb_obj_id(proxy)));
+        assert(JS_HashTableAdd(context->jsids, (void *)js, (void *)rb_obj_id(proxy)));
         
         // root the value for JS GC
         char key[10];
