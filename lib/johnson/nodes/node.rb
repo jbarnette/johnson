@@ -2,6 +2,8 @@ module Johnson
   module Nodes
     SINGLE_NODES = %w{
       BitwiseNot
+      Break
+      Continue
       Delete
       False
       Name

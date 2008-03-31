@@ -128,6 +128,10 @@ module Johnson #:nodoc:
           visitor.visit_Name(self)
         when :tok_comma
           visitor.visit_Null(self)
+        when :tok_continue
+          visitor.visit_Continue(self)
+        when :tok_break
+          visitor.visit_Break(self)
         when :tok_primary
           sym = OP_TO_METHOD[pn_op]
           raise "Unknown op #{pn_op}" unless sym

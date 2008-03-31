@@ -148,6 +148,18 @@ module Johnson
                     ro_node.regexp )
       end
 
+      def visit_Continue(ro_node)
+        Continue.new( ro_node.line,
+                      ro_node.index,
+                      'continue' )
+      end
+
+      def visit_Break(ro_node)
+        Break.new(  ro_node.line,
+                    ro_node.index,
+                    'break' )
+      end
+
       def visit_Function(ro_node)
         Function.new( ro_node.line,
                       ro_node.index,

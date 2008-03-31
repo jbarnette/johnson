@@ -45,6 +45,14 @@ module Johnson
         [:str, o.value]
       end
 
+      def visit_Break(o)
+        [:break]
+      end
+
+      def visit_Continue(o)
+        [:continue]
+      end
+
       def visit_Null(o)
         [:nil]
       end
