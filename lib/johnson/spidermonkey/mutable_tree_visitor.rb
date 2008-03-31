@@ -217,6 +217,7 @@ module Johnson
         Property
         SetterProperty
         StrictEqual
+        StrictNotEqual
       }.each do |bin_op|
         define_method(:"visit_#{bin_op}") do |ro_node|
           self.class.const_get(bin_op).new(

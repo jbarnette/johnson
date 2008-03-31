@@ -193,6 +193,7 @@ module Johnson
         'Or'                  => :or,
         'And'                 => :and,
         'StrictEqual'         => :strict_equal,
+        'StrictNotEqual'      => :strict_not_equal,
         'Label'               => :label,
       }.each do |node,ident|
         define_method(:"visit_#{node}") do |o|

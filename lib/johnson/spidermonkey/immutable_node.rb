@@ -215,6 +215,7 @@ module Johnson #:nodoc:
           visitor.visit_While(self)
         when :tok_eqop
           m = {
+            :jsop_strictne  => :visit_StrictNotEqual,
             :jsop_stricteq  => :visit_StrictEqual,
             :jsop_ne        => :visit_NotEqual,
             :jsop_eq        => :visit_Equal,

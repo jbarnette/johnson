@@ -30,6 +30,7 @@ class BinaryNodeTest < Johnson::NodeTestCase
     :not_equal          => '!=',
     :equal              => '==',
     :strict_equal       => '===',
+    :strict_not_equal   => '!==',
     :lt                 => '<',
     :lt_equal           => '<=',
     :gt                 => '>',
