@@ -49,6 +49,11 @@ module Johnson
         @context.evaluate(Johnson::PRELUDE)
       end
       
+      def test_proxies_get_reused
+        @context["foo"] = @context["bar"] = Foo.new
+        assert_js_equal(true, "foo === bar")
+      end
+      
       def test_getter_calls_0_arity_method
         @context["foo"] = Foo.new
         assert_js_equal(10, "foo.bar")

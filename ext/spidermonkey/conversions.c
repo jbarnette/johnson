@@ -25,9 +25,32 @@ static jsval convert_symbol_to_js(OurContext* context, VALUE symbol)
   return js;
 }
 
-static jsval convert_object_to_js(OurContext* context, VALUE object)
+static jsval convert_object_to_js(OurContext* context, VALUE ruby)
 {
-  return make_js_proxy(context, object);
+  jsid id = (jsid)JS_HashTableLookup(context->rbids, (void *)rb_obj_id(ruby));
+  
+  if (id)
+  {
+    // if we already have a proxy, return it
+    jsval js;
+    assert(JS_IdToValue(context->js, id, &js));
+    return js;
+  }
+  else
+  {
+    // otherwise make one and cache it
+    jsval proxy = make_js_proxy(context, ruby);
+    
+    jsval newid;
+    assert(JS_ValueToId(context->js, proxy, &newid));
+    
+    // put the proxy OID in the id map
+    assert(JS_HashTableAdd(context->rbids, (void *)rb_obj_id(ruby), (void *)newid));
+
+    // FIXME: root for GC
+    
+    return proxy;
+  }
 }
 
 jsval convert_to_js(OurContext* context, VALUE ruby)
@@ -58,7 +81,6 @@ jsval convert_to_js(OurContext* context, VALUE ruby)
 
   	case T_CLASS:
     case T_OBJECT:
-      // FIXME: if it's a wrapped JS object, return it
       return convert_object_to_js(context, ruby);
 
   	case T_DATA: // keep T_DATA last for fall-through
