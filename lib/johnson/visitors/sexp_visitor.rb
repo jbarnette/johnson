@@ -46,9 +46,9 @@ module Johnson
 
       def visit_For(o)
         [ :for,
-          o.init ? o.init.accept(self) : nil,
-          o.cond ? o.cond.accept(self) : nil,
-          o.update ? o.update.accept(self) : nil,
+          o.init && o.init.accept(self),
+          o.cond && o.cond.accept(self),
+          o.update && o.update.accept(self),
           o.body.accept(self)
         ]
       end

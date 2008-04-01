@@ -7,10 +7,24 @@ module Johnson
 
       def visit_SourceElements(o)
         (@depth == 0 ? '' : "{\n") +
-          indent(){
-            o.value.map { |x| "#{indent}#{x.accept(self)};" }.join("\n")
+          indent {
+            o.value.map { |x|
+              code = x.accept(self)
+              semi = code =~ /}\Z/ ? '' : ';'
+              "#{indent}#{code}#{semi}"
+            }.join("\n")
           } +
           (@depth == 0 ? '' : "\n}")
+      end
+
+      def visit_For(o)
+        "for(#{o.init ? o.init.accept(self) : ' '};" \
+          " #{o.cond && o.cond.accept(self)};" \
+          " #{o.update && o.update.accept(self)}) #{o.body.accept(self)}"
+      end
+
+      def visit_ForIn(o)
+        "for(#{o.in_cond.accept(self)}) #{o.body.accept(self)}"
       end
 
       def visit_VarStatement(o)
@@ -57,8 +71,21 @@ module Johnson
         "delete #{o.value.accept(self)}"
       end
 
+      def visit_Export(o)
+        "export #{o.value.map { |x| x.accept(self) }.join(', ')}"
+      end
+
       def visit_DotAccessor(o)
         "#{o.right.accept(self)}.#{o.left.accept(self)}"
+      end
+
+      {
+        'PostfixIncrement'  => '++',
+        'PostfixDecrement'  => '--',
+      }.each do |type,op|
+        define_method(:"visit_#{type}") do |o|
+          "#{o.value.accept(self)}#{op}"
+        end
       end
 
       {
@@ -95,6 +122,7 @@ module Johnson
         'GreaterThanOrEqual'  => '>=',
         'And'                 => '&&',
         'InstanceOf'          => 'instanceof',
+        'In'                  => 'in',
         'Equal'               => '==',
         'AssignExpr'          => '=',
       }.each do |type,op|
