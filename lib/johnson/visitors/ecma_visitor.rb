@@ -96,9 +96,24 @@ module Johnson
       def visit_Label(o)
         "#{o.left.accept(self)}: #{o.right.accept(self)}"
       end
+      alias :visit_Property :visit_Label
 
       def visit_DotAccessor(o)
         "#{o.right.accept(self)}.#{o.left.accept(self)}"
+      end
+
+      def visit_GetterProperty(o)
+        "get #{o.left.accept(self)}#{o.right.accept(self).gsub(/function/, '')}"
+      end
+
+      def visit_SetterProperty(o)
+        "set #{o.left.accept(self)}#{o.right.accept(self).gsub(/function/, '')}"
+      end
+
+      def visit_ObjectLiteral(o)
+        indent {
+          "{ #{o.value.map { |x| x.accept(self) }.join(",\n#{indent}")} }"
+        }
       end
 
       {

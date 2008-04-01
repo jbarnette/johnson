@@ -10,6 +10,9 @@ class ObjectLiteralTest < Johnson::NodeTestCase
                   ]]
                 ]],
                 @parser.parse('var foo = { bar: 10 }'))
+    assert_ecma('var foo = { bar: 10 }',
+                @parser.parse('var foo = { bar: 10 }')
+               )
     assert_sexp(
                 [[:var,
                   [[:assign,
@@ -18,6 +21,9 @@ class ObjectLiteralTest < Johnson::NodeTestCase
                   ]]
                 ]],
                 @parser.parse('var foo = { }'))
+    assert_ecma('var foo = {  }',
+                @parser.parse('var foo = { }')
+               )
     assert_sexp(
                 [[:var,
                   [[:assign,
@@ -26,6 +32,9 @@ class ObjectLiteralTest < Johnson::NodeTestCase
                   ]]
                 ]],
                 @parser.parse('var foo = { "bar": 10 }'))
+    assert_ecma('var foo = { "bar": 10 }',
+                @parser.parse('var foo = { "bar": 10 }')
+               )
     assert_sexp(
                 [[:var,
                   [[:assign,
@@ -34,6 +43,9 @@ class ObjectLiteralTest < Johnson::NodeTestCase
                   ]]
                 ]],
                 @parser.parse('var foo = { 5: 10 }'))
+    assert_ecma('var foo = { 5: 10 }',
+                @parser.parse('var foo = { 5: 10 }')
+               )
   end
 
   def test_object_literal_getter
@@ -45,6 +57,9 @@ class ObjectLiteralTest < Johnson::NodeTestCase
                   ]]
                 ]],
                 @parser.parse('var foo = { get a() { } }'))
+    assert_ecma("var foo = { get a() {  } }",
+                @parser.parse('var foo = { get a() { } }')
+               )
   end
 
   def test_object_literal_setter
@@ -56,6 +71,9 @@ class ObjectLiteralTest < Johnson::NodeTestCase
                   ]]
                 ]],
                 @parser.parse('var foo = { set a(bar) { } }'))
+    assert_ecma("var foo = { set a(bar) {  } }",
+                @parser.parse('var foo = { set a(bar) { } }')
+               )
   end
   
   def test_to_sexp_multi_property
@@ -70,5 +88,8 @@ class ObjectLiteralTest < Johnson::NodeTestCase
                   ]]
                 ]],
                 @parser.parse('var foo = { 5: 10, a: 10 }'))
+    assert_ecma("var foo = { f: 10,\n  a: 10 }",
+                @parser.parse('var foo = { f: 10, a: 10 }')
+               )
   end
 end
