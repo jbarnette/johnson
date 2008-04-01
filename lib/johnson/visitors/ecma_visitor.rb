@@ -89,6 +89,10 @@ module Johnson
         "export #{o.value.map { |x| x.accept(self) }.join(', ')}"
       end
 
+      def visit_Import(o)
+        "import #{o.value.map { |x| x.accept(self) }.join(', ')}"
+      end
+
       def visit_DotAccessor(o)
         "#{o.right.accept(self)}.#{o.left.accept(self)}"
       end
