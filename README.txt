@@ -2,6 +2,7 @@
 
 * http://johnson.rubyforge.org
 * http://johnson.lighthouseapp.com
+* http://github.com/jbarnette/johnson
 
 == DESCRIPTION:
 
