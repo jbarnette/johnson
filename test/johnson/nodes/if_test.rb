@@ -8,6 +8,9 @@ class IfTest < Johnson::NodeTestCase
         nil
       ]], @parser.parse('if(x && y) var foo = 20;')
     )
+    assert_ecma('if(x && y) var foo = 20;',
+      @parser.parse('if(x && y) var foo = 20;')
+    )
   end
 
   def test_if_else
@@ -18,6 +21,9 @@ class IfTest < Johnson::NodeTestCase
       ]],
       @parser.parse('if(5 && 10) var foo = 20; else var bar = 5;')
     )
+    assert_ecma('if(x && y) var foo = 20; else var bar = 5;',
+      @parser.parse('if(x && y) var foo = 20; else var bar = 5;')
+    )
   end
 
   def test_if_else_block
@@ -26,6 +32,9 @@ class IfTest < Johnson::NodeTestCase
         [[:var, [[:assign, [:name, "foo"], [:lit, 20]]]]],
         [:var, [[:assign, [:name, "bar"], [:lit, 5]]]]
       ]],
+      @parser.parse('if(5 && 10){ var foo = 20; } else var bar = 5;')
+    )
+    assert_ecma("if(5 && 10) {\n  var foo = 20;\n} else var bar = 5;",
       @parser.parse('if(5 && 10){ var foo = 20; } else var bar = 5;')
     )
   end

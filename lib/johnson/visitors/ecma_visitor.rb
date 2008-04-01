@@ -42,6 +42,15 @@ module Johnson
         end
       end
 
+      def visit_If(o)
+        semi = ''
+        semi = ';' if o.b_else && !o.b_then.is_a?(Nodes::SourceElements)
+
+        stmt = "if(#{o.cond.accept(self)}) #{o.b_then.accept(self)}#{semi}"
+        stmt += " else #{o.b_else.accept(self)}" if o.b_else
+        stmt
+      end
+
       def visit_Function(o)
         "function#{o.name && ' '}#{o.name}(#{o.arguments.join(', ')}) #{o.body.accept(self)}"
       end
