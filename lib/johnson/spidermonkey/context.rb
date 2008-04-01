@@ -6,12 +6,8 @@ module Johnson #:nodoc:
       end
       
       def jsend(target, symbol, args)
-        if args.last && args.last.is_a?(RubyProxy) && args.last.function?
-          block = args.pop
-          target.__send__(symbol, *args, &block)
-        else
-          target.__send__(symbol, *args)          
-        end
+        block = args.pop if args.last.is_a?(RubyProxy) && args.last.function?
+        target.__send__(symbol, *args, &block)
       end
     end
   end
