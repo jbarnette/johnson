@@ -93,6 +93,10 @@ module Johnson
         "import #{o.value.map { |x| x.accept(self) }.join(', ')}"
       end
 
+      def visit_Return(o)
+        "return#{o.value && ' '}#{o.value && o.value.accept(self)}"
+      end
+
       def visit_Label(o)
         "#{o.left.accept(self)}: #{o.right.accept(self)}"
       end
