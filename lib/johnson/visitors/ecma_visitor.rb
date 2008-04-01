@@ -11,7 +11,7 @@ module Johnson
           indent {
             o.value.map { |x|
               code = x.accept(self)
-              semi = code =~ /}\Z/ ? '' : ';'
+              semi = code =~ /\}\Z/ ? '' : ';'
               "#{indent}#{code}#{semi}"
             }.join("\n")
           } +
