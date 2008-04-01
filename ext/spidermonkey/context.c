@@ -104,7 +104,7 @@ static VALUE allocate(VALUE klass)
   assert(context->runtime  = JS_NewRuntime(0x100000));
   assert(context->js = JS_NewContext(context->runtime, 8192));
 
-  assert(context->jsids = create_jsids_hash());  
+  assert(context->jsids = create_id_hash());  
   assert(context->gcthings = JS_NewObject(context->js, NULL, 0, 0));
   assert(context->global = JS_NewObject(context->js, &OurGlobalClass, NULL, NULL));
   

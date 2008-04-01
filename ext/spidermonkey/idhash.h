@@ -3,6 +3,6 @@
 
 #include "spidermonkey.h"
 
-JSHashTable * create_jsids_hash();
+JSHashTable* create_id_hash();
 
 #endif
