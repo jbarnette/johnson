@@ -9,6 +9,8 @@ class FunctionTest < Johnson::NodeTestCase
                   ]]
                 ]],
                 @parser.parse("var foo = function() { }"))
+    assert_ecma('var foo = function() {  }',
+                @parser.parse("var foo = function() { }"))
   end
 
   def test_anon_function_one_args_to_sexp
@@ -19,6 +21,8 @@ class FunctionTest < Johnson::NodeTestCase
                   ]]
                 ]],
                 @parser.parse("var foo = function(a) { }"))
+    assert_ecma('var foo = function(a) {  }',
+                @parser.parse("var foo = function(a) { }"))
   end
 
   def test_anon_function_two_args_to_sexp
@@ -28,6 +32,8 @@ class FunctionTest < Johnson::NodeTestCase
                     [:func_expr, nil, ["a",'b'], []]
                   ]]
                 ]],
+                @parser.parse("var foo = function(a,b) { }"))
+    assert_ecma('var foo = function(a, b) {  }',
                 @parser.parse("var foo = function(a,b) { }"))
   end
 
@@ -40,6 +46,8 @@ class FunctionTest < Johnson::NodeTestCase
                   ]]
                 ]],
       @parser.parse("var foo = function(#{('a'..'i').to_a.join(',')}) { }"))
+    assert_ecma("var foo = function(#{('a'..'i').to_a.join(', ')}) {  }",
+      @parser.parse("var foo = function(#{('a'..'i').to_a.join(',')}) { }"))
   end
 
   def test_named_function
@@ -47,6 +55,8 @@ class FunctionTest < Johnson::NodeTestCase
                 [[:func_expr, 'a', ['b'], []]],
                 @parser.parse("function a(b) { }")
                )
+    assert_ecma("function a(b) {  }",
+                @parser.parse("function a(b) { }"))
   end
 
   def test_named_function_with_body
@@ -55,5 +65,7 @@ class FunctionTest < Johnson::NodeTestCase
                   [[:op_equal, [:name, 'b'], [:lit, 10]]]]],
                 @parser.parse("function a(b) { b = 10; }")
                )
+    assert_ecma("function a(b) {\n  b = 10;\n}",
+                @parser.parse("function a(b) { b = 10 }"))
   end
 end

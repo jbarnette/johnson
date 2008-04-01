@@ -6,7 +6,8 @@ module Johnson
       end
 
       def visit_SourceElements(o)
-        (@depth == 0 ? '' : "{\n") +
+        newline = o.value.length > 0 ? "\n" : ' '
+        (@depth == 0 ? '' : "{#{newline}") +
           indent {
             o.value.map { |x|
               code = x.accept(self)
@@ -14,7 +15,7 @@ module Johnson
               "#{indent}#{code}#{semi}"
             }.join("\n")
           } +
-          (@depth == 0 ? '' : "\n}")
+          (@depth == 0 ? '' : "#{newline}}")
       end
 
       def visit_For(o)
@@ -39,6 +40,10 @@ module Johnson
         define_method(:"visit_#{type}") do |o|
           o.value
         end
+      end
+
+      def visit_Function(o)
+        "function#{o.name && ' '}#{o.name}(#{o.arguments.join(', ')}) #{o.body.accept(self)}"
       end
 
       def visit_String(o)
