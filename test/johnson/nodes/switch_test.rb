@@ -5,6 +5,9 @@ class SwitchTest < Johnson::NodeTestCase
     assert_sexp([[:switch, [:name, "o"], []]],
                 @parser.parse('switch(o) { }')
                )
+    assert_ecma('switch(o) {  }',
+                @parser.parse('switch(o) { }')
+               )
   end
 
   def test_switch_with_body
@@ -14,6 +17,15 @@ class SwitchTest < Johnson::NodeTestCase
                 ]
       ]], @parser.parse('switch(o) { case j: foo; }')
     )
+    assert_ecma("switch(o) {\n  case j: {\n    foo;\n}\n}",
+                @parser.parse('switch(o) { case j: foo; }')
+               )
+  end
+
+  def test_switch_empty_case
+    assert_ecma("switch(o) {\n  case j: {  }\n}",
+                @parser.parse('switch(o) { case j: }')
+               )
   end
 
   def test_switch_with_body_2_case
@@ -30,7 +42,13 @@ class SwitchTest < Johnson::NodeTestCase
     assert_sexp([[:switch, [:name, "o"], [[:default, nil, [[:name, "bar"]]]]]],
                 @parser.parse('switch(o) { default: bar; }')
     )
+    assert_ecma("switch(o) {\n  default: {\n    bar;\n}\n}",
+                @parser.parse('switch(o) { default: bar; }')
+               )
     assert_sexp([[:switch, [:name, "o"], [[:default, nil, []]]]],
+                @parser.parse('switch(o) { default: }')
+    )
+    assert_ecma("switch(o) {\n  default: {  }\n}",
                 @parser.parse('switch(o) { default: }')
     )
   end

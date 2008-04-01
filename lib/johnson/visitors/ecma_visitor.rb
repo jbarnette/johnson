@@ -97,6 +97,18 @@ module Johnson
         "return#{o.value && ' '}#{o.value && o.value.accept(self)}"
       end
 
+      def visit_Switch(o)
+        "switch(#{o.left.accept(self)}) #{o.right.accept(self)}"
+      end
+
+      def visit_Case(o)
+        "case #{o.left.accept(self)}: #{o.right.accept(self)}"
+      end
+
+      def visit_Default(o)
+        "default: #{o.right.accept(self)}"
+      end
+
       def visit_Label(o)
         "#{o.left.accept(self)}: #{o.right.accept(self)}"
       end
