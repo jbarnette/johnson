@@ -2,21 +2,15 @@
 
 static JSHashNumber key_hash(const void *key)
 {
-  // just use the jsid
   return (JSHashNumber)key;
 }
 
-static intN key_comparator(const void *v1, const void *v2)
+static intN comparator(const void *v1, const void *v2)
 {
-  return (jsid)v1 == (jsid)v2;
+  return v1 == v2;
 }
 
-static intN value_comparator(const void* v1, const void* v2)
+JSHashTable* create_jsids_hash()
 {
-  return (VALUE)v1 == (VALUE)v2;
-}
-
-JSHashTable * create_jsids_hash()
-{
-  return JS_NewHashTable(0, key_hash, key_comparator, value_comparator, NULL, NULL);  
+  return JS_NewHashTable(0, key_hash, comparator, comparator, NULL, NULL);  
 }
