@@ -86,6 +86,20 @@ module Johnson
         "do #{o.left.accept(self)}#{semi} while(#{o.right.accept(self)})"
       end
 
+      def visit_Try(o)
+        stmt = "try #{o.cond.accept(self)}"
+        o.b_then.each do |node|
+          stmt << " #{node.accept(self)}"
+        end if o.b_then
+        stmt << "#{o.b_else && ' finally '}" \
+          "#{o.b_else && o.b_else.accept(self)}" if o.b_else
+        stmt
+      end
+
+      def visit_Catch(o)
+        "catch(#{o.cond.accept(self)}) #{o.b_else.accept(self)}"
+      end
+
       def visit_Delete(o)
         "delete #{o.value.accept(self)}"
       end

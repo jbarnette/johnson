@@ -8,6 +8,9 @@ class TryTest < Johnson::NodeTestCase
         [[:var, [[:assign, [:name, "x"], [:lit, 20]]]]]
       ]],
       @parser.parse('try { var x = 10; } finally { var x = 20; }'))
+    assert_ecma(
+      "try {\n  var x = 10;\n} finally {\n  var x = 20;\n}",
+      @parser.parse('try { var x = 10; } finally { var x = 20; }'))
   end
 
   def test_try_catch
@@ -22,6 +25,8 @@ class TryTest < Johnson::NodeTestCase
       ]],
     nil]],
     @parser.parse('try { var x = 10; } catch(a) { var x = 20; x++; }'))
+    assert_ecma("try {\n  var x = 10;\n} catch(a) {\n  var x = 20;\n  x++;\n}",
+      @parser.parse('try { var x = 10; } catch(a) { var x = 20; x++; }'))
   end
 
   def test_try_multi_catch
@@ -41,6 +46,11 @@ class TryTest < Johnson::NodeTestCase
         ]]
       ],
       nil]],
+      @parser.parse(' try { var x = 10; }
+                      catch(a if true) { var x = 20; x++; }
+                      catch(b if true) { var x = 20; x++; }
+                    '))
+    assert_ecma("try {\n  var x = 10;\n} catch(a) {\n  var x = 20;\n  x++;\n} catch(b) {\n  var x = 20;\n  x++;\n}",
       @parser.parse(' try { var x = 10; }
                       catch(a if true) { var x = 20; x++; }
                       catch(b if true) { var x = 20; x++; }
