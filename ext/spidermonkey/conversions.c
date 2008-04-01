@@ -119,6 +119,40 @@ static JSBool jsval_is_a_symbol(OurContext* context, jsval maybe_symbol)
   return is_a_symbol;
 }
 
+VALUE convert_object_to_ruby(OurContext* context, jsval object)
+{
+  if (JSVAL_NULL == object) return Qnil;
+  
+  if (jsval_is_a_symbol(context, object))
+    return ID2SYM(rb_intern(JS_GetStringBytes(JS_ValueToString(context->js, object))));
+  
+  if (js_value_is_proxy(context, object))
+    return unwrap_js_proxy(context, object);
+
+  VALUE id = (VALUE)JS_HashTableLookup(context->jsids, (void *)object);
+  
+  if (id)
+  {
+    // if we already have a proxy, return it
+    return rb_funcall(rb_const_get(rb_cObject,
+      rb_intern("ObjectSpace")), rb_intern("_id2ref"), 1, id);
+  }
+  else
+  {
+    // otherwise make one and cache it
+    VALUE proxy = make_ruby_proxy(context, object);
+    
+  	// put the proxy OID in the id map
+    assert(JS_HashTableAdd(context->jsids, (void *)object, (void *)rb_obj_id(proxy)));
+    
+    // root the value for JS GC
+    char key[10];
+  	sprintf(key, "%x", (int)object);
+  	JS_SetProperty(context->js, context->gcthings, key, &object);
+    
+    return proxy;
+  }
+}
 
 VALUE convert_to_ruby(OurContext* context, jsval js)
 {
@@ -129,36 +163,7 @@ VALUE convert_to_ruby(OurContext* context, jsval js)
       
     case JSTYPE_FUNCTION:  
     case JSTYPE_OBJECT:
-      if (JSVAL_NULL == js) return Qnil;
-      
-      if (jsval_is_a_symbol(context, js))
-        return ID2SYM(rb_intern(JS_GetStringBytes(JS_ValueToString(context->js, js))));
-      
-      // FIXME: if it's wrapping a Ruby object, unwrap and return it
-      
-      VALUE id = (VALUE)JS_HashTableLookup(context->jsids, (void *)js);
-      
-      if (id)
-      {
-        // if we already have a proxy, return it
-        return rb_funcall(rb_const_get(rb_cObject,
-          rb_intern("ObjectSpace")), rb_intern("_id2ref"), 1, id);
-      }
-      else
-      {
-        // otherwise make one and cache it
-        VALUE proxy = make_ruby_proxy(context, js); 
-        
-      	// put the proxy OID in the id map
-        assert(JS_HashTableAdd(context->jsids, (void *)js, (void *)rb_obj_id(proxy)));
-        
-        // root the value for JS GC
-        char key[10];
-      	sprintf(key, "%x", (int)js);
-      	JS_SetProperty(context->js, context->gcthings, key, &js);
-        
-        return proxy;
-      }
+      return convert_object_to_ruby(context, js);
         
     case JSTYPE_BOOLEAN:
       return JSVAL_TRUE == js ? Qtrue : Qfalse;
