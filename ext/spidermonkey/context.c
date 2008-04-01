@@ -89,6 +89,7 @@ static void deallocate(OurContext* context)
   JS_SetContextPrivate(context->js, 0);
   
   assert(JS_RemoveRoot(context->js, &(context->gcthings)));
+  JS_HashTableDestroy(context->rbids);
   JS_HashTableDestroy(context->jsids);
   
   JS_DestroyContext(context->js);
@@ -105,6 +106,7 @@ static VALUE allocate(VALUE klass)
   assert(context->js = JS_NewContext(context->runtime, 8192));
 
   assert(context->jsids = create_id_hash());  
+  assert(context->rbids = create_id_hash());  
   assert(context->gcthings = JS_NewObject(context->js, NULL, 0, 0));
   assert(context->global = JS_NewObject(context->js, &OurGlobalClass, NULL, NULL));
   

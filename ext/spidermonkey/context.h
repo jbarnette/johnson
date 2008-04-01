@@ -11,6 +11,7 @@ typedef struct {
   JSRuntime *runtime;
   
   JSHashTable *jsids; // jsid -> rbid
+  JSHashTable *rbids; // rbid -> jsid
   JSObject *gcthings;
   
   jsval ex; // an exception value
