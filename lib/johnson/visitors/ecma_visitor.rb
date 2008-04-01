@@ -28,6 +28,11 @@ module Johnson
         "for(#{o.in_cond.accept(self)}) #{o.body.accept(self)}"
       end
 
+      def visit_Ternary(o)
+        "#{o.cond.accept(self)} ? #{o.b_then.accept(self)} : " \
+          "#{o.b_else.accept(self)}"
+      end
+
       def visit_VarStatement(o)
         "var #{o.value.map { |x| x.accept(self) }.join(', ')}"
       end

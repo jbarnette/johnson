@@ -13,5 +13,8 @@ class TernaryNodeTest < Johnson::NodeTestCase
       ]]]],
                 @parser.parse('var x = y < 10 ? 20 : 30')
                )
+    assert_ecma('var x = y < 10 ? 20 : 30;',
+                @parser.parse('var x = y < 10 ? 20 : 30')
+               )
   end
 end
