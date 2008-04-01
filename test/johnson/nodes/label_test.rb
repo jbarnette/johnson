@@ -12,5 +12,8 @@ class LabelTest < Johnson::NodeTestCase
                 ]],
                 @parser.parse('foo: var x = 10')
                )
+    assert_ecma('foo: var x = 10;',
+                @parser.parse('foo: var x = 10;')
+               )
   end
 end
