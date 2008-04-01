@@ -156,14 +156,16 @@ static JSBool method_missing(JSContext* js_context, JSObject* obj, uintN argc, j
   return JS_TRUE;
 }
 
-JSBool js_value_is_proxy(jsval maybe_proxy)
+JSBool js_value_is_proxy(OurContext* context, jsval maybe_proxy)
 {
-  return JS_FALSE;
+  return JS_InstanceOf(context->js, JSVAL_TO_OBJECT(maybe_proxy), &JSProxyClass, NULL);
 }
 
 VALUE unwrap_js_proxy(OurContext* context, jsval proxy)
 {
-  return Qnil;
+  VALUE value;
+  assert(value = (VALUE)JS_GetInstancePrivate(context->js, proxy, &JSProxyClass, NULL));
+  return value;
 }
 
 // static jsval convert_ruby_object_to_jsval(CombinedContext* context, VALUE ruby)

@@ -226,7 +226,7 @@ static void deallocate(OurRubyProxy* proxy)
   if (proxy->context)
   {
     // remove this proxy from the OID map
-    JS_HashTableRemove(proxy->context->ids, (void *)proxy->value);
+    JS_HashTableRemove(proxy->context->jsids, (void *)proxy->value);
   
     // remove our GC handle on the JS value
     char key[10];
