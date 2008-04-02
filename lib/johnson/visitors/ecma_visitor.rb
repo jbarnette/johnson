@@ -139,6 +139,10 @@ module Johnson
         end
       end
 
+      def visit_Parenthesis(o)
+        "(#{o.value.accept(self)})"
+      end
+
       def visit_While(o)
         "while(#{o.left.accept(self)}) #{o.right.accept(self)}"
       end

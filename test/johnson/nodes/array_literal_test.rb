@@ -12,6 +12,10 @@ class ArrayLiteralNodeTest < Johnson::NodeTestCase
                )
   end
 
+  def test_paren
+    assert_ecma("(a && b);", @parser.parse("(a && b)"))
+  end
+
   def test_array_with_commas
     assert_sexp(
                 [[:var, [[:assign, [:name, "foo"], [:array, [

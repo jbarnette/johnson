@@ -9,7 +9,7 @@ module Johnson
       if klass
         visitor.send(:"visit_#{klass.name.split(/::/)[-1]}", self, &block)
       else
-        raise "No visitor for '#{self.class}'"
+        raise "No visitor for '#{self.class}' at line #{line}"
       end
     end
   end
