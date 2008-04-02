@@ -22,6 +22,7 @@ class ParserTest < Test::Unit::TestCase
       [[:var, [[:name, 'foo']]]],
       @parser.parse('var foo;')
     )
+    assert_ecma('var foo;', @parser.parse('var foo;'))
   end
 
   def test_new_foo
@@ -36,42 +37,55 @@ class ParserTest < Test::Unit::TestCase
                 [:function_call, [[:name, "bar"]]],
                 [:lit, 1]]],
                       @parser.parse('bar()[1];'))
+    assert_ecma('bar()[1];', @parser.parse('bar()[1]'))
   end
 
   def test_postfix_inc
     assert_sexp([[:postfix_inc, [:name, "x"]]],
                   @parser.parse('x++;'))
+    assert_ecma('x++;', @parser.parse('x++;'))
     assert_sexp([[:postfix_inc, [:dot_accessor, [:name, "x"], [:name, "foo"]]]],
                   @parser.parse('foo.x++;'))
+    assert_ecma('foo.x++;', @parser.parse('foo.x++;'))
     assert_sexp([[:postfix_inc, [:bracket_access, [:name, "x"], [:lit, 1]]]],
                   @parser.parse('x[1]++;'))
+    assert_ecma('x[1]++;', @parser.parse('x[1]++;'))
   end
 
   def test_prefix_inc
     assert_sexp([[:prefix_inc, [:name, "x"]]],
                   @parser.parse('++x;'))
+    assert_ecma('++x;', @parser.parse('++x;'))
     assert_sexp([[:prefix_inc, [:dot_accessor, [:name, "x"], [:name, "foo"]]]],
                   @parser.parse('++foo.x;'))
+    assert_ecma('++foo.x;', @parser.parse('++foo.x;'))
     assert_sexp([[:prefix_inc, [:bracket_access, [:name, "x"], [:lit, 1]]]],
                   @parser.parse('++x[1];'))
+    assert_ecma('++x[1];', @parser.parse('++x[1];'))
   end
 
   def test_postfix_dec
     assert_sexp([[:postfix_dec, [:name, "x"]]],
                   @parser.parse('x--;'))
+    assert_ecma('x--;', @parser.parse('x--;'))
     assert_sexp([[:postfix_dec, [:dot_accessor, [:name, "x"], [:name, "foo"]]]],
                   @parser.parse('foo.x--;'))
+    assert_ecma('foo.x--;', @parser.parse('foo.x--;'))
     assert_sexp([[:postfix_dec, [:bracket_access, [:name, "x"], [:lit, 1]]]],
                   @parser.parse('x[1]--;'))
+    assert_ecma('x[1]--;', @parser.parse('x[1]--;'))
   end
 
   def test_prefix_dec
     assert_sexp([[:prefix_dec, [:name, "x"]]],
                   @parser.parse('--x;'))
+    assert_ecma('--x;', @parser.parse('--x;'))
     assert_sexp([[:prefix_dec, [:dot_accessor, [:name, "x"], [:name, "foo"]]]],
                   @parser.parse('--foo.x;'))
+    assert_ecma('--foo.x;', @parser.parse('--foo.x;'))
     assert_sexp([[:prefix_dec, [:bracket_access, [:name, "x"], [:lit, 1]]]],
                   @parser.parse('--x[1];'))
+    assert_ecma('--x[1];', @parser.parse('--x[1];'))
   end
 
   def test_expr_comma
@@ -80,6 +94,7 @@ class ParserTest < Test::Unit::TestCase
                 [:op_equal, [:name, 'j'], [:lit, 11]]]]],
                 @parser.parse('i = 10, j = 11;')
                )
+    assert_ecma('i = 10, j = 11;', @parser.parse('i = 10, j = 11'))
   end
 
   def test_primary_expr_paren
@@ -88,6 +103,7 @@ class ParserTest < Test::Unit::TestCase
         [[:assign, [:name, "a"], [:paren, [:lit, 10]]]]
       ]],
       @parser.parse('var a = (10);'))
+    assert_ecma('var a = (10);', @parser.parse('var a = (10);'))
   end
 
   def test_parser_var_ints
@@ -103,6 +119,8 @@ class ParserTest < Test::Unit::TestCase
       ]]],
       tree
     )
+    assert_ecma('var foo = 10, bar = 1;',
+                @parser.parse('var foo = 10, bar = 1'))
   end
 
   def test_parser_var_string_lit
@@ -115,6 +133,8 @@ class ParserTest < Test::Unit::TestCase
       ]]],
       tree
     )
+    assert_ecma('var foo = "hello world";',
+                @parser.parse('var foo = "hello world"'))
   end
 
   def test_parser_var_nil_lit
@@ -127,6 +147,7 @@ class ParserTest < Test::Unit::TestCase
       ]]],
       tree
     )
+    assert_ecma('var foo = null;', @parser.parse('var foo = null'))
   end
 
   def test_parser_var_true_lit
@@ -139,6 +160,7 @@ class ParserTest < Test::Unit::TestCase
       ]]],
       tree
     )
+    assert_ecma('var foo = true;', @parser.parse('var foo = true'))
   end
 
   def test_parser_var_false_lit
@@ -151,6 +173,7 @@ class ParserTest < Test::Unit::TestCase
       ]]],
       tree
     )
+    assert_ecma('var foo = false;', @parser.parse('var foo = false'))
   end
 
   def test_parser_var_this_lit
@@ -163,6 +186,7 @@ class ParserTest < Test::Unit::TestCase
       ]]],
       tree
     )
+    assert_ecma('var foo = this;', @parser.parse('var foo = this'))
   end
 
   def test_parser_var_regex_lit
@@ -175,6 +199,7 @@ class ParserTest < Test::Unit::TestCase
       ]]],
       tree
     )
+    assert_ecma('var foo = /abc/;', @parser.parse('var foo = /abc/'))
   end
 
   def test_parser_var_float
@@ -190,9 +215,15 @@ class ParserTest < Test::Unit::TestCase
       ]]],
       tree
     )
+    assert_ecma('var foo = 10, bar = 1.1;',
+                @parser.parse('var foo = 10, bar = 1.1'))
   end
 
   def assert_sexp(expected, node)
     assert_equal(expected, node.to_sexp)
+  end
+
+  def assert_ecma(expected, node)
+    assert_equal(expected, node.to_ecma)
   end
 end

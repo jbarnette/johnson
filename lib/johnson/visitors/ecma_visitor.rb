@@ -212,6 +212,15 @@ module Johnson
       end
 
       {
+        'PrefixIncrement'  => '++',
+        'PrefixDecrement'  => '--',
+      }.each do |type,op|
+        define_method(:"visit_#{type}") do |o|
+          "#{op}#{o.value.accept(self)}"
+        end
+      end
+
+      {
         'OpEqual'             => '=',
         'StrictNotEqual'      => '!==',
         'StrictEqual'         => '===',
