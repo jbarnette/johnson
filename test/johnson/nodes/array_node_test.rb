@@ -14,4 +14,13 @@ class ArrayNodeTest < Johnson::NodeTestCase
     assert_ecma('new foo(a);', @parser.parse('new foo(a);'))
     assert_ecma('new foo(a, b);', @parser.parse('new foo(a,b);'))
   end
+
+  def test_comma
+    assert_sexp([[:comma,
+      [[:op_add_equal, [:name, "result"], [:name, "source"]],
+      [:op_equal, [:name, "source"], [:str, ""]]]]],
+                @parser.parse('result += source, source = "";'))
+    assert_ecma('result += source, source = "";',
+                @parser.parse('result += source, source = "";'))
+  end
 end

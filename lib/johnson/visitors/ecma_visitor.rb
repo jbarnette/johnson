@@ -53,6 +53,10 @@ module Johnson
           "(#{rest && rest.map { |x| x.accept(self) }.join(', ')})"
       end
 
+      def visit_Comma(o)
+        "#{o.value.map { |x| x.accept(self) }.join(', ') }"
+      end
+
       %w{ Name Number Regexp }.each do |type|
         define_method(:"visit_#{type}") do |o|
           o.value
