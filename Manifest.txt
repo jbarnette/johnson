@@ -79,6 +79,7 @@ test/johnson/spidermonkey/immutable_node_test.rb
 test/johnson/spidermonkey/js_proxy_test.rb
 test/johnson/spidermonkey/ruby_proxy_test.rb
 test/johnson/version_test.rb
+test/johnson_test.rb
 test/parser_test.rb
 vendor/spidermonkey/Makefile.in
 vendor/spidermonkey/Makefile.ref

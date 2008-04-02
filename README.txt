@@ -14,11 +14,10 @@ Johnson wraps JavaScript in a loving Ruby embrace.
 
 == SYNOPSIS:
 
-  # FIXME: write a decent first example
+  # FIXME: write some decent examples
   require "johnson"
   
-  ctx = Johnson::Context.new
-  puts ctx.evaluate("function() { return 'you got JS in my Ruby!' }").call
+  Johnson.evaluate("4 + 4") # => 8
 
 == REQUIREMENTS:
 

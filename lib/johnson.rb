@@ -22,4 +22,11 @@ require "johnson/parser"
 
 module Johnson
   PRELUDE = IO.read(File.dirname(__FILE__) + "/prelude.js")
+  
+  def self.evaluate(expression, vars={})
+    context = Johnson::Context.new
+    vars.each { |key, value| context[key] = value }
+    
+    context.evaluate(expression)
+  end
 end
