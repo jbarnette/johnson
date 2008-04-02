@@ -120,6 +120,10 @@ module Johnson
         "return#{o.value && ' '}#{o.value && o.value.accept(self)}"
       end
 
+      def visit_Typeof(o)
+        "typeof #{o.value.accept(self)}"
+      end
+
       def visit_Switch(o)
         "switch(#{o.left.accept(self)}) #{o.right.accept(self)}"
       end

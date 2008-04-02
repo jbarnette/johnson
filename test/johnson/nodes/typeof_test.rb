@@ -6,5 +6,6 @@ class TypeofNodeTest < Johnson::NodeTestCase
       [[:typeof, [:name, 'foo']]],
       @parser.parse('typeof foo;')
     )
+    assert_ecma('typeof foo;', @parser.parse('typeof foo;'))
   end
 end
