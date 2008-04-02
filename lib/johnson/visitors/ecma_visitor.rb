@@ -116,6 +116,10 @@ module Johnson
         "throw #{o.value.accept(self)}"
       end
 
+      def visit_Void(o)
+        "void #{o.value.accept(self)}"
+      end
+
       def visit_Return(o)
         "return#{o.value && ' '}#{o.value && o.value.accept(self)}"
       end

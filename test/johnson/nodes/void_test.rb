@@ -6,5 +6,6 @@ class VoidNodeTest < Johnson::NodeTestCase
       [[:void, [:name, 'foo']]],
       @parser.parse('void foo;')
     )
+    assert_ecma('void foo;', @parser.parse('void foo;'))
   end
 end
