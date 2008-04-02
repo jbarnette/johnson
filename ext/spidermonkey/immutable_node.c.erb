@@ -188,7 +188,7 @@ data_pn_dval(VALUE self) {
   ImmutableNodeContext * ctx;
 
   Data_Get_Struct(self, ImmutableNodeContext, ctx);
-  if(ATOM_IS_DOUBLE(ctx->node->pn_atom)) {
+  if(JSVAL_IS_NUMBER(ATOM_KEY(ctx->node->pn_atom))) {
     return rb_float_new(ctx->node->pn_dval);
   } else {
     return INT2NUM((int)(ctx->node->pn_dval));

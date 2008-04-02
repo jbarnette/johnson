@@ -17,4 +17,9 @@ class TernaryNodeTest < Johnson::NodeTestCase
                 @parser.parse('var x = y < 10 ? 20 : 30')
                )
   end
+
+  def test_weird_rounding
+    assert_ecma("(value < 1.0e-05) ? 0 : value;",
+      @parser.parse('(value < 0.00001) ? 0 : value;'))
+  end
 end
