@@ -143,6 +143,10 @@ module Johnson
         "while(#{o.left.accept(self)}) #{o.right.accept(self)}"
       end
 
+      def visit_With(o)
+        "with(#{o.left.accept(self)}) #{o.right.accept(self)}"
+      end
+
       def visit_Switch(o)
         "switch(#{o.left.accept(self)}) #{o.right.accept(self)}"
       end
