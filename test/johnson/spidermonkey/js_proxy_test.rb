@@ -108,6 +108,12 @@ module Johnson
         assert_js_equal(Foo.bar, "Foo.bar()")
       end
       
+      def test_can_create_new_instances_in_js
+        @context["Foo"] = Foo
+        foo = @context.evaluate("Foo.new()")
+        assert_kind_of(Foo, foo)
+      end
+      
       def test_dwims_blocks
         @context["foo"] = Foo.new
         assert_js_equal(4, "foo.xform(2, function(x) { return x * 2 })")
