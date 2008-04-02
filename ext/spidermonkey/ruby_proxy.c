@@ -262,7 +262,6 @@ VALUE make_ruby_proxy(OurContext* context, jsval value)
   if (id)
   {
     // if we already have a proxy, return it
-    // FIXME: don't depend on ObjectSpace!
     return rb_funcall(rb_const_get(rb_cObject,
       rb_intern("ObjectSpace")), rb_intern("_id2ref"), 1, id);
   }
