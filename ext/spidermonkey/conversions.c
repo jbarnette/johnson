@@ -25,34 +25,6 @@ static jsval convert_symbol_to_js(OurContext* context, VALUE symbol)
   return js;
 }
 
-static jsval convert_object_to_js(OurContext* context, VALUE object)
-{
-  jsid id = (jsid)JS_HashTableLookup(context->rbids, (void *)rb_obj_id(object));
-  
-  if (id)
-  {
-    // if we already have a proxy, return it
-    jsval js;
-    assert(JS_IdToValue(context->js, id, &js));
-    return js;
-  }
-  else
-  {
-    // otherwise make one and cache it
-    jsval proxy = make_js_proxy(context, object);
-    
-    jsval newid;
-    assert(JS_ValueToId(context->js, proxy, &newid));
-    
-    // put the proxy OID in the id map
-    assert(JS_HashTableAdd(context->rbids, (void *)rb_obj_id(object), (void *)newid));
-
-    // FIXME: root for GC
-    
-    return proxy;
-  }
-}
-
 jsval convert_to_js(OurContext* context, VALUE ruby)
 {
   switch(TYPE(ruby))
@@ -81,7 +53,7 @@ jsval convert_to_js(OurContext* context, VALUE ruby)
 
   	case T_CLASS:
     case T_OBJECT:
-      return convert_object_to_js(context, ruby);
+      return make_js_proxy(context, ruby);
 
   	case T_DATA: // keep T_DATA last for fall-through
   	  if (ruby_value_is_proxy(ruby))
@@ -119,41 +91,6 @@ static JSBool jsval_is_a_symbol(OurContext* context, jsval maybe_symbol)
   return is_a_symbol;
 }
 
-VALUE convert_object_to_ruby(OurContext* context, jsval object)
-{
-  if (JSVAL_NULL == object) return Qnil;
-  
-  if (jsval_is_a_symbol(context, object))
-    return ID2SYM(rb_intern(JS_GetStringBytes(JS_ValueToString(context->js, object))));
-  
-  if (js_value_is_proxy(context, object))
-    return unwrap_js_proxy(context, object);
-
-  VALUE id = (VALUE)JS_HashTableLookup(context->jsids, (void *)object);
-  
-  if (id)
-  {
-    // if we already have a proxy, return it
-    return rb_funcall(rb_const_get(rb_cObject,
-      rb_intern("ObjectSpace")), rb_intern("_id2ref"), 1, id);
-  }
-  else
-  {
-    // otherwise make one and cache it
-    VALUE proxy = make_ruby_proxy(context, object);
-    
-  	// put the proxy OID in the id map
-    assert(JS_HashTableAdd(context->jsids, (void *)object, (void *)rb_obj_id(proxy)));
-    
-    // root the value for JS GC
-    char key[10];
-  	sprintf(key, "%x", (int)object);
-  	JS_SetProperty(context->js, context->gcthings, key, &object);
-    
-    return proxy;
-  }
-}
-
 VALUE convert_to_ruby(OurContext* context, jsval js)
 {
   switch (JS_TypeOfValue(context->js, js))
@@ -163,7 +100,16 @@ VALUE convert_to_ruby(OurContext* context, jsval js)
       
     case JSTYPE_FUNCTION:  
     case JSTYPE_OBJECT:
-      return convert_object_to_ruby(context, js);
+      if (JSVAL_NULL == js)
+        return Qnil;
+
+      if (jsval_is_a_symbol(context, js))
+        return ID2SYM(rb_intern(JS_GetStringBytes(JS_ValueToString(context->js, js))));
+    
+      if (js_value_is_proxy(context, js))
+        return unwrap_js_proxy(context, js);
+    
+      return make_ruby_proxy(context, js);
         
     case JSTYPE_BOOLEAN:
       return JSVAL_TRUE == js ? Qtrue : Qfalse;

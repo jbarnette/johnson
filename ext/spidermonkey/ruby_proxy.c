@@ -220,7 +220,7 @@ call_function_property(int argc, VALUE* argv, VALUE self)
 //// INFRASTRUCTURE BELOW HERE ////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////
 
-static void deallocate(OurRubyProxy* proxy)
+static void finalize(OurRubyProxy* proxy)
 {
   // could get finalized after the context has been freed
   if (proxy->context)
@@ -245,17 +245,6 @@ JSBool ruby_value_is_proxy(VALUE maybe_proxy)
   return proxy_class == CLASS_OF(maybe_proxy); 
 }
 
-VALUE make_ruby_proxy(OurContext* context, jsval value)
-{
-  OurRubyProxy* proxy; 
-  VALUE rbproxy = Data_Make_Struct(proxy_class, OurRubyProxy, 0, deallocate, proxy);
-  
-  proxy->value = value;
-  proxy->context = context;
-  
-  return rbproxy;
-}
-
 jsval unwrap_ruby_proxy(OurContext* context, VALUE wrapped)
 {
   assert(ruby_value_is_proxy(wrapped));
@@ -264,6 +253,38 @@ jsval unwrap_ruby_proxy(OurContext* context, VALUE wrapped)
   Data_Get_Struct(wrapped, OurRubyProxy, proxy);
   
   return proxy->value; 
+}
+
+VALUE make_ruby_proxy(OurContext* context, jsval value)
+{
+  VALUE id = (VALUE)JS_HashTableLookup(context->jsids, (void *)value);
+  
+  if (id)
+  {
+    // if we already have a proxy, return it
+    // FIXME: don't depend on ObjectSpace!
+    return rb_funcall(rb_const_get(rb_cObject,
+      rb_intern("ObjectSpace")), rb_intern("_id2ref"), 1, id);
+  }
+  else
+  {
+    // otherwise make one and cache it
+    OurRubyProxy* our_proxy; 
+    VALUE proxy = Data_Make_Struct(proxy_class, OurRubyProxy, 0, finalize, our_proxy);
+
+    our_proxy->value = value;
+    our_proxy->context = context;
+
+  	// put the proxy OID in the id map
+    assert(JS_HashTableAdd(context->jsids, (void *)value, (void *)rb_obj_id(proxy)));
+    
+    // root the value for JS GC
+    char key[10];
+  	sprintf(key, "%x", (int)value);
+  	JS_SetProperty(context->js, context->gcthings, key, &value);
+    
+    return proxy;
+  }
 }
 
 void init_Johnson_SpiderMonkey_Proxy(VALUE spidermonkey)

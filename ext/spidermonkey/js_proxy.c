@@ -16,27 +16,6 @@ static JSClass JSProxyClass = {
   finalize
 };
 
-static void finalize(JSContext* context, JSObject* obj)
-{
-  // FIXME
-}
-// void Johnson_RubyProxy_finalize(JSContext *js_context, JSObject *obj)
-// {
-//   VALUE ruby;
-//   VALUE self = (VALUE)JS_GetContextPrivate(js_context);
-// 
-//   ruby = (VALUE)JS_GetInstancePrivate(js_context, obj, &gRubyProxyClass, NULL);
-//   VALUE c_name = rb_funcall(
-//           rb_funcall(self, rb_intern("class"), 0),
-//           rb_intern("to_s"), 0);
-// 
-//   if(rb_ivar_defined(self, rb_intern("@converted_objects"))) {
-//     rb_hash_delete( rb_iv_get(self, "@converted_objects"),
-//                     rb_funcall(ruby, rb_intern("object_id"), 0));
-//   }
-// }
-// 
-
 static JSBool get(JSContext* js_context, JSObject* obj, jsval id, jsval* retval)
 {
   // pull out our Ruby object, which is embedded in js_context
@@ -164,36 +143,59 @@ JSBool js_value_is_proxy(OurContext* context, jsval maybe_proxy)
 VALUE unwrap_js_proxy(OurContext* context, jsval proxy)
 {
   VALUE value;
-  assert(value = (VALUE)JS_GetInstancePrivate(context->js, proxy, &JSProxyClass, NULL));
+  assert(value = (VALUE)JS_GetInstancePrivate(context->js, JSVAL_TO_OBJECT(proxy), &JSProxyClass, NULL));
   return value;
 }
 
-// static jsval convert_ruby_object_to_jsval(CombinedContext* context, VALUE ruby)
-// {
-//   VALUE self = (VALUE)JS_GetContextPrivate(context->js);
-//   JSObject * js = JS_NewObject(context->js, &gRubyProxyClass, NULL, NULL);
-//   if(!js) Johnson_Error_raise("failed JS_NewObject");
-// 
-//   rb_hash_aset( rb_iv_get(self, "@converted_objects"),
-//                 rb_funcall(ruby, rb_intern("object_id"), 0),
-//                 ruby );
-// 
-//   if(JS_SetPrivate(context->js, js, (void*)ruby) == JS_FALSE)
-//     Johnson_Error_raise("failed JS_SetPrivate");
-//   
-//   JS_DefineFunction(context->js, js, "__noSuchMethod__",
-//     Johnson_RubyProxy_method_missing, 2, 0);
-//   
-//   return OBJECT_TO_JSVAL(js);
-// }
+static void finalize(JSContext* js_context, JSObject* obj)
+{
+  VALUE ruby_context = (VALUE)JS_GetContextPrivate(js_context);
+  
+  if (ruby_context)
+  {
+    OurContext* context;
+    Data_Get_Struct(ruby_context, OurContext, context);
+    
+    VALUE self;
+    assert(self = (VALUE)JS_GetInstancePrivate(context->js, obj, &JSProxyClass, NULL));
+    
+    // remove the proxy OID from the id map
+    JS_HashTableRemove(context->rbids, (void *)rb_obj_id(self));
+    
+    // free up the ruby value for GC
+    rb_funcall(ruby_context, rb_intern("remove_gcthing"), 1, self);
+  }  
+}
 
 jsval make_js_proxy(OurContext* context, VALUE value)
 {
-  JSObject *js;
+  jsid id = (jsid)JS_HashTableLookup(context->rbids, (void *)rb_obj_id(value));
+  jsval js;
   
-  assert(js = JS_NewObject(context->js, &JSProxyClass, NULL, NULL));
-  assert(JS_SetPrivate(context->js, js, (void*)value));
-  assert(JS_DefineFunction(context->js, js, "__noSuchMethod__", method_missing, 2, 0));
+  if (id)
+  {
+    assert(JS_IdToValue(context->js, id, &js));
+  }
+  else
+  {
+    JSObject *jsobj;
+
+    assert(jsobj = JS_NewObject(context->js, &JSProxyClass, NULL, NULL));
+    assert(JS_SetPrivate(context->js, jsobj, (void*)value));
+    assert(JS_DefineFunction(context->js, jsobj, "__noSuchMethod__", method_missing, 2, 0));
+
+    js = OBJECT_TO_JSVAL(jsobj);
+
+    jsval newid;
+    assert(JS_ValueToId(context->js, js, &newid));
   
-  return OBJECT_TO_JSVAL(js);
+    // put the proxy OID in the id map
+    assert(JS_HashTableAdd(context->rbids, (void *)rb_obj_id(value), (void *)newid));
+    
+    // root the ruby value for GC
+    VALUE ruby_context = (VALUE)JS_GetContextPrivate(context->js);
+    rb_funcall(ruby_context, rb_intern("add_gcthing"), 1, value);
+  }
+  
+  return js;
 }
