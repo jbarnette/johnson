@@ -7,4 +7,11 @@ class ArrayNodeTest < Johnson::NodeTestCase
     assert_ecma("foo(a);", @parser.parse("foo(a);"))
     assert_ecma("foo(a, b);", @parser.parse("foo(a,b);"))
   end
+
+  def test_new
+    assert_sexp([[:new, [[:name, "foo"], [:name, "a"]]]],
+                @parser.parse('new foo(a)'))
+    assert_ecma('new foo(a);', @parser.parse('new foo(a);'))
+    assert_ecma('new foo(a, b);', @parser.parse('new foo(a,b);'))
+  end
 end

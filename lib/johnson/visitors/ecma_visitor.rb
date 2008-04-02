@@ -41,6 +41,12 @@ module Johnson
         "[#{o.value.map { |x| x.accept(self) }.join(', ')}]"
       end
 
+      def visit_New(o)
+        rest = o.value.slice(1..-1)
+        "new #{o.value.first.accept(self)}"\
+          "(#{rest && rest.map { |x| x.accept(self) }.join(', ')})"
+      end
+
       def visit_FunctionCall(o)
         rest = o.value.slice(1..-1)
         "#{o.value.first.accept(self)}"\
