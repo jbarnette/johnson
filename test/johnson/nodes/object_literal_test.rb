@@ -92,4 +92,17 @@ class ObjectLiteralTest < Johnson::NodeTestCase
                 @parser.parse('var foo = { f: 10, a: 10 }')
                )
   end
+
+  def test_ol_with_string_keys
+    assert_sexp([[:var,
+      [[:assign,
+        [:name, "foo"],
+        [:object,
+         [[:property, [:str, "\n"], [:lit, 10]],
+          [:property, [:str, "\t"], [:lit, 10]]]]]]]],
+                @parser.parse('var foo = { "\n": 10, "\t": 10 }')
+               )
+    assert_ecma("var foo = { \"\\n\": 10,\n  \"\\t\": 10 }",
+      @parser.parse('var foo = { "\n": 10, "\t": 10 }'))
+  end
 end

@@ -77,7 +77,15 @@ module Johnson
       end
 
       def visit_String(o)
-        "\"#{o.value}\""
+        h = {
+          "\b"  => '\b',
+          "\t"  => '\t',
+          "\n"  => '\n',
+          "\f"  => '\f',
+          "\r"  => '\r',
+          "\\"  => '\\',
+        }
+        "\"#{o.value.gsub(/"/, '\"').gsub(/[\b\t\n\f\r\\]/) { |m| h[m] }}\""
       end
 
       {
