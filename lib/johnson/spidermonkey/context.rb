@@ -7,6 +7,16 @@ module Johnson #:nodoc:
             
       protected
       
+      # called from JSFunction executor - js_proxy.c:call_proc
+      def call_proc_by_oid(oid, *args)
+        id2ref(oid).call(*args)
+      end
+      
+      # called from JSFunction executor - js_proxy.c:unwrap
+      def id2ref(oid)
+        ObjectSpace._id2ref(oid)
+      end
+      
       # called from js_proxy.c:method_missing
       def jsend(target, symbol, args)
         block = args.pop if args.last.is_a?(RubyProxy) && args.last.function?

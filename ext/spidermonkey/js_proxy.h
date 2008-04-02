@@ -4,6 +4,8 @@
 #include "spidermonkey.h"
 #include "context.h"
 
+#define JS_FUNCTION_PROXY_PROPERTY "__isProxyForRubyProc"
+
 JSBool js_value_is_proxy(OurContext* context, jsval maybe_proxy);
 VALUE unwrap_js_proxy(OurContext* context, jsval proxy);
 jsval make_js_proxy(OurContext* context, VALUE value);

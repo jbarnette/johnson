@@ -9,12 +9,12 @@ module Johnson
       
       def test_truthiness
         @context[:v] = true
-        assert_same(true, @context.evaluate("v == true"))
+        assert_same(true, @context.evaluate("v === true"))
       end
 
       def test_dirty_lies
         @context[:v] = false
-        assert_same(false, @context.evaluate("v == true"))
+        assert_same(false, @context.evaluate("v === true"))
       end
     end
   end

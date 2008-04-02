@@ -1,5 +1,6 @@
 #include "conversions.h"
 #include "js_proxy.h"
+#include "js_function_proxy.h"
 #include "ruby_proxy.h"
 
 static jsval convert_float_or_bignum_to_js(OurContext* context, VALUE float_or_bignum)
@@ -59,6 +60,9 @@ jsval convert_to_js(OurContext* context, VALUE ruby)
   	  if (ruby_value_is_proxy(ruby))
         return unwrap_ruby_proxy(context, ruby);
       
+      if (rb_cProc == CLASS_OF(ruby))
+        return make_js_function_proxy(context, ruby);
+      
     // UNIMPLEMENTED BELOW THIS LINE
 
   	case T_FILE:
@@ -98,7 +102,12 @@ VALUE convert_to_ruby(OurContext* context, jsval js)
     case JSTYPE_VOID:
       return Qnil;
       
-    case JSTYPE_FUNCTION:  
+    case JSTYPE_FUNCTION: 
+      if (js_value_is_function_proxy(context, js))
+        return unwrap_js_function_proxy(context, js);
+      
+      // fall-through for functions defined in JS
+    
     case JSTYPE_OBJECT:
       if (JSVAL_NULL == js)
         return Qnil;
