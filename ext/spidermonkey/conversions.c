@@ -97,6 +97,8 @@ static JSBool jsval_is_a_symbol(OurContext* context, jsval maybe_symbol)
 
 VALUE convert_to_ruby(OurContext* context, jsval js)
 {
+  if (JSVAL_NULL == js) return Qnil;
+  
   switch (JS_TypeOfValue(context->js, js))
   {
     case JSTYPE_VOID:
@@ -109,9 +111,6 @@ VALUE convert_to_ruby(OurContext* context, jsval js)
       // fall-through for functions defined in JS
     
     case JSTYPE_OBJECT:
-      if (JSVAL_NULL == js)
-        return Qnil;
-
       if (jsval_is_a_symbol(context, js))
         return ID2SYM(rb_intern(JS_GetStringBytes(JS_ValueToString(context->js, js))));
     

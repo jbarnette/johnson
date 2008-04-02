@@ -4,7 +4,9 @@
 #include "spidermonkey.h"
 #include "context.h"
 
+#ifndef JS_FUNCTION_PROXY_PROPERTY
 #define JS_FUNCTION_PROXY_PROPERTY "__rubyProcOID"
+#endif
 
 JSBool js_value_is_function_proxy(OurContext* context, jsval maybe_function_proxy);
 VALUE unwrap_js_function_proxy(OurContext* context, jsval function_proxy);
