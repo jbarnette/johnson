@@ -65,8 +65,8 @@ module Johnson
       end
 
       {
-        'Break'     => 'break;',
-        'Continue'  => 'continue;',
+        'Break'     => 'break',
+        'Continue'  => 'continue',
         'Null'      => 'null',
         'True'      => 'true',
         'False'     => 'false',
@@ -137,6 +137,10 @@ module Johnson
         define_method(:"visit_#{type}") do |o|
           "#{op}#{o.value.accept(self)}"
         end
+      end
+
+      def visit_While(o)
+        "while(#{o.left.accept(self)}) #{o.right.accept(self)}"
       end
 
       def visit_Switch(o)
