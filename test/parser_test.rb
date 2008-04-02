@@ -137,6 +137,18 @@ class ParserTest < Test::Unit::TestCase
                 @parser.parse('var foo = "hello world"'))
   end
 
+  def test_accessor_as_square_brace
+    assert_ecma("foo['hello-world'];",
+                @parser.parse("foo['hello-world']"))
+  end
+
+  def test_paren_around_function
+    assert_ecma("(function() {  }).foo();",
+                @parser.parse('(function() { }).foo()'))
+    assert_ecma("(function() {  })();",
+                @parser.parse('(function() { })()'))
+  end
+
   def test_parser_var_nil_lit
     assert @parser
     tree = @parser.parse(StringIO.new("var foo = null;"))

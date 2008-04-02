@@ -11,7 +11,12 @@ module Johnson
           indent {
             o.value.map { |x|
               code = x.accept(self)
-              semi = code =~ /\}\Z/ ? '' : ';'
+              semi = case x
+                     when Nodes::Function, Nodes::While, Nodes::If, Nodes::Try, Nodes::Switch, Nodes::Case, Nodes::Default, Nodes::For, Nodes::ForIn
+                       code =~ /\}\Z/ ? '' : ';'
+                     else
+                       ';'
+                     end
               "#{indent}#{code}#{semi}"
             }.join("\n")
           } +
@@ -49,8 +54,13 @@ module Johnson
 
       def visit_FunctionCall(o)
         rest = o.value.slice(1..-1)
-        "#{o.value.first.accept(self)}"\
-          "(#{rest && rest.map { |x| x.accept(self) }.join(', ')})"
+        stmt =
+          if o.value.first.is_a?(Nodes::Function)
+            "(#{o.value.first.accept(self)})"
+          else
+            "#{o.value.first.accept(self)}"
+          end
+        "#{stmt}(#{rest && rest.map { |x| x.accept(self) }.join(', ')})"
       end
 
       def visit_Comma(o)
@@ -83,9 +93,8 @@ module Johnson
           "\n"  => '\n',
           "\f"  => '\f',
           "\r"  => '\r',
-          "\\"  => '\\\\',
         }
-        "\"#{o.value.gsub(/"/, '\"').gsub(/[\b\t\n\f\r\\]/) { |m| h[m] }}\""
+        "\"#{o.value.gsub(/[\\]/, '\\\\\\').gsub(/"/, '\"').gsub(/[\b\t\n\f\r]/) { |m| h[m] }}\""
       end
 
       {
@@ -193,7 +202,20 @@ module Johnson
       alias :visit_Property :visit_Label
 
       def visit_DotAccessor(o)
-        "#{o.right.accept(self)}.#{o.left.accept(self)}"
+        stmt =
+          if o.right.is_a?(Nodes::Function)
+            "(#{o.right.accept(self)})"
+          else
+            "#{o.right.accept(self)}"
+          end
+
+        rhs = o.left.accept(self)
+        if rhs =~ /\A\w+$/
+          stmt << ".#{rhs}"
+        else
+          stmt << "['#{rhs}']"
+        end
+        stmt
       end
 
       def visit_GetterProperty(o)

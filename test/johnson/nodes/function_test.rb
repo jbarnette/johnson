@@ -9,7 +9,7 @@ class FunctionTest < Johnson::NodeTestCase
                   ]]
                 ]],
                 @parser.parse("var foo = function() { }"))
-    assert_ecma('var foo = function() {  }',
+    assert_ecma('var foo = function() {  };',
                 @parser.parse("var foo = function() { }"))
   end
 
@@ -21,7 +21,7 @@ class FunctionTest < Johnson::NodeTestCase
                   ]]
                 ]],
                 @parser.parse("var foo = function(a) { }"))
-    assert_ecma('var foo = function(a) {  }',
+    assert_ecma('var foo = function(a) {  };',
                 @parser.parse("var foo = function(a) { }"))
   end
 
@@ -33,7 +33,7 @@ class FunctionTest < Johnson::NodeTestCase
                   ]]
                 ]],
                 @parser.parse("var foo = function(a,b) { }"))
-    assert_ecma('var foo = function(a, b) {  }',
+    assert_ecma('var foo = function(a, b) {  };',
                 @parser.parse("var foo = function(a,b) { }"))
   end
 
@@ -46,7 +46,7 @@ class FunctionTest < Johnson::NodeTestCase
                   ]]
                 ]],
       @parser.parse("var foo = function(#{('a'..'i').to_a.join(',')}) { }"))
-    assert_ecma("var foo = function(#{('a'..'i').to_a.join(', ')}) {  }",
+    assert_ecma("var foo = function(#{('a'..'i').to_a.join(', ')}) {  };",
       @parser.parse("var foo = function(#{('a'..'i').to_a.join(',')}) { }"))
   end
 
