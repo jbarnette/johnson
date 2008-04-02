@@ -124,6 +124,17 @@ module Johnson
         "typeof #{o.value.accept(self)}"
       end
 
+      {
+        'UnaryPositive' => '+',
+        'UnaryNegative' => '-',
+        'BitwiseNot'    => '~',
+        'Not'           => '!',
+      }.each do |type,op|
+        define_method(:"visit_#{type}") do |o|
+          "#{op}#{o.value.accept(self)}"
+        end
+      end
+
       def visit_Switch(o)
         "switch(#{o.left.accept(self)}) #{o.right.accept(self)}"
       end
