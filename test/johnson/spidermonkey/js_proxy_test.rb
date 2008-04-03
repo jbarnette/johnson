@@ -3,6 +3,9 @@ require File.expand_path(File.join(File.dirname(__FILE__), "/../../helper"))
 module Johnson
   module SpiderMonkey
     class JSProxyTest < Johnson::TestCase
+      module AModule
+      end
+      
       class Foo
         class Inner
         end
@@ -61,6 +64,21 @@ module Johnson
         assert_same(foo, @context.evaluate("foo"))
       end
       
+      def test_proxies_classes
+        @context["Foo"] = Foo
+        assert_same(Foo, @context.evaluate("Foo"))
+      end
+      
+      def test_proxies_modules
+        @context["AModule"] = AModule
+        assert_same(AModule, @context.evaluate("AModule"))
+      end
+      
+      def test_proxies_hashes
+        @context["beatles"] = { "george" => "guitar" }
+        assert_equal("guitar", @context.evaluate("beatles['george']"))
+      end
+      
       def test_getter_calls_0_arity_method
         @context["foo"] = Foo.new
         assert_js_equal(10, "foo.bar")
@@ -114,7 +132,7 @@ module Johnson
         @context["Foo"] = Foo
         assert_same(Foo::Inner, @context.evaluate("Foo.Inner"))
       end
-      
+            
       def test_can_create_new_instances_in_js
         @context["Foo"] = Foo
         foo = @context.evaluate("Foo.new()")
