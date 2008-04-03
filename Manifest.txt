@@ -14,6 +14,8 @@ ext/spidermonkey/idhash.h
 ext/spidermonkey/immutable_node.c
 ext/spidermonkey/immutable_node.c.erb
 ext/spidermonkey/immutable_node.h
+ext/spidermonkey/js_function_proxy.c
+ext/spidermonkey/js_function_proxy.h
 ext/spidermonkey/js_proxy.c
 ext/spidermonkey/js_proxy.h
 ext/spidermonkey/ruby_proxy.c
@@ -46,10 +48,12 @@ test/johnson/context_test.rb
 test/johnson/conversions/boolean_test.rb
 test/johnson/conversions/nil_test.rb
 test/johnson/conversions/number_test.rb
+test/johnson/conversions/proc_test.rb
 test/johnson/conversions/string_test.rb
 test/johnson/conversions/symbol_test.rb
 test/johnson/error_test.rb
 test/johnson/nodes/array_literal_test.rb
+test/johnson/nodes/array_node_test.rb
 test/johnson/nodes/binary_node_test.rb
 test/johnson/nodes/bracket_access_test.rb
 test/johnson/nodes/delete_test.rb
