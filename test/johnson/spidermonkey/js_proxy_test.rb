@@ -4,6 +4,8 @@ module Johnson
   module SpiderMonkey
     class JSProxyTest < Johnson::TestCase
       class Foo
+        class Inner
+        end
         
         def self.bar; 10; end
 
@@ -106,6 +108,11 @@ module Johnson
       def test_calls_class_method
         @context["Foo"] = Foo
         assert_js_equal(Foo.bar, "Foo.bar()")
+      end
+      
+      def test_accesses_consts
+        @context["Foo"] = Foo
+        assert_same(Foo::Inner, @context.evaluate("Foo.Inner"))
       end
       
       def test_can_create_new_instances_in_js

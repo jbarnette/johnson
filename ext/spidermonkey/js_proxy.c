@@ -36,16 +36,25 @@ static JSBool get(JSContext* js_context, JSObject* obj, jsval id, jsval* retval)
   char* key = JS_GetStringBytes(JSVAL_TO_STRING(id));
   VALUE ruby_id = rb_intern(key);
   
-  VALUE is_method = rb_funcall(self, rb_intern("respond_to?"), 1, ID2SYM(ruby_id));
+  // if the Ruby object is a Module or Class and has a matching
+  // const defined, return the converted result of const_get
   
-  if (is_method)
+  if (rb_obj_is_kind_of(self, rb_cModule)
+    && rb_is_const_id(ruby_id)
+    && rb_funcall(self, rb_intern("const_defined?"), 1, ID2SYM(ruby_id)))
+  {
+    *retval = convert_to_js(context,
+      rb_funcall(self, rb_intern("const_get"), 1, ID2SYM(ruby_id)));
+  }  
+  
+  // otherwise, if the Ruby object has a 0-arity method named the same as
+  // the property we're trying to get, call it and return the converted result
+  
+  else if (rb_funcall(self, rb_intern("respond_to?"), 1, ID2SYM(ruby_id)))
   {
     VALUE method = rb_funcall(self, rb_intern("method"), 1, ID2SYM(ruby_id));
     int arity = NUM2INT(rb_funcall(method, rb_intern("arity"), 0));
-    
-    // if the Ruby object has a 0-arity method named the same as the property
-    // we're trying to get, call it and return the converted result
-    
+        
     if (arity == 0)
       *retval = convert_to_js(context, rb_funcall(self, ruby_id, 0));
   }
@@ -53,7 +62,7 @@ static JSBool get(JSContext* js_context, JSObject* obj, jsval id, jsval* retval)
   {
     // otherwise, if the Ruby object quacks sorta like a hash (it responds to
     // "[]" and "key?"), index it by key and return the converted result
-    
+
     VALUE is_indexable = rb_funcall(self, rb_intern("respond_to?"), 1, ID2SYM(rb_intern("[]")));
     VALUE has_key_p = rb_funcall(self, rb_intern("respond_to?"), 1, ID2SYM(rb_intern("key?")));
     
