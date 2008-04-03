@@ -5,17 +5,17 @@ module Johnson
     def setup
       @context = Johnson::Context.new
     end
-
+    
     def test_symbols_are_interned
-      assert(@context.evaluate("Ruby.symbolize('foo') === Ruby.symbolize('foo')"))
+      assert(@context.evaluate("Johnson.symbolize('foo') === Johnson.symbolize('foo')"))
     end
 
     def test_symbol_to_string
-      assert_equal("monkey", @context.evaluate("Ruby.symbolize('monkey').toString()"))
+      assert_equal("monkey", @context.evaluate("Johnson.symbolize('monkey').toString()"))
     end
 
     def test_symbol_inspect
-      assert_equal(":monkey", @context.evaluate("Ruby.symbolize('monkey').inspect()"))
+      assert_equal(":monkey", @context.evaluate("Johnson.symbolize('monkey').inspect()"))
     end
   end
 end

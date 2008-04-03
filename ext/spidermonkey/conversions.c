@@ -15,13 +15,13 @@ static jsval convert_symbol_to_js(OurContext* context, VALUE symbol)
   VALUE to_s = rb_funcall(symbol, rb_intern("to_s"), 0);
   jsval name = STRING_TO_JSVAL(JS_NewStringCopyZ(context->js, StringValuePtr(to_s)));
 
-  // calls Ruby.symbolize(name) in JS-land. See lib/prelude.js
+  // calls Johnson.symbolize(name) in JS-land. See lib/prelude.js
 
-  jsval nsRuby;    
-  assert(JS_GetProperty(context->js, context->global, "Ruby", &nsRuby) || JSVAL_VOID == nsRuby);
+  jsval nsJohnson;    
+  assert(JS_GetProperty(context->js, context->global, "Johnson", &nsJohnson) || JSVAL_VOID == nsJohnson);
 
   jsval js = JSVAL_NULL;    
-  assert(JS_CallFunctionName(context->js, JSVAL_TO_OBJECT(nsRuby), "symbolize", 1, &name, &js));
+  assert(JS_CallFunctionName(context->js, JSVAL_TO_OBJECT(nsJohnson), "symbolize", 1, &name, &js));
 
   return js;
 }
@@ -81,12 +81,12 @@ jsval convert_to_js(OurContext* context, VALUE ruby)
 
 static JSBool jsval_is_a_symbol(OurContext* context, jsval maybe_symbol)
 {
-  jsval nsRuby, cSymbol;
+  jsval nsJohnson, cSymbol;
 
-  assert(JS_GetProperty(context->js, context->global, "Ruby", &nsRuby));
-  assert(JSVAL_VOID != nsRuby);
+  assert(JS_GetProperty(context->js, context->global, "Johnson", &nsJohnson));
+  assert(JSVAL_VOID != nsJohnson);
   
-  assert(JS_GetProperty(context->js, JSVAL_TO_OBJECT(nsRuby), "Symbol", &cSymbol));
+  assert(JS_GetProperty(context->js, JSVAL_TO_OBJECT(nsJohnson), "Symbol", &cSymbol));
   assert(JSVAL_VOID != cSymbol);
   
   JSBool is_a_symbol;
