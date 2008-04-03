@@ -17,5 +17,12 @@ module Johnson
     def test_symbol_inspect
       assert_equal(":monkey", @context.evaluate("Johnson.symbolize('monkey').inspect()"))
     end
+    
+    def test_all_of_ruby_is_available
+      assert_raise(Johnson::Error) { @context.evaluate("Ruby.Set.new()") }
+      
+      @context.evaluate("Ruby.require('set')")
+      assert_kind_of(Set, @context.evaluate("Ruby.Set.new()"))
+    end
   end
 end

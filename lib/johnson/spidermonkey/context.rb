@@ -3,6 +3,7 @@ module Johnson #:nodoc:
     class Context # native
       def initialize
         @gcthings = {}
+        self["Ruby"] = Object
       end
             
       protected
