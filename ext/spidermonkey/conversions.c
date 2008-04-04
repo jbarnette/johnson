@@ -28,13 +28,13 @@ static jsval convert_symbol_to_js(OurContext* context, VALUE symbol)
 
 static jsval convert_regexp_to_js(OurContext* context, VALUE regexp)
 {
-  VALUE regexp_source = rb_funcall(regexp, rb_intern("source"), 0);
-  int regexp_options = NUM2INT(rb_funcall(regexp, rb_intern("options"), 0));
+  VALUE source = rb_funcall(regexp, rb_intern("source"), 0);
+  int options = NUM2INT(rb_funcall(regexp, rb_intern("options"), 0));
 
   return OBJECT_TO_JSVAL(JS_NewRegExpObject(context->js,
-        StringValuePtr(regexp_source),
-        strlen(StringValuePtr(regexp_source)),
-        regexp_options));
+        StringValuePtr(source),
+        strlen(StringValuePtr(source)),
+        options));
 }
 
 jsval convert_to_js(OurContext* context, VALUE ruby)
@@ -68,16 +68,16 @@ jsval convert_to_js(OurContext* context, VALUE ruby)
   	case T_MODULE:
     case T_OBJECT:
       return make_js_proxy(context, ruby);
-
-  	case T_DATA: // keep T_DATA last for fall-through
-  	  if (ruby_value_is_proxy(ruby))
-        return unwrap_ruby_proxy(context, ruby);
-      
-      if (rb_cProc == CLASS_OF(ruby))
-        return make_js_function_proxy(context, ruby);
       
   	case T_REGEXP:
       return convert_regexp_to_js(context, ruby);
+
+  	case T_DATA: // HEY! keep T_DATA last for fall-through
+  	  if (ruby_value_is_proxy(ruby))
+        return unwrap_ruby_proxy(context, ruby);
+
+      if (rb_cProc == CLASS_OF(ruby))
+        return make_js_function_proxy(context, ruby);
 
     // UNIMPLEMENTED BELOW THIS LINE
 
@@ -92,7 +92,7 @@ jsval convert_to_js(OurContext* context, VALUE ruby)
   return JSVAL_NULL;
 }
 
-static JSBool jsval_is_a_symbol(OurContext* context, jsval maybe_symbol)
+static JSBool js_value_is_symbol(OurContext* context, jsval maybe_symbol)
 {
   jsval nsJohnson, cSymbol;
 
@@ -121,10 +121,10 @@ VALUE convert_to_ruby(OurContext* context, jsval js)
       if (js_value_is_function_proxy(context, js))
         return unwrap_js_function_proxy(context, js);
       
-      // fall-through for functions defined in JS
+      // NOTE: intentional fall-through to JSTYPE_OBJECT
     
     case JSTYPE_OBJECT:
-      if (jsval_is_a_symbol(context, js))
+      if (js_value_is_symbol(context, js))
         return ID2SYM(rb_intern(JS_GetStringBytes(JS_ValueToString(context->js, js))));
     
       if (js_value_is_proxy(context, js))
