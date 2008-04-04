@@ -26,6 +26,17 @@ static jsval convert_symbol_to_js(OurContext* context, VALUE symbol)
   return js;
 }
 
+static jsval convert_regexp_to_js(OurContext* context, VALUE regexp)
+{
+  VALUE regexp_source = rb_funcall(regexp, rb_intern("source"), 0);
+  int regexp_options = NUM2INT(rb_funcall(regexp, rb_intern("options"), 0));
+
+  return OBJECT_TO_JSVAL(JS_NewRegExpObject(context->js,
+        StringValuePtr(regexp_source),
+        strlen(StringValuePtr(regexp_source)),
+        regexp_options));
+}
+
 jsval convert_to_js(OurContext* context, VALUE ruby)
 {
   switch(TYPE(ruby))
@@ -65,11 +76,13 @@ jsval convert_to_js(OurContext* context, VALUE ruby)
       if (rb_cProc == CLASS_OF(ruby))
         return make_js_function_proxy(context, ruby);
       
+  	case T_REGEXP:
+      return convert_regexp_to_js(context, ruby);
+
     // UNIMPLEMENTED BELOW THIS LINE
 
   	case T_FILE:
   	case T_STRUCT:
-  	case T_REGEXP:
   	case T_ARRAY:
     
     default:
