@@ -16,11 +16,13 @@ module Johnson
         assert @context.evaluate('"John".match(y)')
       end
 
-      # FIXME: Should we let this be a RubyProxy?  Or convert to Regexp
-      #def test_regex_roundtrips
-      #  @context[:x] = /aaron/
-      #  assert_equal /aaron/, @context.evaluate('x')
-      #end
+      def test_regex_roundtrips
+        @context[:x] = /aaron/
+        assert_equal(/aaron/, @context.evaluate('x'))
+
+        @context[:x] = /aaron/m
+        assert_equal(/aaron/m, @context.evaluate('x'))
+      end
     end
   end
 end

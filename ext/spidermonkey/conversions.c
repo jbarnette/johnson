@@ -92,6 +92,20 @@ jsval convert_to_js(OurContext* context, VALUE ruby)
   return JSVAL_NULL;
 }
 
+static VALUE make_ruby_regexp(OurContext* context, jsval regexp)
+{
+  JSRegExp * re = (JSRegExp *)JS_GetPrivate(context->js, JSVAL_TO_OBJECT(regexp));
+
+  return rb_funcall(rb_cRegexp, rb_intern("new"), 2,
+    rb_str_new2(JS_GetStringBytes(re->source)),
+    INT2NUM(re->flags));
+}
+
+static JSBool js_value_is_a_regexp(OurContext* context, jsval maybe_regexp)
+{
+  return JS_InstanceOf(context->js, JSVAL_TO_OBJECT(maybe_regexp), &js_RegExpClass, NULL);
+}
+
 static JSBool js_value_is_symbol(OurContext* context, jsval maybe_symbol)
 {
   jsval nsJohnson, cSymbol;
@@ -129,6 +143,9 @@ VALUE convert_to_ruby(OurContext* context, jsval js)
     
       if (js_value_is_proxy(context, js))
         return unwrap_js_proxy(context, js);
+
+      if (js_value_is_a_regexp(context, js))
+        return make_ruby_regexp(context, js);
     
       return make_ruby_proxy(context, js);
         
