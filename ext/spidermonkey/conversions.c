@@ -66,6 +66,8 @@ jsval convert_to_js(OurContext* context, VALUE ruby)
   	case T_CLASS:
   	case T_HASH:
   	case T_MODULE:
+  	case T_FILE:
+  	case T_STRUCT:
     case T_OBJECT:
       return make_js_proxy(context, ruby);
       
@@ -81,8 +83,6 @@ jsval convert_to_js(OurContext* context, VALUE ruby)
 
     // UNIMPLEMENTED BELOW THIS LINE
 
-  	case T_FILE:
-  	case T_STRUCT:
   	case T_ARRAY:
     
     default:
