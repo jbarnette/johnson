@@ -101,9 +101,7 @@ static void deallocate(OurContext* context)
 static VALUE allocate(VALUE klass)
 {
   OurContext* context = calloc(1, sizeof(OurContext));
-  VALUE self = Data_Wrap_Struct(klass, 0, deallocate, context);
-
-  return self;
+  return Data_Wrap_Struct(klass, 0, deallocate, context);
 }
 
 static VALUE initialize_native(VALUE self, VALUE options) 
