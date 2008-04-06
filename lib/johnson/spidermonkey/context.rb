@@ -1,7 +1,8 @@
 module Johnson #:nodoc:
   module SpiderMonkey #:nodoc:
     class Context # native
-      def initialize
+      def initialize(options={})
+        initialize_native(options)
         @gcthings = {}
         self["Ruby"] = Object
       end

@@ -101,8 +101,17 @@ static void deallocate(OurContext* context)
 static VALUE allocate(VALUE klass)
 {
   OurContext* context = calloc(1, sizeof(OurContext));
+  VALUE self = Data_Wrap_Struct(klass, 0, deallocate, context);
+
+  return self;
+}
+
+static VALUE initialize_native(VALUE self, VALUE options) 
+{
+  OurContext* context;
+  Data_Get_Struct(self, OurContext, context);
   
-  assert(context->runtime  = JS_NewRuntime(0x100000));
+  assert(context->runtime = JS_NewRuntime(0x100000));
   assert(context->js = JS_NewContext(context->runtime, 8192));
 
   assert(context->jsids = create_id_hash());  
@@ -112,8 +121,6 @@ static VALUE allocate(VALUE klass)
   
   assert(JS_InitStandardClasses(context->js, context->global));
   assert(JS_AddRoot(context->js, &(context->gcthings)));
-    
-  VALUE self = Data_Wrap_Struct(klass, 0, deallocate, context);
 
   JS_SetErrorReporter(context->js, error);
   JS_SetContextPrivate(context->js, (void *)self);
@@ -126,6 +133,8 @@ void init_Johnson_SpiderMonkey_Context(VALUE spidermonkey)
   VALUE context = rb_define_class_under(spidermonkey, "Context", rb_cObject);
 
   rb_define_alloc_func(context, allocate);
+  rb_define_private_method(context, "initialize_native", initialize_native, 1);
+  
   rb_define_method(context, "evaluate", evaluate, 1);
   rb_define_method(context, "[]", get, 1);
   rb_define_method(context, "[]=", set, 2);  
