@@ -11,6 +11,7 @@ module Johnson
         f = Struct.new(:phil_collins).new
         f.phil_collins = 'awesome'
         @context[:foo] = f
+        assert_equal(f, @context.evaluate('foo'))
         assert_equal('awesome', @context.evaluate('foo.phil_collins'))
       end
     end
