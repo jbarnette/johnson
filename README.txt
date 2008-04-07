@@ -6,7 +6,7 @@
 
 == DESCRIPTION:
 
-Johnson wraps JavaScript in a loving Ruby embrace.
+Johnson wraps JavaScript in a loving Ruby embrace, bro.
 
 == FEATURES/PROBLEMS:
 
