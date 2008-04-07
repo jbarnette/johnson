@@ -6,10 +6,10 @@
 
 void Init_spidermonkey()
 {
-  VALUE johnson = rb_define_module("Johnson");
+  VALUE johnson = rb_define_module("Johnson"); // FIXME: this belongs outside the extension
   VALUE spidermonkey = rb_define_module_under(johnson, "SpiderMonkey");
   
-  init_Johnson_Error(johnson);
+  init_Johnson_Error(johnson); // FIXME: this belongs outside the extension
   init_Johnson_SpiderMonkey_Context(spidermonkey);
   init_Johnson_SpiderMonkey_Proxy(spidermonkey);
   init_Johnson_SpiderMonkey_Immutable_Node(spidermonkey);
