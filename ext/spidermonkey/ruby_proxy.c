@@ -63,25 +63,27 @@ respond_to_p(VALUE self, VALUE sym)
   return found ? Qtrue : rb_call_super(1, &sym);
 }
 
-static VALUE
-call(int argc, VALUE* argv, VALUE self)
+/* private */ static VALUE
+native_call(int argc, VALUE* argv, VALUE self) /* native_call(global, *args) */
 {
   if (!function_p(self))
     Johnson_Error_raise("This Johnson::SpiderMonkey::RubyProxy isn't a function.");
 
+
   OurRubyProxy* proxy;
   Data_Get_Struct(self, OurRubyProxy, proxy);
   
-  jsval args[argc];  
+  jsval global = convert_to_js(proxy->context, argv[0]);
+  jsval args[argc - 1];
   int i;
 
-  for(i = 0; i < argc; ++i)
-    args[i] = convert_to_js(proxy->context, argv[i]);
+  for(i = 1; i < argc; ++i)
+    args[i - 1] = convert_to_js(proxy->context, argv[i]);
   
   jsval js;
   
   assert(JS_CallFunctionValue(proxy->context->js,
-    proxy->context->global, proxy->value, argc, args, &js));
+    JSVAL_TO_OBJECT(global), proxy->value, argc - 1, args, &js));
   
   return convert_to_ruby(proxy->context, js);
 }
@@ -169,6 +171,14 @@ length(VALUE self)
     JS_DestroyIdArray(proxy->context->js, ids);
     return length;
   }
+}
+
+/* private */ static VALUE /* global_object */
+global_object(VALUE self)
+{
+  OurRubyProxy* proxy;
+  Data_Get_Struct(self, OurRubyProxy, proxy);
+  return convert_to_ruby(proxy->context, OBJECT_TO_JSVAL(proxy->context->global));
 }
 
 /* private */ static VALUE /* function_property?(name) */
@@ -294,10 +304,11 @@ void init_Johnson_SpiderMonkey_Proxy(VALUE spidermonkey)
   rb_define_method(proxy_class, "[]=", set, 2);
   rb_define_method(proxy_class, "function?", function_p, 0);
   rb_define_method(proxy_class, "respond_to?", respond_to_p, 1);
-  rb_define_method(proxy_class, "call", call, -1);
   rb_define_method(proxy_class, "each", each, 0);
   rb_define_method(proxy_class, "length", length, 0);
 
+  rb_define_private_method(proxy_class, "native_call", native_call, -1);
+  rb_define_private_method(proxy_class, "global_object", global_object, 0);
   rb_define_private_method(proxy_class, "function_property?", function_property_p, 1);
   rb_define_private_method(proxy_class, "call_function_property", call_function_property, -1);
 }

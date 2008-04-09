@@ -14,6 +14,14 @@ module Johnson #:nodoc:
       def to_proc
         @proc ||= Proc.new { |*args| call(*args) }
       end
+
+      def call(*args)
+        call_with(global_object, *args)
+      end
+
+      def call_with(global, *args)
+        native_call(global, *args)
+      end
       
       def method_missing(sym, *args, &block)
         args << block if block_given?
