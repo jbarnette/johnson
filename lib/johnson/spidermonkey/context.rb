@@ -48,8 +48,14 @@ module Johnson #:nodoc:
           define_method(:"#{attribute}=") do |arg|
             send(:__johnson_js_properties)[attribute] = arg
           end
-          define_method(:"#{attribute}") do
-            send(:__johnson_js_properties)[attribute]
+          define_method(:"#{attribute}") do |*args|
+            js_prop = send(:__johnson_js_properties)[attribute]
+            if js_prop.is_a?(RubyProxy) && js_prop.function?
+              #js_prop.call_using(self, *args) if js_prop.function?
+              js_prop.call(*args) if js_prop.function?
+            else
+              js_prop
+            end
           end
         end
 
