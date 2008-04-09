@@ -24,6 +24,15 @@ module Johnson #:nodoc:
         block = args.pop if args.last.is_a?(RubyProxy) && args.last.function?
         target.__send__(symbol, *args, &block)
       end
+
+      # called from js_proxy.c:set
+      def autovivify(target, attribute, value)
+        (class << target; self; end).instance_eval do
+          attr_accessor :"#{attribute}"
+        end
+
+        target.send(:"#{attribute}=", value)
+      end
       
       # called from js_proxy.c:make_js_proxy
       def add_gcthing(thing)

@@ -12,4 +12,5 @@
 /vendor/spidermonkey/*.OBJ
 
 /vendor/spidermonkey/editline/*.OBJ
+.*.swp
 

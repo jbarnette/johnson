@@ -58,6 +58,16 @@ module Johnson
         @context["foo"] = @context["bar"] = Foo.new
         assert_js_equal(true, "foo === bar")
       end
+
+      def test_attributes_get_added_to_ruby
+        foo = @context["foo"] = Foo.new
+        assert !foo.respond_to?(:johnson)
+        @context.evaluate("foo.johnson = 'explode';")
+        assert foo.respond_to?(:johnson)
+        assert_equal('explode', foo.johnson)
+        assert_js_equal('explode', 'foo.johnson')
+        assert !Foo.new.respond_to?(:johnson)
+      end
       
       def test_proxies_roundtrip
         @context["foo"] = foo = Foo.new

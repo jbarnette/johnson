@@ -91,6 +91,8 @@ static JSBool set(JSContext* js_context, JSObject* obj, jsval id, jsval* value)
   VALUE setter_id = rb_intern(StringValuePtr(setter));
   
   VALUE has_setter = rb_funcall(self, rb_intern("respond_to?"), 1, ID2SYM(setter_id));
+  VALUE is_index_assignable =
+    rb_funcall(self, rb_intern("respond_to?"), 1, ID2SYM(rb_intern("[]=")));
   
   if (has_setter)
   {
@@ -103,16 +105,14 @@ static JSBool set(JSContext* js_context, JSObject* obj, jsval id, jsval* value)
     if (arity == 1)
       rb_funcall(self, setter_id, 1, convert_to_ruby(context, *value));
   }
-  else
+  else if(is_index_assignable)
   {
     // otherwise, if the Ruby object quacks sorta like a hash for assignment
     // (it responds to "[]="), assign it by key
     
-    VALUE is_index_assignable =
-      rb_funcall(self, rb_intern("respond_to?"), 1, ID2SYM(rb_intern("[]=")));
-    
-    if (is_index_assignable)
-      rb_funcall(self, rb_intern("[]="), 2, ruby_key, convert_to_ruby(context, *value));
+    rb_funcall(self, rb_intern("[]="), 2, ruby_key, convert_to_ruby(context, *value));
+  } else {
+    rb_funcall(ruby_context, rb_intern("autovivify"), 3, self, ruby_key, convert_to_ruby(context, *value));
   }
   
   return JS_TRUE;
