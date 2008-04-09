@@ -87,6 +87,12 @@ module Johnson
         @context.evaluate("foo.ex_squared = 20;")
         assert_equal(20, foo.ex_squared)
       end
+
+      def test_use_ruby_global_object
+        func = @context.evaluate("function(x) { return this.x2(x); }")
+        foo  = Foo.new
+        assert_equal(4, func.call_using(foo, 2))
+      end
       
       def test_proxies_roundtrip
         @context["foo"] = foo = Foo.new

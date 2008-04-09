@@ -19,8 +19,8 @@ module Johnson #:nodoc:
         call_using(global_object, *args)
       end
 
-      def call_using(global, *args)
-        native_call(global, *args)
+      def call_using(this, *args)
+        native_call(this, *args)
       end
       
       def method_missing(sym, *args, &block)
