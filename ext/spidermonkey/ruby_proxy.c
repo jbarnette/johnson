@@ -67,7 +67,7 @@ static VALUE
 call(int argc, VALUE* argv, VALUE self)
 {
   if (!function_p(self))
-    Johnson_Error_raise("This Johnson::SpiderMonkey::Proxy isn't a function.");
+    Johnson_Error_raise("This Johnson::SpiderMonkey::RubyProxy isn't a function.");
 
   OurRubyProxy* proxy;
   Data_Get_Struct(self, OurRubyProxy, proxy);
