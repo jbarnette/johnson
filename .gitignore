@@ -13,4 +13,5 @@
 
 /vendor/spidermonkey/editline/*.OBJ
 .*.swp
+tags
 

@@ -36,10 +36,20 @@ static JSBool get(JSContext* js_context, JSObject* obj, jsval id, jsval* retval)
   char* key = JS_GetStringBytes(JSVAL_TO_STRING(id));
   VALUE ruby_id = rb_intern(key);
   
+  // if the Ruby object has a dynamic js property with a key
+  // matching the property we're looking for, pull the value out of
+  // that map.
+  if (rb_funcall(ruby_context, rb_intern("autovivified?"), 2, self, ID2SYM(ruby_id)))
+  {
+
+    *retval = convert_to_js(context,
+        rb_funcall(ruby_context, rb_intern("autovivified"), 2, self, ID2SYM(ruby_id)));
+  }
+
   // if the Ruby object is a Module or Class and has a matching
   // const defined, return the converted result of const_get
   
-  if (rb_obj_is_kind_of(self, rb_cModule)
+  else if (rb_obj_is_kind_of(self, rb_cModule)
     && rb_is_const_id(ruby_id)
     && rb_funcall(self, rb_intern("const_defined?"), 1, ID2SYM(ruby_id)))
   {

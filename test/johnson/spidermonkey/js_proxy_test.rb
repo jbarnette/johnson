@@ -68,6 +68,9 @@ module Johnson
         assert_js_equal('explode', 'foo.johnson')
         assert !Foo.new.respond_to?(:johnson)
       end
+
+      def test_assign_function_as_attribute
+      end
       
       def test_proxies_roundtrip
         @context["foo"] = foo = Foo.new

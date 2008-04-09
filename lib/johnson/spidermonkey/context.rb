@@ -25,10 +25,32 @@ module Johnson #:nodoc:
         target.__send__(symbol, *args, &block)
       end
 
+      # called from js_proxy.c:get
+      def autovivified(target, attribute)
+        target.send(:__johnson_js_properties)[attribute]
+      end
+
+      # called from js_proxy.c:get
+      def autovivified?(target, attribute)
+        return false unless target.respond_to?(:__johnson_js_properties)
+        target.send(:__johnson_js_properties).has_key?(attribute)
+      end
+
       # called from js_proxy.c:set
       def autovivify(target, attribute, value)
+
         (class << target; self; end).instance_eval do
-          attr_accessor :"#{attribute}"
+          unless target.respond_to?(:__johnson_js_properties)
+            define_method(:__johnson_js_properties) do
+              @__johnson_js_properties ||= {}
+            end
+          end
+          define_method(:"#{attribute}=") do |arg|
+            send(:__johnson_js_properties)[attribute] = arg
+          end
+          define_method(:"#{attribute}") do
+            send(:__johnson_js_properties)[attribute]
+          end
         end
 
         target.send(:"#{attribute}=", value)
