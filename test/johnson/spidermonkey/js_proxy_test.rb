@@ -72,12 +72,20 @@ module Johnson
       def test_assign_function_as_attribute
         foo = @context["foo"] = Foo.new
         assert !foo.respond_to?(:johnson)
-        @context.evaluate("foo.johnson = function() { return 'explode'; }")
+        f = @context.evaluate("foo.johnson = function() { return 'explode'; }")
         assert foo.respond_to?(:johnson)
         assert_equal('explode', foo.johnson)
         assert_js_equal('explode', 'foo.johnson()')
+        assert_js_equal(f, 'foo.johnson')
         assert !Foo.new.respond_to?(:johnson)
       end
+
+      #def test_assign_function_as_attribute_with_this
+      #  foo = @context["foo"] = Foo.new
+      #  @context.evaluate("function x2(x) { return x; }")
+      #  @context.evaluate("foo.ex_squared = function(x) { return this.x2(x); }")
+      #  assert_equal(4, foo.ex_squared(2))
+      #end
       
       def test_proxies_roundtrip
         @context["foo"] = foo = Foo.new
