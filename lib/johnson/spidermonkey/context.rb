@@ -38,7 +38,6 @@ module Johnson #:nodoc:
 
       # called from js_proxy.c:set
       def autovivify(target, attribute, value)
-
         (class << target; self; end).instance_eval do
           unless target.respond_to?(:__johnson_js_properties)
             define_method(:__johnson_js_properties) do
@@ -51,8 +50,7 @@ module Johnson #:nodoc:
           define_method(:"#{attribute}") do |*args|
             js_prop = send(:__johnson_js_properties)[attribute]
             if js_prop.is_a?(RubyProxy) && js_prop.function?
-              #js_prop.call_using(self, *args) if js_prop.function?
-              js_prop.call(*args) if js_prop.function?
+              js_prop.call_using(self, *args)
             else
               js_prop
             end

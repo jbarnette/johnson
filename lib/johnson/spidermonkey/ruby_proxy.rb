@@ -16,10 +16,10 @@ module Johnson #:nodoc:
       end
 
       def call(*args)
-        call_with(global_object, *args)
+        call_using(global_object, *args)
       end
 
-      def call_with(global, *args)
+      def call_using(global, *args)
         native_call(global, *args)
       end
       
