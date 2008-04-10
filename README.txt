@@ -18,6 +18,7 @@ Johnson wraps JavaScript in a loving Ruby embrace.
   require "johnson"
   
   Johnson.evaluate("4 + 4") # => 8
+  Johnson.evaluate("4 + foo", :foo => 4) # => 8
 
 == REQUIREMENTS:
 
