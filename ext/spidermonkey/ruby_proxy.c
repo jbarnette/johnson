@@ -173,12 +173,12 @@ length(VALUE self)
   }
 }
 
-/* private */ static VALUE /* global_object */
-global_object(VALUE self)
+/* private */ static VALUE /* context */
+context(VALUE self)
 {
   OurRubyProxy* proxy;
   Data_Get_Struct(self, OurRubyProxy, proxy);
-  return convert_to_ruby(proxy->context, OBJECT_TO_JSVAL(proxy->context->global));
+  return (VALUE)JS_GetContextPrivate(proxy->context->js);
 }
 
 /* private */ static VALUE /* function_property?(name) */
@@ -308,7 +308,7 @@ void init_Johnson_SpiderMonkey_Proxy(VALUE spidermonkey)
   rb_define_method(proxy_class, "length", length, 0);
 
   rb_define_private_method(proxy_class, "native_call", native_call, -1);
-  rb_define_private_method(proxy_class, "global_object", global_object, 0);
+  rb_define_private_method(proxy_class, "context", context, 0);
   rb_define_private_method(proxy_class, "function_property?", function_property_p, 1);
   rb_define_private_method(proxy_class, "call_function_property", call_function_property, -1);
 }

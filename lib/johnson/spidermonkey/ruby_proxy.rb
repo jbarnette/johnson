@@ -16,7 +16,7 @@ module Johnson #:nodoc:
       end
 
       def call(*args)
-        call_using(global_object, *args)
+        call_using(context.global, *args)
       end
 
       def call_using(this, *args)

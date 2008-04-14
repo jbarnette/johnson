@@ -3,6 +3,13 @@
 #include "error.h"
 #include "idhash.h"
 
+static VALUE global(VALUE self)
+{
+  OurContext* context;
+  Data_Get_Struct(self, OurContext, context);
+  return convert_to_ruby(context, OBJECT_TO_JSVAL(context->global));  
+}
+
 static VALUE evaluate(VALUE self, VALUE script)
 {
   Check_Type(script, T_STRING);
@@ -132,7 +139,8 @@ void init_Johnson_SpiderMonkey_Context(VALUE spidermonkey)
 
   rb_define_alloc_func(context, allocate);
   rb_define_private_method(context, "initialize_native", initialize_native, 1);
-  
+
+  rb_define_method(context, "global", global, 0);  
   rb_define_method(context, "evaluate", evaluate, 1);
   rb_define_method(context, "[]", get, 1);
   rb_define_method(context, "[]=", set, 2);  
