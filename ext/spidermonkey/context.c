@@ -47,32 +47,6 @@ static VALUE evaluate(VALUE self, VALUE script)
   return convert_to_ruby(context, js);
 }
 
-static VALUE get(VALUE self, VALUE name)
-{
-  Check_Type(name, T_STRING);
-  
-  OurContext* context;
-  Data_Get_Struct(self, OurContext, context);
-  
-  jsval js_value;  
-  assert(JS_GetProperty(context->js, context->global, StringValuePtr(name), &js_value));
-  
-  return convert_to_ruby(context, js_value);
-}
-
-static VALUE set(VALUE self, VALUE name, VALUE value)
-{
-  Check_Type(name, T_STRING);
-  
-  OurContext* context;
-  Data_Get_Struct(self, OurContext, context);
-  
-  jsval js_value = convert_to_js(context, value);
-  assert(JS_SetProperty(context->js, context->global, StringValuePtr(name), &js_value));
-  
-  return value;
-}
-
 static void error(JSContext* js, const char* message, JSErrorReport* report)
 {
   // first we find ourselves
@@ -142,6 +116,4 @@ void init_Johnson_SpiderMonkey_Context(VALUE spidermonkey)
 
   rb_define_method(context, "global", global, 0);  
   rb_define_method(context, "evaluate", evaluate, 1);
-  rb_define_method(context, "[]", get, 1);
-  rb_define_method(context, "[]=", set, 2);  
 }

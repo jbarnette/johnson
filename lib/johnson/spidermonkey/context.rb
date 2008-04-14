@@ -6,6 +6,14 @@ module Johnson #:nodoc:
         @gcthings = {}
         self["Ruby"] = Object
       end
+      
+      def [](key)
+        global[key]
+      end
+      
+      def []=(key, value)
+        global[key] = value
+      end
             
       protected
       

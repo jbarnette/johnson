@@ -138,6 +138,11 @@ VALUE convert_to_ruby(OurContext* context, jsval js)
       // NOTE: intentional fall-through to JSTYPE_OBJECT
     
     case JSTYPE_OBJECT:
+      if (OBJECT_TO_JSVAL(context->global) == js)
+        // global gets special treatment, since the Prelude might not be loaded
+        return make_ruby_proxy(context, js);
+      
+      // this conditional requires the Prelude
       if (js_value_is_symbol(context, js))
         return ID2SYM(rb_intern(JS_GetStringBytes(JS_ValueToString(context->js, js))));
     
