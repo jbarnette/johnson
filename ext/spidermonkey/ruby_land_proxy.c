@@ -1,4 +1,4 @@
-#include "ruby_proxy.h"
+#include "ruby_land_proxy.h"
 
 static VALUE proxy_class = Qnil;
 
@@ -7,8 +7,8 @@ get(VALUE self, VALUE name)
 {
   Check_Type(name, T_STRING);
   
-  OurRubyProxy* proxy;
-  Data_Get_Struct(self, OurRubyProxy, proxy);
+  RubyLandProxy* proxy;
+  Data_Get_Struct(self, RubyLandProxy, proxy);
   
   jsval js_value;  
   
@@ -23,8 +23,8 @@ set(VALUE self, VALUE name, VALUE value)
 {
   Check_Type(name, T_STRING);
   
-  OurRubyProxy* proxy;
-  Data_Get_Struct(self, OurRubyProxy, proxy);
+  RubyLandProxy* proxy;
+  Data_Get_Struct(self, RubyLandProxy, proxy);
   
   jsval js_value = convert_to_js(proxy->context, value);
   
@@ -37,16 +37,16 @@ set(VALUE self, VALUE name, VALUE value)
 static VALUE /* function? */
 function_p(VALUE self)
 {
-  OurRubyProxy* proxy;
-  Data_Get_Struct(self, OurRubyProxy, proxy);
+  RubyLandProxy* proxy;
+  Data_Get_Struct(self, RubyLandProxy, proxy);
   return JS_TypeOfValue(proxy->context->js, proxy->value) == JSTYPE_FUNCTION;
 }
 
 static VALUE /* respond_to?(sym) */
 respond_to_p(VALUE self, VALUE sym)
 {
-  OurRubyProxy* proxy;
-  Data_Get_Struct(self, OurRubyProxy, proxy);
+  RubyLandProxy* proxy;
+  Data_Get_Struct(self, RubyLandProxy, proxy);
   
   char* name = rb_id2name(SYM2ID(sym));
   
@@ -67,11 +67,11 @@ respond_to_p(VALUE self, VALUE sym)
 native_call(int argc, VALUE* argv, VALUE self) /* native_call(global, *args) */
 {
   if (!function_p(self))
-    Johnson_Error_raise("This Johnson::SpiderMonkey::RubyProxy isn't a function.");
+    Johnson_Error_raise("This Johnson::SpiderMonkey::RubyLandProxy isn't a function.");
 
 
-  OurRubyProxy* proxy;
-  Data_Get_Struct(self, OurRubyProxy, proxy);
+  RubyLandProxy* proxy;
+  Data_Get_Struct(self, RubyLandProxy, proxy);
   
   jsval global = convert_to_js(proxy->context, argv[0]);
   jsval args[argc - 1];
@@ -91,8 +91,8 @@ native_call(int argc, VALUE* argv, VALUE self) /* native_call(global, *args) */
 static VALUE /* each(&block) */ 
 each(VALUE self)
 {
-  OurRubyProxy* proxy;
-  Data_Get_Struct(self, OurRubyProxy, proxy);
+  RubyLandProxy* proxy;
+  Data_Get_Struct(self, RubyLandProxy, proxy);
   
   JSObject* value = JSVAL_TO_OBJECT(proxy->value);
   
@@ -151,8 +151,8 @@ each(VALUE self)
 static VALUE
 length(VALUE self)
 {
-  OurRubyProxy* proxy;
-  Data_Get_Struct(self, OurRubyProxy, proxy);
+  RubyLandProxy* proxy;
+  Data_Get_Struct(self, RubyLandProxy, proxy);
   
   JSObject* value = JSVAL_TO_OBJECT(proxy->value);
   
@@ -176,8 +176,8 @@ length(VALUE self)
 /* private */ static VALUE /* context */
 context(VALUE self)
 {
-  OurRubyProxy* proxy;
-  Data_Get_Struct(self, OurRubyProxy, proxy);
+  RubyLandProxy* proxy;
+  Data_Get_Struct(self, RubyLandProxy, proxy);
   return (VALUE)JS_GetContextPrivate(proxy->context->js);
 }
 
@@ -186,8 +186,8 @@ function_property_p(VALUE self, VALUE name)
 {
   Check_Type(name, T_STRING);
   
-  OurRubyProxy* proxy;
-  Data_Get_Struct(self, OurRubyProxy, proxy);
+  RubyLandProxy* proxy;
+  Data_Get_Struct(self, RubyLandProxy, proxy);
   
   jsval js_value;  
 
@@ -200,8 +200,8 @@ function_property_p(VALUE self, VALUE name)
 /* private */ static VALUE
 call_function_property(int argc, VALUE* argv, VALUE self)
 {
-  OurRubyProxy* proxy;
-  Data_Get_Struct(self, OurRubyProxy, proxy);
+  RubyLandProxy* proxy;
+  Data_Get_Struct(self, RubyLandProxy, proxy);
   
   jsval function;
   
@@ -230,7 +230,7 @@ call_function_property(int argc, VALUE* argv, VALUE self)
 //// INFRASTRUCTURE BELOW HERE ////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////
 
-static void finalize(OurRubyProxy* proxy)
+static void finalize(RubyLandProxy* proxy)
 {
   // could get finalized after the context has been freed
   if (proxy->context)
@@ -255,17 +255,17 @@ JSBool ruby_value_is_proxy(VALUE maybe_proxy)
   return proxy_class == CLASS_OF(maybe_proxy); 
 }
 
-jsval unwrap_ruby_proxy(OurContext* context, VALUE wrapped)
+jsval unwrap_ruby_land_proxy(OurContext* context, VALUE wrapped)
 {
   assert(ruby_value_is_proxy(wrapped));
   
-  OurRubyProxy* proxy;
-  Data_Get_Struct(wrapped, OurRubyProxy, proxy);
+  RubyLandProxy* proxy;
+  Data_Get_Struct(wrapped, RubyLandProxy, proxy);
   
   return proxy->value; 
 }
 
-VALUE make_ruby_proxy(OurContext* context, jsval value)
+VALUE make_ruby_land_proxy(OurContext* context, jsval value)
 {
   VALUE id = (VALUE)JS_HashTableLookup(context->jsids, (void *)value);
   
@@ -278,8 +278,8 @@ VALUE make_ruby_proxy(OurContext* context, jsval value)
   else
   {
     // otherwise make one and cache it
-    OurRubyProxy* our_proxy; 
-    VALUE proxy = Data_Make_Struct(proxy_class, OurRubyProxy, 0, finalize, our_proxy);
+    RubyLandProxy* our_proxy; 
+    VALUE proxy = Data_Make_Struct(proxy_class, RubyLandProxy, 0, finalize, our_proxy);
 
     our_proxy->value = value;
     our_proxy->context = context;
@@ -298,7 +298,7 @@ VALUE make_ruby_proxy(OurContext* context, jsval value)
 
 void init_Johnson_SpiderMonkey_Proxy(VALUE spidermonkey)
 {
-  proxy_class = rb_define_class_under(spidermonkey, "RubyProxy", rb_cObject);
+  proxy_class = rb_define_class_under(spidermonkey, "RubyLandProxy", rb_cObject);
 
   rb_define_method(proxy_class, "[]", get, 1);
   rb_define_method(proxy_class, "[]=", set, 2);

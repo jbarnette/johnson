@@ -78,7 +78,7 @@ jsval make_js_function_proxy(OurContext* context, VALUE proc)
     assert(JS_HashTableAdd(context->rbids, (void *)rb_obj_id(proc), (void *)newid));
     
     // root the ruby value for GC
-    // FIXME: this is pretty much copy/paste from js_proxy.c
+    // FIXME: this is pretty much copy/paste from js_land_proxy.c
     // FIXME: no custom finalizer on JSFunction, so never freed!
     VALUE ruby_context = (VALUE)JS_GetContextPrivate(context->js);
     rb_funcall(ruby_context, rb_intern("add_gcthing"), 1, proc);

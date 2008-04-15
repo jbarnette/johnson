@@ -1,7 +1,7 @@
 #include "conversions.h"
-#include "js_proxy.h"
+#include "js_land_proxy.h"
 #include "js_function_proxy.h"
-#include "ruby_proxy.h"
+#include "ruby_land_proxy.h"
 
 static jsval convert_float_or_bignum_to_js(OurContext* context, VALUE float_or_bignum)
 {
@@ -69,14 +69,14 @@ jsval convert_to_js(OurContext* context, VALUE ruby)
   	case T_FILE:
   	case T_STRUCT:
     case T_OBJECT:
-      return make_js_proxy(context, ruby);
+      return make_js_land_proxy(context, ruby);
       
   	case T_REGEXP:
       return convert_regexp_to_js(context, ruby);
 
   	case T_DATA: // HEY! keep T_DATA last for fall-through
   	  if (ruby_value_is_proxy(ruby))
-        return unwrap_ruby_proxy(context, ruby);
+        return unwrap_ruby_land_proxy(context, ruby);
 
       if (rb_cProc == CLASS_OF(ruby))
         return make_js_function_proxy(context, ruby);
@@ -140,19 +140,19 @@ VALUE convert_to_ruby(OurContext* context, jsval js)
     case JSTYPE_OBJECT:
       if (OBJECT_TO_JSVAL(context->global) == js)
         // global gets special treatment, since the Prelude might not be loaded
-        return make_ruby_proxy(context, js);
+        return make_ruby_land_proxy(context, js);
       
       // this conditional requires the Prelude
       if (js_value_is_symbol(context, js))
         return ID2SYM(rb_intern(JS_GetStringBytes(JS_ValueToString(context->js, js))));
     
       if (js_value_is_proxy(context, js))
-        return unwrap_js_proxy(context, js);
+        return unwrap_js_land_proxy(context, js);
 
       if (js_value_is_a_regexp(context, js))
         return make_ruby_regexp(context, js);
     
-      return make_ruby_proxy(context, js);
+      return make_ruby_land_proxy(context, js);
         
     case JSTYPE_BOOLEAN:
       return JSVAL_TRUE == js ? Qtrue : Qfalse;

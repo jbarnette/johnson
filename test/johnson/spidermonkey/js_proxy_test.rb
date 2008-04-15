@@ -2,7 +2,7 @@ require File.expand_path(File.join(File.dirname(__FILE__), "/../../helper"))
 
 module Johnson
   module SpiderMonkey
-    class JSProxyTest < Johnson::TestCase
+    class JSLandProxyTest < Johnson::TestCase
       module AModule
       end
       
