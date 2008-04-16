@@ -31,7 +31,7 @@ static JSBool get(JSContext* js_context, JSObject* obj, jsval id, jsval* retval)
   // get the Ruby object that backs this proxy
   
   VALUE self;
-  assert(self = (VALUE)JS_GetInstancePrivate(context->js, obj, &JSLandProxyClass, NULL));
+  assert(self = (VALUE)JS_GetInstancePrivate(context->js, obj, JS_GET_CLASS(context->js, obj), NULL));
   
   char* key = JS_GetStringBytes(JSVAL_TO_STRING(id));
   VALUE ruby_id = rb_intern(key);
@@ -92,7 +92,7 @@ static JSBool set(JSContext* js_context, JSObject* obj, jsval id, jsval* value)
   Data_Get_Struct(ruby_context, OurContext, context);
     
   VALUE self;
-  assert(self = (VALUE)JS_GetInstancePrivate(context->js, obj, &JSLandProxyClass, NULL));
+  assert(self = (VALUE)JS_GetInstancePrivate(context->js, obj, JS_GET_CLASS(context->js, obj), NULL));
   
   char* key = JS_GetStringBytes(JSVAL_TO_STRING(id));
   VALUE ruby_key = rb_str_new2(key);
@@ -137,7 +137,7 @@ static JSBool method_missing(JSContext* js_context, JSObject* obj, uintN argc, j
   Data_Get_Struct(ruby_context, OurContext, context);
     
   VALUE self;
-  assert(self = (VALUE)JS_GetInstancePrivate(context->js, obj, &JSLandProxyClass, NULL));
+  assert(self = (VALUE)JS_GetInstancePrivate(context->js, obj, JS_GET_CLASS(context->js, obj), NULL));
   
   char* key = JS_GetStringBytes(JSVAL_TO_STRING(argv[0]));
   
@@ -162,7 +162,11 @@ JSBool js_value_is_proxy(OurContext* context, jsval maybe_proxy)
 VALUE unwrap_js_land_proxy(OurContext* context, jsval proxy)
 {
   VALUE value;
-  assert(value = (VALUE)JS_GetInstancePrivate(context->js, JSVAL_TO_OBJECT(proxy), &JSLandProxyClass, NULL));
+  JSObject *proxy_object = JSVAL_TO_OBJECT(proxy);
+  
+  assert(value = (VALUE)JS_GetInstancePrivate(context->js, proxy_object,
+          JS_GET_CLASS(context->js, proxy_object), NULL));
+  
   return value;
 }
 
@@ -176,7 +180,8 @@ static void finalize(JSContext* js_context, JSObject* obj)
     Data_Get_Struct(ruby_context, OurContext, context);
     
     VALUE self;
-    assert(self = (VALUE)JS_GetInstancePrivate(context->js, obj, &JSLandProxyClass, NULL));
+    assert(self = (VALUE)JS_GetInstancePrivate(context->js, obj,
+            JS_GET_CLASS(context->js, obj), NULL));
     
     // remove the proxy OID from the id map
     JS_HashTableRemove(context->rbids, (void *)rb_obj_id(self));
