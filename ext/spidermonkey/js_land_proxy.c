@@ -1,8 +1,9 @@
 #include "js_land_proxy.h"
 
 static JSBool get(JSContext* js_context, JSObject* obj, jsval id, jsval* retval);
-static void finalize(JSContext* context, JSObject* obj);
 static JSBool set(JSContext* context, JSObject* obj, jsval id, jsval* retval);
+static JSBool construct(JSContext* js_context, JSObject* obj, uintN argc, jsval* argv, jsval* retval);
+static void finalize(JSContext* context, JSObject* obj);
 
 static JSClass JSLandProxyClass = {
   "JSLandProxy", JSCLASS_HAS_PRIVATE,
@@ -14,6 +15,22 @@ static JSClass JSLandProxyClass = {
   JS_ResolveStub,
   JS_ConvertStub,
   finalize
+};
+
+static JSClass JSLandClassProxyClass = {
+  "JSLandClassProxy", JSCLASS_HAS_PRIVATE,
+  JS_PropertyStub,
+  JS_PropertyStub,
+  get,
+  set,
+  JS_EnumerateStub,
+  JS_ResolveStub,
+  JS_ConvertStub,
+  finalize,
+  NULL,
+  NULL,
+  NULL,
+  construct
 };
 
 static JSBool get(JSContext* js_context, JSObject* obj, jsval id, jsval* retval)
@@ -128,6 +145,12 @@ static JSBool set(JSContext* js_context, JSObject* obj, jsval id, jsval* value)
   return JS_TRUE;
 }
 
+static JSBool construct(JSContext* js_context, JSObject* obj, uintN argc, jsval* argv, jsval* retval)
+{
+  *retval = JSVAL_NULL;
+  return JS_TRUE;
+}
+
 static JSBool method_missing(JSContext* js_context, JSObject* obj, uintN argc, jsval* argv, jsval* retval)
 {
   VALUE ruby_context;
@@ -156,7 +179,8 @@ static JSBool method_missing(JSContext* js_context, JSObject* obj, uintN argc, j
 
 JSBool js_value_is_proxy(OurContext* context, jsval maybe_proxy)
 {
-  return JS_InstanceOf(context->js, JSVAL_TO_OBJECT(maybe_proxy), &JSLandProxyClass, NULL);
+  JSClass* klass = JS_GET_CLASS(context->js, JSVAL_TO_OBJECT(maybe_proxy));  
+  return &JSLandProxyClass == klass || &JSLandClassProxyClass == klass;
 }
 
 VALUE unwrap_js_land_proxy(OurContext* context, jsval proxy)
@@ -203,8 +227,11 @@ jsval make_js_land_proxy(OurContext* context, VALUE value)
   else
   {
     JSObject *jsobj;
-
-    assert(jsobj = JS_NewObject(context->js, &JSLandProxyClass, NULL, NULL));
+    
+    JSClass *klass = &JSLandProxyClass;
+    if (T_CLASS == TYPE(value)) klass = &JSLandClassProxyClass;
+    
+    assert(jsobj = JS_NewObject(context->js, klass, NULL, NULL));
     assert(JS_SetPrivate(context->js, jsobj, (void*)value));
     assert(JS_DefineFunction(context->js, jsobj, "__noSuchMethod__", method_missing, 2, 0));
 
