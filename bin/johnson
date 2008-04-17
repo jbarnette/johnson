@@ -1,0 +1,56 @@
+#!/usr/bin/env ruby
+
+require "rubygems"
+require "johnson"
+require "readline"
+
+CONTEXT = Johnson::Context.new
+CONTEXT[:print] = lambda { |m| puts m }
+
+local_binding = binding
+ruby_readline = []
+
+def copy_history
+  new_history = []
+  until Readline::HISTORY.empty?
+    new_history.push(Readline::HISTORY.pop)
+  end
+  new_history
+end
+
+def paste_history(old_history)
+  until old_history.empty?
+    Readline::HISTORY << old_history.pop
+  end
+end
+
+def rescued(&block)
+  yield
+rescue Object => e
+  puts e.message
+  puts e.backtrace
+end
+
+loop do
+  input = Readline.readline("js> ", true)
+  break if input == "exit"
+  
+  if input == "ruby"
+    js_readline = copy_history
+    paste_history(ruby_readline)
+    
+    loop do
+      input = Readline.readline("rb> ", true)
+      break if input == "done"
+      exit if input == "exit"
+      
+      rescued { puts "=> " + eval(input, local_binding).inspect }
+    end
+    
+    ruby_readline = copy_history
+    paste_history(js_readline)
+    next
+  end
+  
+  rescued { puts "=> " + CONTEXT.evaluate(input).inspect }
+end

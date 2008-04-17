@@ -19,5 +19,9 @@ module Johnson
       return nil if expression.nil?
       delegate.evaluate(expression)
     end
+    
+    def global
+      delegate.global
+    end
   end
 end
