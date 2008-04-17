@@ -31,6 +31,15 @@ module Johnson
         proxy[0] = 10
         assert_js_equal(10, 'x[0]')
       end
+      
+      def test_hash_indexable
+        proxy = @context.evaluate("var x = { 0: 1, 1: 2, 2: 3 }; x")
+        assert_equal(1, proxy[0])
+        assert_equal(1, proxy['0'])
+
+        proxy[0] = 10
+        assert_js_equal(10, 'x[0]')
+      end
 
       def test_functions_get_wrapped_as_proxies
         f = @context.evaluate("function() {}")
