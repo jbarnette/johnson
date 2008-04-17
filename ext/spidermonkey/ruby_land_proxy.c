@@ -5,31 +5,45 @@ static VALUE proxy_class = Qnil;
 static VALUE /* [] */
 get(VALUE self, VALUE name)
 {
-  Check_Type(name, T_STRING);
-  
   RubyLandProxy* proxy;
   Data_Get_Struct(self, RubyLandProxy, proxy);
-  
+
   jsval js_value;  
-  
-  assert(JS_GetProperty(proxy->context->js,
-    JSVAL_TO_OBJECT(proxy->value), StringValuePtr(name), &js_value));
-  
+
+  switch(TYPE(name)) {
+    case T_FIXNUM:
+      assert(JS_GetElement(proxy->context->js,
+              JSVAL_TO_OBJECT(proxy->value), NUM2INT(name), &js_value));
+      break;
+    default:
+      Check_Type(name, T_STRING);
+      assert(JS_GetProperty(proxy->context->js,
+        JSVAL_TO_OBJECT(proxy->value), StringValuePtr(name), &js_value));
+      break;
+  }
+
   return convert_to_ruby(proxy->context, js_value);
 }
 
 static VALUE /* []= */
 set(VALUE self, VALUE name, VALUE value)
 {
-  Check_Type(name, T_STRING);
-  
   RubyLandProxy* proxy;
   Data_Get_Struct(self, RubyLandProxy, proxy);
   
   jsval js_value = convert_to_js(proxy->context, value);
   
-  assert(JS_SetProperty(proxy->context->js,
-    JSVAL_TO_OBJECT(proxy->value), StringValuePtr(name), &js_value));
+  switch(TYPE(name)) {
+    case T_FIXNUM:
+      assert(JS_SetElement(proxy->context->js,
+              JSVAL_TO_OBJECT(proxy->value), NUM2INT(name), &js_value));
+      break;
+    default:
+      Check_Type(name, T_STRING);
+      assert(JS_SetProperty(proxy->context->js,
+            JSVAL_TO_OBJECT(proxy->value), StringValuePtr(name), &js_value));
+      break;
+  }
   
   return value;
 }

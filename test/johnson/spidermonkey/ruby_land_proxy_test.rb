@@ -23,6 +23,15 @@ module Johnson
         assert(@context.evaluate("x === y"))
       end
       
+      def test_array_indexable
+        proxy = @context.evaluate("var x = [1,2,3]; x")
+        assert_equal(1, proxy[0])
+        assert_equal(1, proxy['0'])
+
+        proxy[0] = 10
+        assert_js_equal(10, 'x[0]')
+      end
+
       def test_functions_get_wrapped_as_proxies
         f = @context.evaluate("function() {}")
         assert_kind_of(Johnson::SpiderMonkey::RubyLandProxy, f)
