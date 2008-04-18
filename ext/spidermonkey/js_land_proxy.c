@@ -56,9 +56,9 @@ static JSBool get(JSContext* js_context, JSObject* obj, jsval id, jsval* retval)
   // if the Ruby object has a dynamic js property with a key
   // matching the property we're looking for, pull the value out of
   // that map.
+  
   if (rb_funcall(ruby_context, rb_intern("autovivified?"), 2, self, ID2SYM(ruby_id)))
   {
-
     *retval = convert_to_js(context,
         rb_funcall(ruby_context, rb_intern("autovivified"), 2, self, ID2SYM(ruby_id)));
   }
@@ -137,8 +137,11 @@ static JSBool set(JSContext* js_context, JSObject* obj, jsval id, jsval* value)
     // (it responds to "[]="), assign it by key
     
     rb_funcall(self, rb_intern("[]="), 2, ruby_key, convert_to_ruby(context, *value));
-  } else {
-    rb_funcall(ruby_context, rb_intern("autovivify"), 3, self, ruby_key, convert_to_ruby(context, *value));
+  }
+  else
+  {
+    rb_funcall(ruby_context, rb_intern("autovivify"), 3, self,
+      ruby_key, convert_to_ruby(context, *value));
   }
   
   return JS_TRUE;
@@ -183,7 +186,7 @@ static JSBool method_missing(JSContext* js_context, JSObject* obj, uintN argc, j
   
   VALUE ruby_id = rb_intern(key);
   
-  // FIXME: this is horrible and lazy, to_a comes from enumerable on proxy
+  // FIXME: this is horrible and lazy, to_a comes from enumerable on proxy (argv[1] is a JSArray)
   VALUE args = rb_funcall(convert_to_ruby(context, argv[1]), rb_intern("to_a"), 0);
   
   // Context#jsend: if the last arg is a function, it'll get passed along as a &block
