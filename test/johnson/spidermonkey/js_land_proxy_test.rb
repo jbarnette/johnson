@@ -62,6 +62,20 @@ module Johnson
         @context.evaluate(Johnson::PRELUDE)
       end
       
+      def test_array_gets_returned
+        list = [1,2,3,4]
+
+        @context['alert'] = lambda { |x| p x }
+        @context['list'] = list
+        @context.evaluate("
+          var new_list = [];
+          for(x in list) {
+            new_list.push(x + 1);
+          }
+        ")
+        assert_equal(list.map { |x| x + 1}, @context['new_list'].to_a)
+      end
+
       def test_proxies_get_reused
         @context["foo"] = @context["bar"] = Foo.new
         assert_js_equal(true, "foo === bar")

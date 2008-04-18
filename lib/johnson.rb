@@ -1,3 +1,4 @@
+require 'generator'
 require "johnson/version"
 
 # the native SpiderMonkey extension

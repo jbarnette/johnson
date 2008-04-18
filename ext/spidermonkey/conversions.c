@@ -64,6 +64,7 @@ jsval convert_to_js(OurContext* context, VALUE ruby)
       return convert_symbol_to_js(context, ruby);
 
   	case T_CLASS:
+  	case T_ARRAY:
   	case T_HASH:
   	case T_MODULE:
   	case T_FILE:
@@ -83,7 +84,6 @@ jsval convert_to_js(OurContext* context, VALUE ruby)
 
     // UNIMPLEMENTED BELOW THIS LINE
 
-  	case T_ARRAY:
     
     default:
       Johnson_Error_raise("unknown ruby type in switch");

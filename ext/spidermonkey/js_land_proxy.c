@@ -52,6 +52,19 @@ static JSBool get(JSContext* js_context, JSObject* obj, jsval id, jsval* retval)
   
   char* key = JS_GetStringBytes(JSVAL_TO_STRING(id));
   VALUE ruby_id = rb_intern(key);
+
+  if(!strcasecmp("__iterator__", key)) {
+    jsval nsJohnson;
+    assert(JS_GetProperty(context->js, context->global, "Johnson", &nsJohnson) || JSVAL_VOID == nsJohnson);
+
+    jsval nsGenerator;
+    assert(JS_GetProperty(context->js, JSVAL_TO_OBJECT(nsJohnson), "Generator", &nsGenerator) || JSVAL_VOID == nsGenerator);
+
+    jsval create;
+    assert(JS_GetProperty(context->js, JSVAL_TO_OBJECT(nsGenerator), "create", &create) || JSVAL_VOID == create);
+    *retval = create;
+    return JS_TRUE;
+  }
   
   // if the Ruby object has a dynamic js property with a key
   // matching the property we're looking for, pull the value out of
@@ -253,6 +266,7 @@ jsval make_js_land_proxy(OurContext* context, VALUE value)
     
     assert(jsobj = JS_NewObject(context->js, klass, NULL, NULL));
     assert(JS_SetPrivate(context->js, jsobj, (void*)value));
+
     assert(JS_DefineFunction(context->js, jsobj, "__noSuchMethod__", method_missing, 2, 0));
 
     js = OBJECT_TO_JSVAL(jsobj);
