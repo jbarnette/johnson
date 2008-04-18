@@ -4,7 +4,7 @@ require "rubygems"
 require "johnson"
 require "readline"
 
-CONTEXT = Johnson::Context.new
+CONTEXT = cx = Johnson::Context.new
 CONTEXT[:print] = lambda { |m| puts m }
 
 EXIT_VERBS = %w(exit quit)
