@@ -29,4 +29,8 @@ module Johnson
     
     context.evaluate(expression)
   end
+  
+  def self.parse(js)
+    Johnson::Parser.parse(js)
+  end
 end
