@@ -1,16 +1,12 @@
 = johnson
 
-* http://johnson.rubyforge.org
-* http://johnson.lighthouseapp.com
 * http://github.com/jbarnette/johnson
+* http://johnson.lighthouseapp.com
+* http://johnson.rubyforge.org
 
 == DESCRIPTION:
 
 Johnson wraps JavaScript in a loving Ruby embrace.
-
-== FEATURES/PROBLEMS:
-
-* FIX (list of features or problems)
 
 == SYNOPSIS:
 
@@ -34,7 +30,7 @@ FIXME: ruby-spidermonkey shoutout
 
 (The MIT License)
 
-Copyright (c) 2008 John Barnette, Aaron Patterson
+Copyright (c) 2008 John Barnette, Aaron Patterson, Yehuda Katz
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
