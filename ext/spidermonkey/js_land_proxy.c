@@ -90,10 +90,10 @@ static JSBool get(JSContext* js_context, JSObject* obj, jsval id, jsval* retval)
     // otherwise, if the Ruby object quacks sorta like a hash (it responds to
     // "[]" and "key?"), index it by key and return the converted result
 
-    VALUE is_indexable = rb_funcall(self, rb_intern("respond_to?"), 1, ID2SYM(rb_intern("[]")));
+    VALUE indexable_p = rb_funcall(self, rb_intern("respond_to?"), 1, ID2SYM(rb_intern("[]")));
     VALUE has_key_p = rb_funcall(self, rb_intern("respond_to?"), 1, ID2SYM(rb_intern("key?")));
     
-    if (is_indexable && has_key_p)
+    if (indexable_p && has_key_p)
       *retval = convert_to_js(context, rb_funcall(self, rb_intern("[]"), 1, rb_str_new2(key)));
   }
   
@@ -117,11 +117,10 @@ static JSBool set(JSContext* js_context, JSObject* obj, jsval id, jsval* value)
   VALUE setter = rb_str_append(rb_str_new3(ruby_key), rb_str_new2("="));
   VALUE setter_id = rb_intern(StringValuePtr(setter));
   
-  VALUE has_setter = rb_funcall(self, rb_intern("respond_to?"), 1, ID2SYM(setter_id));
-  VALUE is_index_assignable =
-    rb_funcall(self, rb_intern("respond_to?"), 1, ID2SYM(rb_intern("[]=")));
+  VALUE settable_p = rb_funcall(self, rb_intern("respond_to?"), 1, ID2SYM(setter_id));
+  VALUE indexable_p = rb_funcall(self, rb_intern("respond_to?"), 1, ID2SYM(rb_intern("[]=")));
   
-  if (has_setter)
+  if (settable_p)
   {
     VALUE method = rb_funcall(self, rb_intern("method"), 1, ID2SYM(setter_id));
     int arity = NUM2INT(rb_funcall(method, rb_intern("arity"), 0));
@@ -132,7 +131,7 @@ static JSBool set(JSContext* js_context, JSObject* obj, jsval id, jsval* value)
     if (arity == 1)
       rb_funcall(self, setter_id, 1, convert_to_ruby(context, *value));
   }
-  else if(is_index_assignable)
+  else if(indexable_p)
   {
     // otherwise, if the Ruby object quacks sorta like a hash for assignment
     // (it responds to "[]="), assign it by key
@@ -147,7 +146,25 @@ static JSBool set(JSContext* js_context, JSObject* obj, jsval id, jsval* value)
 
 static JSBool construct(JSContext* js_context, JSObject* obj, uintN argc, jsval* argv, jsval* retval)
 {
-  *retval = JSVAL_NULL;
+  VALUE ruby_context;
+  assert(ruby_context = (VALUE)JS_GetContextPrivate(js_context));
+  
+  OurContext* context;
+  Data_Get_Struct(ruby_context, OurContext, context);
+
+  VALUE klass = convert_to_ruby(context, JS_ARGV_CALLEE(argv));
+  VALUE args = rb_ary_new();
+
+  int i;
+  
+  for (i = 0; i < argc; ++i)
+    rb_ary_push(args, convert_to_ruby(context, argv[i]));
+    
+  // Context#jsend: if the last arg is a function, it'll get passed along as a &block
+  
+  *retval = convert_to_js(context,
+    rb_funcall(ruby_context, rb_intern("jsend"), 3, klass, ID2SYM(rb_intern("new")), args));
+
   return JS_TRUE;
 }
 
@@ -166,7 +183,7 @@ static JSBool method_missing(JSContext* js_context, JSObject* obj, uintN argc, j
   
   VALUE ruby_id = rb_intern(key);
   
-  // FIXME: this could probably be a lot faster, to_a comes from enumerable on proxy
+  // FIXME: this is horrible and lazy, to_a comes from enumerable on proxy
   VALUE args = rb_funcall(convert_to_ruby(context, argv[1]), rb_intern("to_a"), 0);
   
   // Context#jsend: if the last arg is a function, it'll get passed along as a &block

@@ -6,6 +6,14 @@ module Johnson
       module AModule
       end
       
+      class AClass
+        attr_reader :args
+        
+        def initialize(*args)
+          @args = args
+        end
+      end
+      
       class Foo
         class Inner
         end
@@ -169,9 +177,18 @@ module Johnson
       end
             
       def test_can_create_new_instances_in_js
-        @context["Foo"] = Foo
-        foo = @context.evaluate("Foo.new()")
-        assert_kind_of(Foo, foo)
+        @context["AClass"] = AClass
+        foo = @context.evaluate("AClass.new()")
+        assert_kind_of(AClass, foo)
+      end
+      
+      def test_class_proxies_provide_a_ctor
+        @context["AClass"] = AClass
+        foo = @context.evaluate("new AClass()")
+        assert_kind_of(AClass, foo)
+        
+        bar = @context.evaluate("new AClass(1, 2, 3)")
+        assert_equal([1, 2, 3], bar.args)
       end
       
       def test_dwims_blocks
