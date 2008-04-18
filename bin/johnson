@@ -7,6 +7,8 @@ require "readline"
 CONTEXT = Johnson::Context.new
 CONTEXT[:print] = lambda { |m| puts m }
 
+EXIT_VERBS = %w(exit quit)
+
 local_binding = binding
 ruby_readline = []
 
@@ -33,16 +35,16 @@ end
 
 loop do
   input = Readline.readline("js> ", true)
-  break if input == "exit"
+  break if EXIT_VERBS.include?(input)
   
-  if input == "ruby"
+  if input == "rb"
     js_readline = copy_history
     paste_history(ruby_readline)
     
     loop do
       input = Readline.readline("rb> ", true)
-      break if input == "done"
-      exit if input == "exit"
+      break if input == "js"
+      exit if EXIT_VERBS.include?(input)
       
       rescued { puts "=> " + eval(input, local_binding).inspect }
     end
