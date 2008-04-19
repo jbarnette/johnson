@@ -23,5 +23,9 @@ module Johnson
     def global
       delegate.global
     end
+    
+    def load(file)
+      delegate.evaluate(IO.read(file))
+    end
   end
 end

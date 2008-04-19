@@ -4,11 +4,10 @@ module Johnson
   module SpiderMonkey
     class ContextTest < Johnson::TestCase
       def setup
-        @context = Johnson::SpiderMonkey::Context.new
+        @context = Johnson::Context.new(Johnson::SpiderMonkey::Context)
       end
       
       def test_wraps_global_unfuckedly
-        @context.evaluate(Johnson::PRELUDE)
         assert_same(@context.global, @context.evaluate("this"))
       end
       

@@ -1,5 +1,8 @@
-require 'generator'
+require "generator"
 require "johnson/version"
+
+# the command-line option parser
+require "johnson/cli/options"
 
 # the native SpiderMonkey extension
 require "johnson/spidermonkey"
