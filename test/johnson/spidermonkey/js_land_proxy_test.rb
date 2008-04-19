@@ -58,8 +58,7 @@ module Johnson
       end
 
       def setup
-        @context = Johnson::SpiderMonkey::Context.new
-        @context.evaluate(Johnson::PRELUDE)
+        @context = Johnson::Context.new(Johnson::SpiderMonkey::Context)
       end
 
       def test_find_constants

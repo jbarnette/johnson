@@ -4,8 +4,7 @@ module Johnson
   module SpiderMonkey
     class RubyLandProxyTest < Johnson::TestCase
       def setup
-        @context = Johnson::SpiderMonkey::Context.new
-        @context.evaluate(Johnson::PRELUDE)
+        @context = Johnson::Context.new(Johnson::SpiderMonkey::Context)
       end
       
       def test_constructing_a_proxy_directly_asplodes
