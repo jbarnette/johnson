@@ -1,7 +1,8 @@
 require 'stringio'
+require 'johnson/parser/error'
 
 module Johnson
-  class Parser
+  module Parser
     class << self
       def parse(js)
         tree = if js.is_a?(String)

@@ -51,7 +51,12 @@ static VALUE parse_io(VALUE klass, VALUE stream) {
   context->node = js_ParseScript(context->js, 
       JS_NewObject(context->js, NULL, NULL, NULL),
       context->pc);
-
+  if(JS_IsExceptionPending(context->js)) {
+    jsval exception;
+    JS_GetPendingException(context->js, &exception);
+    JS_ClearPendingException(context->js);
+    rb_funcall(self, rb_intern("raise_parse_error"), 0);
+  }
   return self;
 }
 

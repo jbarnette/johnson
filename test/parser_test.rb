@@ -17,6 +17,12 @@ class ParserTest < Test::Unit::TestCase
     assert_sexp([], tree)
   end
 
+  def test_exception_raised
+    assert_raises(Johnson::Parser::Error) {
+      @parser.parse('if(')
+    }
+  end
+
   def test_variable_declaration_no_init
     assert_sexp(
       [[:var, [[:name, 'foo']]]],

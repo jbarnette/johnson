@@ -285,6 +285,10 @@ module Johnson #:nodoc:
         raise "Unknown relop #{pn_op} at (#{line}, #{index})" unless m
         visitor.send(m, self)
       end
+
+      def raise_parse_error
+        raise Johnson::Parser::Error
+      end
     end
   end
 end
