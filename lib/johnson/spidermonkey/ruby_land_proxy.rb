@@ -23,6 +23,10 @@ module Johnson #:nodoc:
         native_call(this, *args)
       end
       
+      def inspect
+        toString
+      end
+      
       def method_missing(sym, *args, &block)
         args << block if block_given?
         
