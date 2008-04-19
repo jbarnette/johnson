@@ -287,7 +287,7 @@ module Johnson #:nodoc:
       end
 
       def raise_parse_error
-        raise Johnson::Parser::Error
+        raise Johnson::Parser::SyntaxError
       end
     end
   end

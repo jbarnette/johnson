@@ -1,6 +1,6 @@
 module Johnson
   module Parser
-    class Error < RuntimeError
+    class SyntaxError < RuntimeError
     end
   end
 end

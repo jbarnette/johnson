@@ -18,7 +18,7 @@ class ParserTest < Test::Unit::TestCase
   end
 
   def test_exception_raised
-    assert_raises(Johnson::Parser::Error) {
+    assert_raises(Johnson::Parser::SyntaxError) {
       @parser.parse('if(')
     }
   end

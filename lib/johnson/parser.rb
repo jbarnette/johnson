@@ -1,5 +1,5 @@
 require 'stringio'
-require 'johnson/parser/error'
+require 'johnson/parser/syntax_error'
 
 module Johnson
   module Parser
