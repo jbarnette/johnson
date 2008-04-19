@@ -65,6 +65,21 @@ module Johnson
       def test_find_constants
         assert_js_equal($LOAD_PATH, "Ruby['$LOAD_PATH']")
       end
+
+      def test_require_twice
+        assert @context.evaluate('Johnson.require("prelude")')
+        assert !@context.evaluate('Johnson.require("prelude")')
+      end
+
+      def test_catch_missing_require
+        assert @context.evaluate("
+          try {
+            Johnson.require('adkfjhasd');
+          } catch(FileNotFound) {
+            true;
+          }
+        ")
+      end
       
       def test_array_gets_returned
         list = [1,2,3,4]
