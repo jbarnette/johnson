@@ -105,6 +105,12 @@ static JSBool get(JSContext* js_context, JSObject* obj, jsval id, jsval* retval)
   char* name = JS_GetStringBytes(JSVAL_TO_STRING(id));
   VALUE ruby_id = rb_intern(name);
   
+  // FIXME: this is necessarily ugly. Maybe we should write something like
+  // jsval foo = property_expression(context->js, context->global, "Johnson.Generator.create")
+  // this would make the code where we look up Johnson.Symbol cleaner too (in conversions.c)
+  
+  // FIXME: we should probably just JS_DefineProperty this, and it shouldn't be enumerable
+  
   if(!strcasecmp("__iterator__", name)) {
     jsval nsJohnson;
     assert(JS_GetProperty(context->js, context->global, "Johnson", &nsJohnson) || JSVAL_VOID == nsJohnson);
