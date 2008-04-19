@@ -34,6 +34,7 @@ lib/johnson/nodes/list.rb
 lib/johnson/nodes/node.rb
 lib/johnson/nodes/ternary_node.rb
 lib/johnson/parser.rb
+lib/johnson/parser/syntax_error.rb
 lib/johnson/spidermonkey/context.rb
 lib/johnson/spidermonkey/immutable_node.rb
 lib/johnson/spidermonkey/mutable_tree_visitor.rb
