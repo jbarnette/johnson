@@ -247,7 +247,7 @@ call_function_property(int argc, VALUE* argv, VALUE self)
 static void finalize(RubyLandProxy* proxy)
 {
   // could get finalized after the context has been freed
-  if (proxy->context)
+  if (proxy->context && proxy->context->jsids)
   {
     // remove this proxy from the OID map
     JS_HashTableRemove(proxy->context->jsids, (void *)proxy->value);

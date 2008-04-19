@@ -72,6 +72,9 @@ static void deallocate(OurContext* context)
   assert(JS_RemoveRoot(context->js, &(context->gcthings)));
   JS_HashTableDestroy(context->rbids);
   JS_HashTableDestroy(context->jsids);
+
+  context->jsids = 0;
+  context->rbids = 0;
   
   JS_DestroyContext(context->js);
   JS_DestroyRuntime(context->runtime);
