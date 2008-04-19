@@ -1,5 +1,4 @@
-$ = {};
-$.makeTemplate = function (template, begin, end) {
+Johnson.templatize = function (template, begin, end) {
   var begin = begin || "<%"
   var end = end || "%>"
   var rebegin = begin.replace(/([\]{}[\\])/g, '\\$1');
