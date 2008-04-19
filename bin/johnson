@@ -1,11 +1,16 @@
 #!/usr/bin/env ruby
 
-require "rubygems"
-require "johnson"
+begin
+  require "johnson"
+rescue LoadError
+  require "rubygems"
+  require "johnson"
+end
+
 require "readline"
 
 CONTEXT = cx = Johnson::Context.new
-CONTEXT[:print] = lambda { |m| puts m }
+CONTEXT[:alert] = lambda { |m| puts m }
 
 EXIT_VERBS = %w(exit quit)
 
@@ -33,9 +38,36 @@ rescue Object => e
   puts e.backtrace
 end
 
+def eval_in_js(expression)
+  rescued { puts "=> " + CONTEXT.evaluate(expression).inspect }
+end
+
+def eval_in_ruby(expression, bind_to)
+  rescued { puts "=> " + eval(expression, bind_to).inspect }
+end
+
+options = Johnson::CLI::Options.parse!(ARGV)
+options.load_paths.each { |d| $LOAD_PATH << d }
+options.files_to_preload.each { |f| CONTEXT.load(f) }
+
+unless options.files_to_evaluate.empty?
+  options.files_to_evaluate.each { |f| CONTEXT.load(f) }
+  exit
+end
+
+unless options.expressions.empty?
+  options.expressions.each { |e| CONTEXT.evaluate(e) }
+  exit
+end
+
 loop do
   input = Readline.readline("js> ", true)
   break if EXIT_VERBS.include?(input)
+  
+  if input =~ /^rb\s+(.+)$/
+    eval_in_ruby($1, local_binding)
+    next
+  end
   
   if input == "rb"
     js_readline = copy_history
@@ -45,8 +77,13 @@ loop do
       input = Readline.readline("rb> ", true)
       break if input == "js"
       exit if EXIT_VERBS.include?(input)
-      
-      rescued { puts "=> " + eval(input, local_binding).inspect }
+
+      if input =~ /^js\s+(.+)$/
+        eval_in_js($1)
+        next
+      end
+
+      eval_in_ruby(input, local_binding)
     end
     
     ruby_readline = copy_history
@@ -54,5 +91,5 @@ loop do
     next
   end
   
-  rescued { puts "=> " + CONTEXT.evaluate(input).inspect }
+  eval_in_js(input)
 end
