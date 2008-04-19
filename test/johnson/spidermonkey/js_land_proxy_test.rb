@@ -212,7 +212,11 @@ module Johnson
       def test_dwims_blocks
         @context["foo"] = Foo.new
         assert_js_equal(4, "foo.xform(2, function(x) { return x * 2 })")
-      end    
+      end
+      
+      def test_scope_for_with
+        assert_js_equal(84, "with (rb) { b + b }", :rb => { "b" => 42 })
+      end  
     end
   end
 end
