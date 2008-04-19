@@ -86,6 +86,12 @@ static JSBool get(JSContext* js_context, JSObject* obj, jsval id, jsval* retval)
     *retval = convert_to_js(context,
       rb_funcall(self, rb_intern("const_get"), 1, ID2SYM(ruby_id)));
   }  
+
+  // If its a global, return the global
+  else if (rb_ary_includes(rb_f_global_variables(), rb_str_new2(key)))
+  {
+    *retval = convert_to_js(context, rb_gv_get(key));
+  }
   
   // otherwise, if the Ruby object has a 0-arity method named the same as
   // the property we're trying to get, call it and return the converted result

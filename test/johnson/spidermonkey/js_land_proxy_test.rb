@@ -61,6 +61,10 @@ module Johnson
         @context = Johnson::SpiderMonkey::Context.new
         @context.evaluate(Johnson::PRELUDE)
       end
+
+      def test_find_constants
+        assert_js_equal($LOAD_PATH, "Ruby['$LOAD_PATH']")
+      end
       
       def test_array_gets_returned
         list = [1,2,3,4]
