@@ -38,6 +38,12 @@ module Johnson
         @value = value
       end
 
+      def to_s
+        to_sexp.inspect
+      end
+
+      alias_method :inspect, :to_s
+
       def to_sexp
         SexpVisitor.new.accept(self)
       end
@@ -45,6 +51,8 @@ module Johnson
       def to_ecma
         EcmaVisitor.new.accept(self)
       end
+
+      alias_method :to_js, :to_ecma
     end
     SINGLE_NODES.each { |se| const_set(se.to_sym, Class.new(Node)) }
   end

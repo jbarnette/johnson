@@ -21,7 +21,8 @@ module Johnson
     end
     
     def assert_js_equal(expected, expression, options={})
-      context = options[:context] || @context
+      context = options.delete(:context) || @context
+      options.each { |k, v| context[k.to_s] = v }
       assert_equal(expected, context.evaluate(expression))
     end
   end
