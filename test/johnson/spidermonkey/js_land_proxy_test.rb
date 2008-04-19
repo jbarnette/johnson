@@ -230,7 +230,7 @@ module Johnson
       end
       
       def test_scope_for_with
-        assert_js_equal(84, "with (rb) { b + b }", :rb => { "b" => 42 })
+        assert_js_equal(84, "with (rb) { b + b }", :b => 1, :rb => { "b" => 42 })
       end  
     end
   end
