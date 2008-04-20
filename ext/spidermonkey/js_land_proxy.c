@@ -135,6 +135,7 @@ static JSBool get(JSContext* js_context, JSObject* obj, jsval id, jsval* retval)
     return JS_TRUE;
   }
   
+  // Trying to call JS_GetStringBytes on a non-string causes a segfault
   char* name = JS_GetStringBytes(JSVAL_TO_STRING(id));
   VALUE ruby_id = rb_intern(name);
   
