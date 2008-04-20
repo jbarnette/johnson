@@ -32,5 +32,6 @@ static JSClass OurGlobalClass = {
 };
 
 void init_Johnson_SpiderMonkey_Context(VALUE spidermonkey);
+VALUE Johnson_SpiderMonkey_JSLandProxy();
 
 #endif

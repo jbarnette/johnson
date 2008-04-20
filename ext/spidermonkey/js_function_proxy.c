@@ -23,7 +23,8 @@ static JSBool call_proc(JSContext *js_context, JSObject* this, uintN argc, jsval
     rb_ary_push(args, convert_to_ruby(context, argv[i]));
 
   *ret = convert_to_js(context,
-    rb_funcall2(ruby_context, rb_intern("call_proc_by_oid"), RARRAY_LEN(args), RARRAY_PTR(args)));
+    rb_funcall2(Johnson_SpiderMonkey_JSLandProxy(),
+      rb_intern("call_proc_by_oid"), RARRAY_LEN(args), RARRAY_PTR(args)));
 
   return JS_TRUE;
 }
@@ -48,7 +49,8 @@ VALUE unwrap_js_function_proxy(OurContext* context, jsval function_proxy)
     JS_GetFunctionObject(JS_ValueToFunction(context->js, function_proxy)),
     JS_FUNCTION_PROXY_PROPERTY, &oid));
   
-  return rb_funcall(ruby_context, rb_intern("id2ref"), 1, INT2NUM(JSVAL_TO_INT(oid)));
+  return rb_funcall(Johnson_SpiderMonkey_JSLandProxy(),
+    rb_intern("id2ref"), 1, INT2NUM(JSVAL_TO_INT(oid)));
 }
 
 

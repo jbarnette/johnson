@@ -77,12 +77,11 @@ respond_to_p(VALUE self, VALUE sym)
   return found ? Qtrue : rb_call_super(1, &sym);
 }
 
-/* private */ static VALUE
-native_call(int argc, VALUE* argv, VALUE self) /* native_call(global, *args) */
+/* private */ static VALUE /* native_call(global, *args) */
+native_call(int argc, VALUE* argv, VALUE self)
 {
   if (!function_p(self))
     Johnson_Error_raise("This Johnson::SpiderMonkey::RubyLandProxy isn't a function.");
-
 
   RubyLandProxy* proxy;
   Data_Get_Struct(self, RubyLandProxy, proxy);

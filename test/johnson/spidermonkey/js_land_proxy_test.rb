@@ -79,20 +79,6 @@ module Johnson
           }
         ")
       end
-      
-      def test_array_gets_returned
-        list = [1,2,3,4]
-
-        @context['alert'] = lambda { |x| p x }
-        @context['list'] = list
-        @context.evaluate("
-          var new_list = [];
-          for(x in list) {
-            new_list.push(x + 1);
-          }
-        ")
-        assert_equal(list.map { |x| x + 1}, @context['new_list'].to_a)
-      end
 
       def test_proxies_get_reused
         @context["foo"] = @context["bar"] = Foo.new
@@ -228,9 +214,26 @@ module Johnson
         assert_js_equal(4, "foo.xform(2, function(x) { return x * 2 })")
       end
       
+      def test_dwims_blocks_for_0_arity_methods
+        @context[:arr] = [1, 2, 3]
+        assert_js_equal([2, 4, 6], "arr.collect(function(x) { return x * 2 })")
+      end
+      
       def test_scope_for_with
         assert_js_equal(84, "with (rb) { b + b }", :b => 1, :rb => { "b" => 42 })
-      end  
+      end
+      
+      def test_lambdas_for_with
+        assert_js_equal(84, "with (rb) { b(42) }", :rb => { "b" => lambda { |x| x * 2 } })
+      end
+      
+      class MethodForWith
+        def b(x); x * 2; end
+      end
+      
+      def test_method_for_with
+        assert_js_equal(84, "with (rb) { b(42) }", :rb => MethodForWith.new)
+      end
     end
   end
 end
