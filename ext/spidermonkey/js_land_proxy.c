@@ -36,8 +36,8 @@ static JSClass JSLandClassProxyClass = {
 
 static JSBool autovivified_p(VALUE ruby_context, VALUE self, char* name)
 {
-  return rb_funcall(ruby_context, rb_intern("autovivified?"), 2,
-    self, ID2SYM(rb_intern(name)));
+  return rb_funcall(Johnson_SpiderMonkey_JSLandProxy(), rb_intern("autovivified?"), 2,
+    self, rb_str_new2(name));
 }
 
 static JSBool const_p(VALUE self, char* name)
@@ -57,7 +57,23 @@ static JSBool method_p(VALUE self, char* name)
   return rb_funcall(self, rb_intern("respond_to?"), 1, ID2SYM(rb_intern(name)));
 }
 
-static JSBool has_key_p(VALUE self, char*name)
+static JSBool attribute_p(VALUE self, char* name)
+{
+  if (!method_p(self, name))
+    return JS_FALSE;
+    
+  VALUE rb_id = rb_intern(name);
+  VALUE rb_method = rb_funcall(self, rb_intern("method"), 1, ID2SYM(rb_id));
+
+  METHOD* method;
+  Data_Get_Struct(rb_method, METHOD, method);
+  
+  return nd_type(method->body) == NODE_IVAR
+    || rb_funcall(Johnson_SpiderMonkey_JSLandProxy(),
+        rb_intern("js_property?"), 2, self, ID2SYM(rb_id));
+}
+
+static JSBool has_key_p(VALUE self, char* name)
 {
   return rb_funcall(self, rb_intern("respond_to?"), 1, ID2SYM(rb_intern("[]")))
     && rb_funcall(self, rb_intern("respond_to?"), 1, ID2SYM(rb_intern("key?")))
@@ -81,6 +97,7 @@ static JSBool respond_to_p(JSContext* js_context, JSObject* obj, char* name)
   return autovivified_p(ruby_context, self, name)
     || const_p(self, name)
     || global_p(name)
+    || attribute_p(self, name)
     || method_p(self, name)
     || has_key_p(self, name);
 }
@@ -111,7 +128,7 @@ static JSBool get(JSContext* js_context, JSObject* obj, jsval id, jsval* retval)
   
   // FIXME: we should probably just JS_DefineProperty this, and it shouldn't be enumerable
   
-  if(!strcasecmp("__iterator__", name)) {
+  if (!strcasecmp("__iterator__", name)) {
     jsval nsJohnson;
     assert(JS_GetProperty(context->js, context->global, "Johnson", &nsJohnson) || JSVAL_VOID == nsJohnson);
 
@@ -128,10 +145,11 @@ static JSBool get(JSContext* js_context, JSObject* obj, jsval id, jsval* retval)
   // matching the property we're looking for, pull the value out of
   // that map.
   
-  if (autovivified_p(ruby_context, self, name))
+  else if (autovivified_p(ruby_context, self, name))
   {
     *retval = convert_to_js(context,
-        rb_funcall(ruby_context, rb_intern("autovivified"), 2, self, ID2SYM(ruby_id)));
+      rb_funcall(Johnson_SpiderMonkey_JSLandProxy(),
+        rb_intern("autovivified"), 2, self, rb_str_new2(name)));
   }
 
   // if the Ruby object is a Module or Class and has a matching
@@ -149,16 +167,13 @@ static JSBool get(JSContext* js_context, JSObject* obj, jsval id, jsval* retval)
     *retval = convert_to_js(context, rb_gv_get(name));
   }
   
-  // otherwise, if the Ruby object has a 0-arity method named the same as
+  // otherwise, if the Ruby object has a an attribute method matching
   // the property we're trying to get, call it and return the converted result
   
-  else if (method_p(self, name))
+  else if (attribute_p(self, name))
   {
     VALUE method = rb_funcall(self, rb_intern("method"), 1, ID2SYM(ruby_id));
-    int arity = NUM2INT(rb_funcall(method, rb_intern("arity"), 0));
-        
-    if (arity == 0)
-      *retval = convert_to_js(context, rb_funcall(self, ruby_id, 0));
+    *retval = convert_to_js(context, rb_funcall(self, ruby_id, 0));
   }
 
   // otherwise, if the Ruby object quacks sorta like a hash (it responds to
@@ -169,6 +184,17 @@ static JSBool get(JSContext* js_context, JSObject* obj, jsval id, jsval* retval)
     *retval = convert_to_js(context, rb_funcall(self, rb_intern("[]"), 1, rb_str_new2(name)));
   }
   
+  // otherwise, it's a method being accessed as a property, which means
+  // we need to return a lambda
+  
+  else if (method_p(self, name))
+  {
+    *retval = convert_to_js(context,
+      rb_funcall(Johnson_SpiderMonkey_JSLandProxy(), rb_intern("wrap"),
+        2, self, rb_str_new2(name)));
+  }
+  
+  // else it's undefined (JS_VOID) by default
   return JS_TRUE;
 }
 
@@ -221,8 +247,8 @@ static JSBool set(JSContext* js_context, JSObject* obj, jsval id, jsval* value)
   }
   else
   {
-    rb_funcall(ruby_context, rb_intern("autovivify"), 3, self,
-      ruby_key, convert_to_ruby(context, *value));
+    rb_funcall(Johnson_SpiderMonkey_JSLandProxy(), rb_intern("autovivify"),
+      3, self, ruby_key, convert_to_ruby(context, *value));
   }
   
   return JS_TRUE;
@@ -244,10 +270,9 @@ static JSBool construct(JSContext* js_context, JSObject* obj, uintN argc, jsval*
   for (i = 0; i < argc; ++i)
     rb_ary_push(args, convert_to_ruby(context, argv[i]));
     
-  // Context#jsend: if the last arg is a function, it'll get passed along as a &block
-  
   *retval = convert_to_js(context,
-    rb_funcall(ruby_context, rb_intern("jsend"), 3, klass, ID2SYM(rb_intern("new")), args));
+    rb_funcall(Johnson_SpiderMonkey_JSLandProxy(), rb_intern("send_with_possible_block"),
+      3, klass, ID2SYM(rb_intern("new")), args));
 
   return JS_TRUE;
 }
@@ -264,7 +289,7 @@ static JSBool resolve(JSContext *js_context, JSObject *obj, jsval id, uintN flag
   
   if (respond_to_p(js_context, obj, name))
   {
-    assert(JS_DefineProperty(js_context, obj, name, JSVAL_TRUE,
+    assert(JS_DefineProperty(js_context, obj, name, JSVAL_VOID,
       get_and_destroy_resolved_property, set, JSPROP_ENUMERATE));
     
     *objp = obj;
@@ -285,16 +310,14 @@ static JSBool method_missing(JSContext* js_context, JSObject* obj, uintN argc, j
   assert(self = (VALUE)JS_GetInstancePrivate(context->js, obj, JS_GET_CLASS(context->js, obj), NULL));
   
   char* key = JS_GetStringBytes(JSVAL_TO_STRING(argv[0]));
-  
   VALUE ruby_id = rb_intern(key);
   
   // FIXME: this is horrible and lazy, to_a comes from enumerable on proxy (argv[1] is a JSArray)
   VALUE args = rb_funcall(convert_to_ruby(context, argv[1]), rb_intern("to_a"), 0);
   
-  // Context#jsend: if the last arg is a function, it'll get passed along as a &block
-  
   *retval = convert_to_js(context,
-    rb_funcall(ruby_context, rb_intern("jsend"), 3, self, ID2SYM(ruby_id), args));
+    rb_funcall(Johnson_SpiderMonkey_JSLandProxy(), rb_intern("send_with_possible_block"),
+      3, self, ID2SYM(ruby_id), args));
   
   return JS_TRUE;
 }
@@ -353,6 +376,10 @@ jsval make_js_land_proxy(OurContext* context, VALUE value)
     JSClass *klass = &JSLandProxyClass;
     if (T_CLASS == TYPE(value)) klass = &JSLandClassProxyClass;
     
+    if (T_STRUCT == TYPE(value))
+      rb_funcall(Johnson_SpiderMonkey_JSLandProxy(),
+        rb_intern("treat_all_properties_as_methods"), 1, value);
+      
     assert(jsobj = JS_NewObject(context->js, klass, NULL, NULL));
     assert(JS_SetPrivate(context->js, jsobj, (void*)value));
 

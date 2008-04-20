@@ -120,3 +120,8 @@ void init_Johnson_SpiderMonkey_Context(VALUE spidermonkey)
   rb_define_method(context, "global", global, 0);  
   rb_define_method(context, "evaluate", evaluate, 1);
 }
+
+VALUE Johnson_SpiderMonkey_JSLandProxy()
+{
+  return rb_eval_string("Johnson::SpiderMonkey::JSLandProxy");  
+}

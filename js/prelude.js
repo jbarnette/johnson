@@ -28,8 +28,8 @@ Johnson.Generator = function(enumerableProxy) {
 };
 
 Johnson.Generator.prototype.next = function() {
-  if(this.generator['next?']) {
-    return this.generator.next;
+  if(this.generator.send("next?")) {
+    return this.generator.next();
   }
   throw StopIteration;
 }

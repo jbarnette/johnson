@@ -228,9 +228,26 @@ module Johnson
         assert_js_equal(4, "foo.xform(2, function(x) { return x * 2 })")
       end
       
+      def test_dwims_blocks_for_0_arity_methods
+        @context[:arr] = [1, 2, 3]
+        assert_js_equal([2, 4, 6], "arr.collect(function(x) { return x * 2 })")
+      end
+      
       def test_scope_for_with
         assert_js_equal(84, "with (rb) { b + b }", :b => 1, :rb => { "b" => 42 })
-      end  
+      end
+      
+      def test_lambdas_for_with
+        assert_js_equal(84, "with (rb) { b(42) }", :rb => { "b" => lambda { |x| x * 2 } })
+      end
+      
+      class MethodForWith
+        def b(x); x * 2; end
+      end
+      
+      def test_method_for_with
+        assert_js_equal(84, "with (rb) { b(42) }", :rb => MethodForWith.new)
+      end
     end
   end
 end
