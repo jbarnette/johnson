@@ -135,7 +135,6 @@ static JSBool get(JSContext* js_context, JSObject* obj, jsval id, jsval* retval)
     return JS_TRUE;
   }
   
-  // Trying to call JS_GetStringBytes on a non-string causes a segfault
   char* name = JS_GetStringBytes(JSVAL_TO_STRING(id));
   VALUE ruby_id = rb_intern(name);
   
@@ -203,6 +202,9 @@ static JSBool get(JSContext* js_context, JSObject* obj, jsval id, jsval* retval)
   
   // otherwise, it's a method being accessed as a property, which means
   // we need to return a lambda
+  
+  // FIXME: this should really wrap the Method  for 'name' in a JS class
+  // rather than generating a wrapper Proc
   
   else if (method_p(self, name))
   {
