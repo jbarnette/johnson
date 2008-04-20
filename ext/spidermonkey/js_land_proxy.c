@@ -73,6 +73,11 @@ static JSBool attribute_p(VALUE self, char* name)
         rb_intern("js_property?"), 2, self, ID2SYM(rb_id));
 }
 
+static JSBool indexable_p(VALUE self)
+{
+  rb_funcall(self, rb_intern("respond_to?"), 1, ID2SYM(rb_intern("[]")));
+}
+
 static JSBool has_key_p(VALUE self, char* name)
 {
   return rb_funcall(self, rb_intern("respond_to?"), 1, ID2SYM(rb_intern("[]")))
@@ -118,6 +123,17 @@ static JSBool get(JSContext* js_context, JSObject* obj, jsval id, jsval* retval)
   
   VALUE self;
   assert(self = (VALUE)JS_GetInstancePrivate(context->js, obj, JS_GET_CLASS(context->js, obj), NULL));
+  
+  // Short-circuit for numeric indexes
+  
+  if (JSVAL_IS_INT(id))
+  {
+    if (indexable_p(self))
+      *retval = convert_to_js(context,
+        rb_funcall(self, rb_intern("[]"), 1, INT2FIX(JSVAL_TO_INT(id))));
+    
+    return JS_TRUE;
+  }
   
   char* name = JS_GetStringBytes(JSVAL_TO_STRING(id));
   VALUE ruby_id = rb_intern(name);
@@ -217,6 +233,17 @@ static JSBool set(JSContext* js_context, JSObject* obj, jsval id, jsval* value)
     
   VALUE self;
   assert(self = (VALUE)JS_GetInstancePrivate(context->js, obj, JS_GET_CLASS(context->js, obj), NULL));
+  
+  // Short-circuit for numeric indexes
+  
+  if (JSVAL_IS_INT(id))
+  {
+    if (indexable_p(self))
+      rb_funcall(self, rb_intern("[]="),
+        2, INT2FIX(JSVAL_TO_INT(id)), convert_to_ruby(context, *value));
+    
+    return JS_TRUE;
+  }
   
   char* key = JS_GetStringBytes(JSVAL_TO_STRING(id));
   VALUE ruby_key = rb_str_new2(key);
