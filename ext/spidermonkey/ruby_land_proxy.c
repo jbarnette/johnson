@@ -1,4 +1,6 @@
 #include "ruby_land_proxy.h"
+#include "conversions.h"
+#include "error.h"
 
 static VALUE proxy_class = Qnil;
 

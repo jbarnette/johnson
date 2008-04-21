@@ -1,6 +1,7 @@
 #include "conversions.h"
 #include "js_land_proxy.h"
 #include "ruby_land_proxy.h"
+#include "error.h"
 
 static JSBool convert_float_or_bignum_to_js(OurContext* context, VALUE float_or_bignum, jsval* retval)
 {

@@ -1,4 +1,5 @@
 #include "js_land_proxy.h"
+#include "conversions.h"
 
 static JSBool get(JSContext* js_context, JSObject* obj, jsval id, jsval* retval);
 static JSBool set(JSContext* context, JSObject* obj, jsval id, jsval* retval);
@@ -91,7 +92,8 @@ static JSBool attribute_p(VALUE self, char* name)
 
 static JSBool indexable_p(VALUE self)
 {
-  rb_funcall(self, rb_intern("respond_to?"), 1, ID2SYM(rb_intern("[]")));
+  VALUE v = rb_funcall(self, rb_intern("respond_to?"), 1, ID2SYM(rb_intern("[]")));
+  return RTEST(v) ? JS_TRUE : JS_FALSE;
 }
 
 static JSBool has_key_p(VALUE self, char* name)
@@ -110,7 +112,6 @@ static JSBool respond_to_p(JSContext* js_context, JSObject* obj, char* name)
   Data_Get_Struct(ruby_context, OurContext, context);
   
   VALUE self;
-  VALUE symbol = ID2SYM(rb_intern(name));
   
   assert(self = (VALUE)JS_GetInstancePrivate(
     context->js, obj, JS_GET_CLASS(context->js, obj), NULL));
@@ -204,7 +205,6 @@ static JSBool get(JSContext* js_context, JSObject* obj, jsval id, jsval* retval)
   
   else if (attribute_p(self, name))
   {
-    VALUE method = rb_funcall(self, rb_intern("method"), 1, ID2SYM(ruby_id));
     return convert_to_js(context, rb_funcall(self, ruby_id, 0), retval);
   }
 
