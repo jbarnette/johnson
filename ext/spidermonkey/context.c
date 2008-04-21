@@ -23,14 +23,13 @@ static VALUE evaluate(int argc, VALUE* argv, VALUE self)
   context->ex = 0;
   memset(context->msg, 0, MAX_EXCEPTION_MESSAGE_SIZE);  
   
-  char* scriptz = StringValuePtr(script);
-  char* filenamez = RTEST(filename) ? StringValuePtr(filename) : NULL;
+  char* filenamez = RTEST(filename) ? StringValueCStr(filename) : NULL;
   int linenumi = RTEST(linenum) ? NUM2INT(linenum) : 1;
 
   jsval js;
     
   JSBool ok = JS_EvaluateScript(context->js, context->global,
-    scriptz, strlen(scriptz), filenamez, linenumi, &js);
+    StringValuePtr(script), StringValueLen(script), filenamez, linenumi, &js);
 
   if (!ok)
   {

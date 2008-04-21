@@ -10,7 +10,7 @@ static JSBool convert_float_or_bignum_to_js(OurContext* context, VALUE float_or_
 static JSBool convert_symbol_to_js(OurContext* context, VALUE symbol, jsval* retval)
 {
   VALUE to_s = rb_funcall(symbol, rb_intern("to_s"), 0);
-  jsval name = STRING_TO_JSVAL(JS_NewStringCopyZ(context->js, StringValuePtr(to_s)));
+  jsval name = STRING_TO_JSVAL(JS_NewStringCopyN(context->js, StringValuePtr(to_s), StringValueLen(to_s)));
 
   // calls Johnson.symbolize(name) in JS-land. See lib/prelude.js
 
@@ -27,7 +27,7 @@ static JSBool convert_regexp_to_js(OurContext* context, VALUE regexp, jsval* ret
 
   *retval = OBJECT_TO_JSVAL(JS_NewRegExpObject(context->js,
         StringValuePtr(source),
-        strlen(StringValuePtr(source)),
+        StringValueLen(source),
         options));
   return JS_TRUE;
 }
@@ -49,7 +49,7 @@ JSBool convert_to_js(OurContext* context, VALUE ruby, jsval* retval)
       return JS_TRUE;
 
     case T_STRING:
-      *retval = STRING_TO_JSVAL(JS_NewStringCopyZ(context->js, StringValuePtr(ruby)));
+      *retval = STRING_TO_JSVAL(JS_NewStringCopyN(context->js, StringValuePtr(ruby), StringValueLen(ruby)));
       return JS_TRUE;
 
     case T_FIXNUM:

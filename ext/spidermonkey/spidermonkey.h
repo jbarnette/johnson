@@ -9,4 +9,8 @@
 #include "jshash.h"
 #include "jsregexp.h"
 
+#ifndef StringValueLen
+#define StringValueLen(v) (RSTRING(v)->len)
+#endif
+
 #endif

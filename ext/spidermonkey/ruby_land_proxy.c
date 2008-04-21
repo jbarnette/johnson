@@ -18,7 +18,7 @@ get(VALUE self, VALUE name)
     default:
       Check_Type(name, T_STRING);
       assert(JS_GetProperty(proxy->context->js,
-        JSVAL_TO_OBJECT(proxy->value), StringValuePtr(name), &js_value));
+        JSVAL_TO_OBJECT(proxy->value), StringValueCStr(name), &js_value));
       break;
   }
 
@@ -42,7 +42,7 @@ set(VALUE self, VALUE name, VALUE value)
     default:
       Check_Type(name, T_STRING);
       assert(JS_SetProperty(proxy->context->js,
-            JSVAL_TO_OBJECT(proxy->value), StringValuePtr(name), &js_value));
+            JSVAL_TO_OBJECT(proxy->value), StringValueCStr(name), &js_value));
       break;
   }
   
@@ -207,7 +207,7 @@ function_property_p(VALUE self, VALUE name)
   jsval js_value;  
 
   assert(JS_GetProperty(proxy->context->js,
-    JSVAL_TO_OBJECT(proxy->value), StringValuePtr(name), &js_value));
+    JSVAL_TO_OBJECT(proxy->value), StringValueCStr(name), &js_value));
     
   return JS_TypeOfValue(proxy->context->js, js_value) == JSTYPE_FUNCTION;
 }
@@ -221,7 +221,7 @@ call_function_property(int argc, VALUE* argv, VALUE self)
   jsval function;
   
   assert(JS_GetProperty(proxy->context->js,
-    JSVAL_TO_OBJECT(proxy->value), StringValuePtr(argv[0]), &function));
+    JSVAL_TO_OBJECT(proxy->value), StringValueCStr(argv[0]), &function));
   
   // should never be anything but a function
   assert(JS_TypeOfValue(proxy->context->js, function) == JSTYPE_FUNCTION);
