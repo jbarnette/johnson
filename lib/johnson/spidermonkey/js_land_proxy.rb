@@ -1,10 +1,6 @@
 module Johnson
   module SpiderMonkey
     module JSLandProxy #:nodoc:
-      def self.wrap(target, name)
-        Proc.new { |*args| send_with_possible_block(target, name, args) }
-      end
-      
       def self.send_with_possible_block(target, symbol, args)
         block = args.pop if args.last.is_a?(RubyLandProxy) && args.last.function?
         target.__send__(symbol, *args, &block)
