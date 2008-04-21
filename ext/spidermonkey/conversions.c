@@ -1,6 +1,5 @@
 #include "conversions.h"
 #include "js_land_proxy.h"
-#include "js_function_proxy.h"
 #include "ruby_land_proxy.h"
 
 static jsval convert_float_or_bignum_to_js(OurContext* context, VALUE float_or_bignum)
@@ -79,11 +78,8 @@ jsval convert_to_js(OurContext* context, VALUE ruby)
   	  if (ruby_value_is_proxy(ruby))
         return unwrap_ruby_land_proxy(context, ruby);
 
-      if (rb_cProc == CLASS_OF(ruby))
-        return make_js_function_proxy(context, ruby);
-
-    // UNIMPLEMENTED BELOW THIS LINE
-
+      if (rb_cProc == rb_class_of(ruby) || rb_cMethod == rb_class_of(ruby))
+        return make_js_land_proxy(context, ruby);
     
     default:
       Johnson_Error_raise("unknown ruby type in switch");
@@ -92,7 +88,7 @@ jsval convert_to_js(OurContext* context, VALUE ruby)
   return JSVAL_NULL;
 }
 
-static VALUE make_ruby_regexp(OurContext* context, jsval regexp)
+static VALUE convert_regexp_to_ruby(OurContext* context, jsval regexp)
 {
   JSRegExp* re = (JSRegExp*)JS_GetPrivate(context->js, JSVAL_TO_OBJECT(regexp));
 
@@ -132,11 +128,6 @@ VALUE convert_to_ruby(OurContext* context, jsval js)
       return Qnil;
       
     case JSTYPE_FUNCTION: 
-      if (js_value_is_function_proxy(context, js))
-        return unwrap_js_function_proxy(context, js);
-      
-      // NOTE: intentional fall-through to JSTYPE_OBJECT
-    
     case JSTYPE_OBJECT:
       if (OBJECT_TO_JSVAL(context->global) == js)
         // global gets special treatment, since the Prelude might not be loaded
@@ -150,7 +141,7 @@ VALUE convert_to_ruby(OurContext* context, jsval js)
         return unwrap_js_land_proxy(context, js);
 
       if (js_value_is_regexp(context, js))
-        return make_ruby_regexp(context, js);
+        return convert_regexp_to_ruby(context, js);
     
       return make_ruby_land_proxy(context, js);
         
