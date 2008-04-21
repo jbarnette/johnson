@@ -270,14 +270,15 @@ JSBool ruby_value_is_proxy(VALUE maybe_proxy)
   return proxy_class == CLASS_OF(maybe_proxy); 
 }
 
-jsval unwrap_ruby_land_proxy(OurContext* context, VALUE wrapped)
+JSBool unwrap_ruby_land_proxy(OurContext* context, VALUE wrapped, jsval* retval)
 {
   assert(ruby_value_is_proxy(wrapped));
   
   RubyLandProxy* proxy;
   Data_Get_Struct(wrapped, RubyLandProxy, proxy);
   
-  return proxy->value; 
+  *retval = proxy->value; 
+  return JS_TRUE;
 }
 
 VALUE make_ruby_land_proxy(OurContext* context, jsval value)

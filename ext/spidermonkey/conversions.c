@@ -2,14 +2,12 @@
 #include "js_land_proxy.h"
 #include "ruby_land_proxy.h"
 
-static jsval convert_float_or_bignum_to_js(OurContext* context, VALUE float_or_bignum)
+static JSBool convert_float_or_bignum_to_js(OurContext* context, VALUE float_or_bignum, jsval* retval)
 {
-  jsval js;
-  assert(JS_NewDoubleValue(context->js, NUM2DBL(float_or_bignum), &js));
-  return js;
+  return JS_NewDoubleValue(context->js, NUM2DBL(float_or_bignum), retval);
 }
 
-static jsval convert_symbol_to_js(OurContext* context, VALUE symbol)
+static JSBool convert_symbol_to_js(OurContext* context, VALUE symbol, jsval* retval)
 {
   VALUE to_s = rb_funcall(symbol, rb_intern("to_s"), 0);
   jsval name = STRING_TO_JSVAL(JS_NewStringCopyZ(context->js, StringValuePtr(to_s)));
@@ -19,21 +17,19 @@ static jsval convert_symbol_to_js(OurContext* context, VALUE symbol)
   jsval nsJohnson;    
   assert(JS_GetProperty(context->js, context->global, "Johnson", &nsJohnson) || JSVAL_VOID == nsJohnson);
 
-  jsval js = JSVAL_NULL;    
-  assert(JS_CallFunctionName(context->js, JSVAL_TO_OBJECT(nsJohnson), "symbolize", 1, &name, &js));
-
-  return js;
+  return JS_CallFunctionName(context->js, JSVAL_TO_OBJECT(nsJohnson), "symbolize", 1, &name, retval);
 }
 
-static jsval convert_regexp_to_js(OurContext* context, VALUE regexp)
+static JSBool convert_regexp_to_js(OurContext* context, VALUE regexp, jsval* retval)
 {
   VALUE source = rb_funcall(regexp, rb_intern("source"), 0);
   int options = NUM2INT(rb_funcall(regexp, rb_intern("options"), 0));
 
-  return OBJECT_TO_JSVAL(JS_NewRegExpObject(context->js,
+  *retval = OBJECT_TO_JSVAL(JS_NewRegExpObject(context->js,
         StringValuePtr(source),
         strlen(StringValuePtr(source)),
         options));
+  return JS_TRUE;
 }
 
 JSBool convert_to_js(OurContext* context, VALUE ruby, jsval* retval)
@@ -62,12 +58,10 @@ JSBool convert_to_js(OurContext* context, VALUE ruby, jsval* retval)
 
     case T_FLOAT:
     case T_BIGNUM:
-      *retval = convert_float_or_bignum_to_js(context, ruby);
-      return JS_TRUE;
+      return convert_float_or_bignum_to_js(context, ruby, retval);
 
     case T_SYMBOL:
-      *retval = convert_symbol_to_js(context, ruby);
-      return JS_TRUE;
+      return convert_symbol_to_js(context, ruby, retval);
 
     case T_CLASS:
     case T_ARRAY:
@@ -76,23 +70,17 @@ JSBool convert_to_js(OurContext* context, VALUE ruby, jsval* retval)
     case T_FILE:
     case T_STRUCT:
     case T_OBJECT:
-      *retval = make_js_land_proxy(context, ruby);
-      return JS_TRUE;
+      return make_js_land_proxy(context, ruby, retval);
       
     case T_REGEXP:
-      *retval = convert_regexp_to_js(context, ruby);
-      return JS_TRUE;
+      return convert_regexp_to_js(context, ruby, retval);
 
     case T_DATA: // HEY! keep T_DATA last for fall-through
-      if (ruby_value_is_proxy(ruby)) {
-        *retval = unwrap_ruby_land_proxy(context, ruby);
-        return JS_TRUE;
-      }
+      if (ruby_value_is_proxy(ruby))
+        return unwrap_ruby_land_proxy(context, ruby, retval);
 
-      if (rb_cProc == rb_class_of(ruby) || rb_cMethod == rb_class_of(ruby)) {
-        *retval = make_js_land_proxy(context, ruby);
-        return JS_TRUE;
-      }
+      if (rb_cProc == rb_class_of(ruby) || rb_cMethod == rb_class_of(ruby))
+        return make_js_land_proxy(context, ruby, retval);
     
     default:
       Johnson_Error_raise("unknown ruby type in switch");

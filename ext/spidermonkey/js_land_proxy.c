@@ -426,14 +426,13 @@ static void finalize(JSContext* js_context, JSObject* obj)
   }  
 }
 
-jsval make_js_land_proxy(OurContext* context, VALUE value)
+JSBool make_js_land_proxy(OurContext* context, VALUE value, jsval* retval)
 {
   jsid id = (jsid)JS_HashTableLookup(context->rbids, (void *)rb_obj_id(value));
-  jsval js;
   
   if (id)
   {
-    assert(JS_IdToValue(context->js, id, &js));
+    return JS_IdToValue(context->js, id, retval);
   }
   else
   {
@@ -460,10 +459,10 @@ jsval make_js_land_proxy(OurContext* context, VALUE value)
       assert(JS_DefineFunction(context->js, jsobj,
         "__noSuchMethod__", method_missing, 2, 0));
 
-    js = OBJECT_TO_JSVAL(jsobj);
+    *retval = OBJECT_TO_JSVAL(jsobj);
 
     jsval newid;
-    assert(JS_ValueToId(context->js, js, &newid));
+    assert(JS_ValueToId(context->js, *retval, &newid));
   
     // put the proxy OID in the id map
     assert(JS_HashTableAdd(context->rbids, (void *)rb_obj_id(value), (void *)newid));
@@ -471,7 +470,7 @@ jsval make_js_land_proxy(OurContext* context, VALUE value)
     // root the ruby value for GC
     VALUE ruby_context = (VALUE)JS_GetContextPrivate(context->js);
     rb_funcall(ruby_context, rb_intern("add_gcthing"), 1, value);
+
+    return JS_TRUE;
   }
-  
-  return js;
 }

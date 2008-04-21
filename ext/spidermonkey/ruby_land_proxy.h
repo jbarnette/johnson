@@ -10,7 +10,7 @@ typedef struct {
 } RubyLandProxy;
 
 JSBool ruby_value_is_proxy(VALUE maybe_proxy);
-jsval unwrap_ruby_land_proxy(OurContext* context, VALUE proxy);
+JSBool unwrap_ruby_land_proxy(OurContext* context, VALUE proxy, jsval* retval);
 VALUE make_ruby_land_proxy(OurContext* context, jsval value);
 
 #endif
