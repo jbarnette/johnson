@@ -33,5 +33,6 @@ static JSClass OurGlobalClass = {
 
 void init_Johnson_SpiderMonkey_Context(VALUE spidermonkey);
 VALUE Johnson_SpiderMonkey_JSLandProxy();
+static JSBool define_property(JSContext *context, JSObject *obj, uintN argc, jsval *argv, jsval *retval);
 
 #endif

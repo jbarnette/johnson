@@ -107,7 +107,27 @@ static VALUE initialize_native(VALUE self, VALUE options)
   JS_SetErrorReporter(context->js, error);
   JS_SetContextPrivate(context->js, (void *)self);
 
+  jsval js_cObject;
+  assert(JS_GetProperty(context->js, context->global, "Object", &js_cObject));
+
+  JS_DefineFunction(context->js, js_cObject, "defineProperty", define_property, 4, 0);
+  JS_DefineProperty(context->js, js_cObject, "READ_ONLY", 
+    INT_TO_JSVAL(0x02), NULL, NULL, JSPROP_READONLY);
+  JS_DefineProperty(context->js, js_cObject, "ITERABLE", 
+    INT_TO_JSVAL(0x01), NULL, NULL, JSPROP_READONLY);
+  JS_DefineProperty(context->js, js_cObject, "NON_DELETABLE", 
+    INT_TO_JSVAL(0x04), NULL, NULL, JSPROP_READONLY);
+
   return self;
+}
+
+// Argv is [ object, name, value, READ_ONLY | ITERABLE | NON_DELETABLE ]
+static JSBool define_property(JSContext *context, JSObject *obj, uintN argc, jsval *argv, jsval *retval) {
+  char *name = JS_GetStringBytes(JSVAL_TO_STRING(argv[1]));
+  int flags = JSVAL_TO_INT(argv[3]);
+  
+  JS_DefineProperty(context, argv[0], name, argv[2], NULL, NULL, flags);
+  return JS_TRUE;
 }
 
 void init_Johnson_SpiderMonkey_Context(VALUE spidermonkey)

@@ -26,6 +26,7 @@ ext/spidermonkey/spidermonkey.h
 js/prelude.js
 js/template.js
 lib/johnson.rb
+lib/johnson/cli/options.rb
 lib/johnson/context.rb
 lib/johnson/nodes.rb
 lib/johnson/nodes/binary_node.rb
@@ -39,6 +40,7 @@ lib/johnson/parser.rb
 lib/johnson/parser/syntax_error.rb
 lib/johnson/spidermonkey/context.rb
 lib/johnson/spidermonkey/immutable_node.rb
+lib/johnson/spidermonkey/js_land_proxy.rb
 lib/johnson/spidermonkey/mutable_tree_visitor.rb
 lib/johnson/spidermonkey/ruby_land_proxy.rb
 lib/johnson/version.rb
@@ -48,6 +50,7 @@ lib/johnson/visitors/ecma_visitor.rb
 lib/johnson/visitors/sexp_visitor.rb
 test/helper.rb
 test/johnson/context_test.rb
+test/johnson/conversions/array_test.rb
 test/johnson/conversions/boolean_test.rb
 test/johnson/conversions/file_test.rb
 test/johnson/conversions/nil_test.rb
@@ -58,6 +61,7 @@ test/johnson/conversions/string_test.rb
 test/johnson/conversions/struct_test.rb
 test/johnson/conversions/symbol_test.rb
 test/johnson/error_test.rb
+test/johnson/extensions_test.rb
 test/johnson/nodes/array_literal_test.rb
 test/johnson/nodes/array_node_test.rb
 test/johnson/nodes/binary_node_test.rb

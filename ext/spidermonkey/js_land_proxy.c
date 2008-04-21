@@ -146,15 +146,8 @@ static JSBool get(JSContext* js_context, JSObject* obj, jsval id, jsval* retval)
   // FIXME: we should probably just JS_DefineProperty this, and it shouldn't be enumerable
   
   if (!strcasecmp("__iterator__", name)) {
-    jsval nsJohnson;
-    assert(JS_GetProperty(context->js, context->global, "Johnson", &nsJohnson) || JSVAL_VOID == nsJohnson);
-
-    jsval nsGenerator;
-    assert(JS_GetProperty(context->js, JSVAL_TO_OBJECT(nsJohnson), "Generator", &nsGenerator) || JSVAL_VOID == nsGenerator);
-
-    jsval create;
-    assert(JS_GetProperty(context->js, JSVAL_TO_OBJECT(nsGenerator), "create", &create) || JSVAL_VOID == create);
-    *retval = create;
+    JS_EvaluateScript(context->js, context->global, "Johnson.Generator.create", 
+      24, "js_land_proxy.c", 149, retval);
     return JS_TRUE;
   }
   
