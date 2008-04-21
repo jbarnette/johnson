@@ -20,7 +20,7 @@ module Johnson
       def test_proc_js_function_proxy_gets_reused
         @context[:k] = k = lambda { |x| x }
         @context[:kk] = k
-        assert_js("k == kk")
+        assert_js("k === kk")
       end
     end
   end

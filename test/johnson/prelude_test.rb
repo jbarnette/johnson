@@ -24,5 +24,25 @@ module Johnson
       @context.evaluate("Ruby.require('set')")
       assert_kind_of(Set, @context.evaluate("Ruby.Set.new()"))
     end
+    
+    def test_require_an_existing_js_file_without_extension
+      assert_js("Johnson.require('johnson/template')")
+    end
+    
+    def test_require_returns_false_the_second_time_around
+      assert_js("Johnson.require('johnson/template')")
+      assert(!@context.evaluate("Johnson.require('johnson/template')"))
+    end
+    
+    def test_missing_requires_throw_LoadError
+      assert_js(<<-END)
+        var flag = false;
+        
+        try { Johnson.require("johnson/__nonexistent"); }
+        catch(FileNotFound) { flag = true; }
+        
+        flag;
+      END
+    end
   end
 end

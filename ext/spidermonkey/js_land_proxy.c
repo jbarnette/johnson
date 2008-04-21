@@ -4,6 +4,7 @@ static JSBool get(JSContext* js_context, JSObject* obj, jsval id, jsval* retval)
 static JSBool set(JSContext* context, JSObject* obj, jsval id, jsval* retval);
 static JSBool construct(JSContext* js_context, JSObject* obj, uintN argc, jsval* argv, jsval* retval);
 static JSBool resolve(JSContext *js_context, JSObject *obj, jsval id, uintN flags, JSObject **objp);
+static JSBool call(JSContext* js_context, JSObject* obj, uintN argc, jsval* argv, jsval* retval);
 static void finalize(JSContext* context, JSObject* obj);
 
 static JSClass JSLandProxyClass = {
@@ -32,6 +33,21 @@ static JSClass JSLandClassProxyClass = {
   NULL,
   NULL,
   construct
+};
+
+static JSClass JSLandCallableProxyClass = {
+  "JSLandCallableProxy", JSCLASS_HAS_PRIVATE,
+  JS_PropertyStub,
+  JS_PropertyStub,
+  JS_PropertyStub,
+  JS_PropertyStub,
+  JS_EnumerateStub,
+  JS_ResolveStub,
+  JS_ConvertStub,
+  finalize,
+  NULL,
+  NULL,
+  call
 };
 
 static JSBool autovivified_p(VALUE ruby_context, VALUE self, char* name)
@@ -107,6 +123,14 @@ static JSBool respond_to_p(JSContext* js_context, JSObject* obj, char* name)
     || has_key_p(self, name);
 }
 
+static jsval evaluate_js_property_expression(OurContext * context, char * property) {
+  jsval retval;
+  JSBool ok = JS_EvaluateScript(context->js, context->global,
+      property, strlen(property), NULL, 1,
+      &retval);
+  return retval;
+}
+
 static JSBool get(JSContext* js_context, JSObject* obj, jsval id, jsval* retval)
 {
   // pull out our Ruby context, which is embedded in js_context
@@ -135,19 +159,13 @@ static JSBool get(JSContext* js_context, JSObject* obj, jsval id, jsval* retval)
     return JS_TRUE;
   }
   
-  // Trying to call JS_GetStringBytes on a non-string causes a segfault
   char* name = JS_GetStringBytes(JSVAL_TO_STRING(id));
   VALUE ruby_id = rb_intern(name);
-  
-  // FIXME: this is necessarily ugly. Maybe we should write something like
-  // jsval foo = property_expression(context->js, context->global, "Johnson.Generator.create")
-  // this would make the code where we look up Johnson.Symbol cleaner too (in conversions.c)
   
   // FIXME: we should probably just JS_DefineProperty this, and it shouldn't be enumerable
   
   if (!strcasecmp("__iterator__", name)) {
-    JS_EvaluateScript(context->js, context->global, "Johnson.Generator.create", 
-      24, "js_land_proxy.c", 149, retval);
+    *retval = evaluate_js_property_expression(context, "Johnson.Generator.create");
     return JS_TRUE;
   }
   
@@ -197,11 +215,13 @@ static JSBool get(JSContext* js_context, JSObject* obj, jsval id, jsval* retval)
   // otherwise, it's a method being accessed as a property, which means
   // we need to return a lambda
   
+  // FIXME: this should really wrap the Method  for 'name' in a JS class
+  // rather than generating a wrapper Proc
+  
   else if (method_p(self, name))
   {
     *retval = convert_to_js(context,
-      rb_funcall(Johnson_SpiderMonkey_JSLandProxy(), rb_intern("wrap"),
-        2, self, rb_str_new2(name)));
+      rb_funcall(self, rb_intern("method"), 1, rb_str_new2(name)));
   }
   
   // else it's undefined (JS_VOID) by default
@@ -343,10 +363,37 @@ static JSBool method_missing(JSContext* js_context, JSObject* obj, uintN argc, j
   return JS_TRUE;
 }
 
+static JSBool call(JSContext* js_context, JSObject* obj, uintN argc, jsval* argv, jsval* retval)
+{
+  VALUE ruby_context;
+  assert(ruby_context = (VALUE)JS_GetContextPrivate(js_context));
+  
+  OurContext* context;
+  Data_Get_Struct(ruby_context, OurContext, context);
+  
+  VALUE self;// = convert_to_ruby(context, JS_ARGV_CALLEE(argv));
+  assert(self = (VALUE)JS_GetInstancePrivate(context->js, JSVAL_TO_OBJECT(JS_ARGV_CALLEE(argv)), &JSLandCallableProxyClass, NULL));
+  
+  VALUE args = rb_ary_new();  
+  int i;
+  
+  for (i = 0; i < argc; ++i)
+    rb_ary_push(args, convert_to_ruby(context, argv[i]));
+  
+  *retval = convert_to_js(context,
+    rb_funcall(Johnson_SpiderMonkey_JSLandProxy(), rb_intern("send_with_possible_block"),
+      3, self, ID2SYM(rb_intern("call")), args));
+  
+  return JS_TRUE;
+}
+
 JSBool js_value_is_proxy(OurContext* context, jsval maybe_proxy)
 {
   JSClass* klass = JS_GET_CLASS(context->js, JSVAL_TO_OBJECT(maybe_proxy));  
-  return &JSLandProxyClass == klass || &JSLandClassProxyClass == klass;
+  
+  return &JSLandProxyClass == klass
+    || &JSLandClassProxyClass == klass
+    || &JSLandCallableProxyClass == klass;
 }
 
 VALUE unwrap_js_land_proxy(OurContext* context, jsval proxy)
@@ -397,14 +444,23 @@ jsval make_js_land_proxy(OurContext* context, VALUE value)
     JSClass *klass = &JSLandProxyClass;
     if (T_CLASS == TYPE(value)) klass = &JSLandClassProxyClass;
     
+    // FIXME: hack; should happen in Rubyland
     if (T_STRUCT == TYPE(value))
       rb_funcall(Johnson_SpiderMonkey_JSLandProxy(),
         rb_intern("treat_all_properties_as_methods"), 1, value);
+
+    JSBool callable_p = rb_class_of(value) == rb_cMethod
+      || rb_class_of(value) == rb_cProc;
       
+    if (callable_p)
+      klass = &JSLandCallableProxyClass;
+        
     assert(jsobj = JS_NewObject(context->js, klass, NULL, NULL));
     assert(JS_SetPrivate(context->js, jsobj, (void*)value));
 
-    assert(JS_DefineFunction(context->js, jsobj, "__noSuchMethod__", method_missing, 2, 0));
+    if (!callable_p)
+      assert(JS_DefineFunction(context->js, jsobj,
+        "__noSuchMethod__", method_missing, 2, 0));
 
     js = OBJECT_TO_JSVAL(jsobj);
 
