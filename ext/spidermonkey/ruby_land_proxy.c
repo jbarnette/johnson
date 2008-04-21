@@ -31,7 +31,8 @@ set(VALUE self, VALUE name, VALUE value)
   RubyLandProxy* proxy;
   Data_Get_Struct(self, RubyLandProxy, proxy);
   
-  jsval js_value = convert_to_js(proxy->context, value);
+  jsval js_value;
+  assert(convert_to_js(proxy->context, value, &js_value));
   
   switch(TYPE(name)) {
     case T_FIXNUM:
@@ -86,12 +87,13 @@ native_call(int argc, VALUE* argv, VALUE self)
   RubyLandProxy* proxy;
   Data_Get_Struct(self, RubyLandProxy, proxy);
   
-  jsval global = convert_to_js(proxy->context, argv[0]);
+  jsval global;
+  assert(convert_to_js(proxy->context, argv[0], &global));
   jsval args[argc - 1];
   int i;
 
   for(i = 1; i < argc; ++i)
-    args[i - 1] = convert_to_js(proxy->context, argv[i]);
+    assert(convert_to_js(proxy->context, argv[i], &(args[i - 1])));
   
   jsval js;
   
@@ -229,7 +231,7 @@ call_function_property(int argc, VALUE* argv, VALUE self)
   int i;
   
   for(i = 1; i < argc; ++i)
-    args[i - 1] = convert_to_js(proxy->context, argv[i]);
+    assert(convert_to_js(proxy->context, argv[i], &(args[i - 1])));
     
   jsval js;
   

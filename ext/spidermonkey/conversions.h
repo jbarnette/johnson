@@ -4,7 +4,7 @@
 #include "spidermonkey.h"
 #include "context.h"
 
-jsval convert_to_js(OurContext* context, VALUE ruby);
+JSBool convert_to_js(OurContext* context, VALUE ruby, jsval* retval);
 VALUE convert_to_ruby(OurContext* context, jsval js);
 
 #endif

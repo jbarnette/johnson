@@ -36,56 +36,70 @@ static jsval convert_regexp_to_js(OurContext* context, VALUE regexp)
         options));
 }
 
-jsval convert_to_js(OurContext* context, VALUE ruby)
+JSBool convert_to_js(OurContext* context, VALUE ruby, jsval* retval)
 {
   switch(TYPE(ruby))
   {
     case T_NIL:
-      return JSVAL_NULL;
+      *retval = JSVAL_NULL;
+      return JS_TRUE;
 
-  	case T_TRUE:
-      return JSVAL_TRUE;
+    case T_TRUE:
+      *retval = JSVAL_TRUE;
+      return JS_TRUE;
     
-  	case T_FALSE:
-      return JSVAL_FALSE;
+    case T_FALSE:
+      *retval = JSVAL_FALSE;
+      return JS_TRUE;
 
-  	case T_STRING:
-  	  return STRING_TO_JSVAL(JS_NewStringCopyZ(context->js, StringValuePtr(ruby)));
+    case T_STRING:
+      *retval = STRING_TO_JSVAL(JS_NewStringCopyZ(context->js, StringValuePtr(ruby)));
+      return JS_TRUE;
 
-  	case T_FIXNUM:
-    	return INT_TO_JSVAL(NUM2INT(ruby));
+    case T_FIXNUM:
+      *retval = INT_TO_JSVAL(NUM2INT(ruby));
+      return JS_TRUE;
 
-  	case T_FLOAT:
-  	case T_BIGNUM:
-      return convert_float_or_bignum_to_js(context, ruby);
+    case T_FLOAT:
+    case T_BIGNUM:
+      *retval = convert_float_or_bignum_to_js(context, ruby);
+      return JS_TRUE;
 
     case T_SYMBOL:
-      return convert_symbol_to_js(context, ruby);
+      *retval = convert_symbol_to_js(context, ruby);
+      return JS_TRUE;
 
-  	case T_CLASS:
-  	case T_ARRAY:
-  	case T_HASH:
-  	case T_MODULE:
-  	case T_FILE:
-  	case T_STRUCT:
+    case T_CLASS:
+    case T_ARRAY:
+    case T_HASH:
+    case T_MODULE:
+    case T_FILE:
+    case T_STRUCT:
     case T_OBJECT:
-      return make_js_land_proxy(context, ruby);
+      *retval = make_js_land_proxy(context, ruby);
+      return JS_TRUE;
       
-  	case T_REGEXP:
-      return convert_regexp_to_js(context, ruby);
+    case T_REGEXP:
+      *retval = convert_regexp_to_js(context, ruby);
+      return JS_TRUE;
 
-  	case T_DATA: // HEY! keep T_DATA last for fall-through
-  	  if (ruby_value_is_proxy(ruby))
-        return unwrap_ruby_land_proxy(context, ruby);
+    case T_DATA: // HEY! keep T_DATA last for fall-through
+      if (ruby_value_is_proxy(ruby)) {
+        *retval = unwrap_ruby_land_proxy(context, ruby);
+        return JS_TRUE;
+      }
 
-      if (rb_cProc == rb_class_of(ruby) || rb_cMethod == rb_class_of(ruby))
-        return make_js_land_proxy(context, ruby);
+      if (rb_cProc == rb_class_of(ruby) || rb_cMethod == rb_class_of(ruby)) {
+        *retval = make_js_land_proxy(context, ruby);
+        return JS_TRUE;
+      }
     
     default:
       Johnson_Error_raise("unknown ruby type in switch");
   }
   
-  return JSVAL_NULL;
+  *retval = JSVAL_NULL;
+  return JS_TRUE;
 }
 
 static VALUE convert_regexp_to_ruby(OurContext* context, jsval regexp)
