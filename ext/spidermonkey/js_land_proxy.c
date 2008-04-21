@@ -123,6 +123,14 @@ static JSBool respond_to_p(JSContext* js_context, JSObject* obj, char* name)
     || has_key_p(self, name);
 }
 
+static jsval property_get(OurContext * context, char * property) {
+  jsval retval;
+  JSBool ok = JS_EvaluateScript(context->js, context->global,
+      property, strlen(property), NULL, 1,
+      &retval);
+  return retval;
+}
+
 static JSBool get(JSContext* js_context, JSObject* obj, jsval id, jsval* retval)
 {
   // pull out our Ruby context, which is embedded in js_context
@@ -161,15 +169,7 @@ static JSBool get(JSContext* js_context, JSObject* obj, jsval id, jsval* retval)
   // FIXME: we should probably just JS_DefineProperty this, and it shouldn't be enumerable
   
   if (!strcasecmp("__iterator__", name)) {
-    jsval nsJohnson;
-    assert(JS_GetProperty(context->js, context->global, "Johnson", &nsJohnson) || JSVAL_VOID == nsJohnson);
-
-    jsval nsGenerator;
-    assert(JS_GetProperty(context->js, JSVAL_TO_OBJECT(nsJohnson), "Generator", &nsGenerator) || JSVAL_VOID == nsGenerator);
-
-    jsval create;
-    assert(JS_GetProperty(context->js, JSVAL_TO_OBJECT(nsGenerator), "create", &create) || JSVAL_VOID == create);
-    *retval = create;
+    *retval = property_get(context, "Johnson.Generator.create");
     return JS_TRUE;
   }
   
