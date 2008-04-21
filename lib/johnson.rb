@@ -25,10 +25,10 @@ require "johnson/spidermonkey/immutable_node"
 require "johnson/context"
 require "johnson/parser"
 
-$LOAD_PATH.push File.expand_path("#{File.dirname(__FILE__)}/../js")
+$LOAD_PATH.push(File.expand_path("#{File.dirname(__FILE__)}/../js"))
 
 module Johnson
-  PRELUDE = IO.read(File.dirname(__FILE__) + "/../js/prelude.js")
+  PRELUDE = IO.read(File.dirname(__FILE__) + "/../js/johnson/prelude.js")
   
   def self.evaluate(expression, vars={})
     context = Johnson::Context.new
