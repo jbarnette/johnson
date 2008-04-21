@@ -100,12 +100,12 @@ static VALUE convert_regexp_to_ruby(OurContext* context, jsval regexp)
     INT2NUM(re->flags));
 }
 
-static JSBool js_value_is_regexp(OurContext* context, jsval maybe_regexp)
+static bool js_value_is_regexp(OurContext* context, jsval maybe_regexp)
 {
   return JS_InstanceOf(context->js, JSVAL_TO_OBJECT(maybe_regexp), &js_RegExpClass, NULL);
 }
 
-static JSBool js_value_is_symbol(OurContext* context, jsval maybe_symbol)
+static bool js_value_is_symbol(OurContext* context, jsval maybe_symbol)
 {
   jsval nsJohnson, cSymbol;
 
@@ -118,7 +118,7 @@ static JSBool js_value_is_symbol(OurContext* context, jsval maybe_symbol)
   JSBool is_a_symbol;
   assert(JS_HasInstance(context->js, JSVAL_TO_OBJECT(cSymbol), maybe_symbol, &is_a_symbol));
 
-  return is_a_symbol;
+  return is_a_symbol != JS_FALSE;
 }
 
 VALUE convert_to_ruby(OurContext* context, jsval js)

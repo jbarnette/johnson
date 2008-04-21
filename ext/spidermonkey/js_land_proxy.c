@@ -51,33 +51,33 @@ static JSClass JSLandCallableProxyClass = {
   call
 };
 
-static JSBool autovivified_p(VALUE ruby_context, VALUE self, char* name)
+static bool autovivified_p(VALUE ruby_context, VALUE self, char* name)
 {
-  return rb_funcall(Johnson_SpiderMonkey_JSLandProxy(), rb_intern("autovivified?"), 2,
-    self, rb_str_new2(name));
+  return RTEST(rb_funcall(Johnson_SpiderMonkey_JSLandProxy(), rb_intern("autovivified?"), 2,
+    self, rb_str_new2(name)));
 }
 
-static JSBool const_p(VALUE self, char* name)
+static bool const_p(VALUE self, char* name)
 {
   return rb_obj_is_kind_of(self, rb_cModule)
     && rb_is_const_id(rb_intern(name))
-    && rb_funcall(self, rb_intern("const_defined?"), 1, ID2SYM(rb_intern(name)));
+    && RTEST( rb_funcall(self, rb_intern("const_defined?"), 1, ID2SYM(rb_intern(name))) );
 }
 
-static JSBool global_p(char* name)
+static bool global_p(char* name)
 {
   return rb_ary_includes(rb_f_global_variables(), rb_str_new2(name));
 }
 
-static JSBool method_p(VALUE self, char* name)
+static bool method_p(VALUE self, char* name)
 {
-  return rb_funcall(self, rb_intern("respond_to?"), 1, ID2SYM(rb_intern(name)));
+  return RTEST( rb_funcall(self, rb_intern("respond_to?"), 1, ID2SYM(rb_intern(name))) );
 }
 
-static JSBool attribute_p(VALUE self, char* name)
+static bool attribute_p(VALUE self, char* name)
 {
   if (!method_p(self, name))
-    return JS_FALSE;
+    return false;
     
   VALUE rb_id = rb_intern(name);
   VALUE rb_method = rb_funcall(self, rb_intern("method"), 1, ID2SYM(rb_id));
@@ -86,24 +86,23 @@ static JSBool attribute_p(VALUE self, char* name)
   Data_Get_Struct(rb_method, METHOD, method);
   
   return nd_type(method->body) == NODE_IVAR
-    || rb_funcall(Johnson_SpiderMonkey_JSLandProxy(),
-        rb_intern("js_property?"), 2, self, ID2SYM(rb_id));
+    || RTEST(rb_funcall(Johnson_SpiderMonkey_JSLandProxy(),
+        rb_intern("js_property?"), 2, self, ID2SYM(rb_id)));
 }
 
-static JSBool indexable_p(VALUE self)
+static bool indexable_p(VALUE self)
 {
-  VALUE v = rb_funcall(self, rb_intern("respond_to?"), 1, ID2SYM(rb_intern("[]")));
-  return RTEST(v) ? JS_TRUE : JS_FALSE;
+  return RTEST(rb_funcall(self, rb_intern("respond_to?"), 1, ID2SYM(rb_intern("[]"))));
 }
 
-static JSBool has_key_p(VALUE self, char* name)
+static bool has_key_p(VALUE self, char* name)
 {
-  return rb_funcall(self, rb_intern("respond_to?"), 1, ID2SYM(rb_intern("[]")))
-    && rb_funcall(self, rb_intern("respond_to?"), 1, ID2SYM(rb_intern("key?")))
-    && rb_funcall(self, rb_intern("key?"), 1, rb_str_new2(name));
+  return RTEST(rb_funcall(self, rb_intern("respond_to?"), 1, ID2SYM(rb_intern("[]"))))
+    && RTEST(rb_funcall(self, rb_intern("respond_to?"), 1, ID2SYM(rb_intern("key?"))))
+    && RTEST(rb_funcall(self, rb_intern("key?"), 1, rb_str_new2(name)));
 }
 
-static JSBool respond_to_p(JSContext* js_context, JSObject* obj, char* name)
+static bool respond_to_p(JSContext* js_context, JSObject* obj, char* name)
 {
   VALUE ruby_context;
   assert(ruby_context = (VALUE)JS_GetContextPrivate(js_context));
@@ -385,7 +384,7 @@ static JSBool call(JSContext* js_context, JSObject* obj, uintN argc, jsval* argv
       3, self, ID2SYM(rb_intern("call")), args), retval);
 }
 
-JSBool js_value_is_proxy(OurContext* context, jsval maybe_proxy)
+bool js_value_is_proxy(OurContext* context, jsval maybe_proxy)
 {
   JSClass* klass = JS_GET_CLASS(context->js, JSVAL_TO_OBJECT(maybe_proxy));  
   
@@ -446,7 +445,7 @@ JSBool make_js_land_proxy(OurContext* context, VALUE value, jsval* retval)
       rb_funcall(Johnson_SpiderMonkey_JSLandProxy(),
         rb_intern("treat_all_properties_as_methods"), 1, value);
 
-    JSBool callable_p = rb_class_of(value) == rb_cMethod
+    bool callable_p = rb_class_of(value) == rb_cMethod
       || rb_class_of(value) == rb_cProc;
       
     if (callable_p)

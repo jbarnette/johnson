@@ -9,7 +9,7 @@ typedef struct {
   OurContext* context;
 } RubyLandProxy;
 
-JSBool ruby_value_is_proxy(VALUE maybe_proxy);
+bool ruby_value_is_proxy(VALUE maybe_proxy);
 JSBool unwrap_ruby_land_proxy(OurContext* context, VALUE proxy, jsval* retval);
 VALUE make_ruby_land_proxy(OurContext* context, jsval value);
 void init_Johnson_SpiderMonkey_Proxy(VALUE spidermonkey);
