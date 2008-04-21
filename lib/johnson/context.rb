@@ -4,7 +4,7 @@ module Johnson
     
     def initialize(delegate=Johnson::SpiderMonkey::Context)
       @delegate = delegate.is_a?(Class) ? delegate.new : delegate
-      evaluate(Johnson::PRELUDE)
+      evaluate(Johnson::PRELUDE, 'Johnson::PRELUDE')
     end
     
     def [](key)
@@ -15,9 +15,9 @@ module Johnson
       delegate[key.to_s] = value
     end
     
-    def evaluate(expression)
+    def evaluate(expression, filename=nil, linenum=nil)
       return nil if expression.nil?
-      delegate.evaluate(expression)
+      delegate.evaluate(expression, filename, linenum)
     end
     
     def global
@@ -25,7 +25,7 @@ module Johnson
     end
     
     def load(file)
-      delegate.evaluate(IO.read(file))
+      delegate.evaluate(IO.read(file), file)
     end
   end
 end

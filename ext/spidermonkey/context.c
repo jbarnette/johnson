@@ -10,22 +10,27 @@ static VALUE global(VALUE self)
   return convert_to_ruby(context, OBJECT_TO_JSVAL(context->global));  
 }
 
-static VALUE evaluate(VALUE self, VALUE script)
+static VALUE evaluate(int argc, VALUE* argv, VALUE self)
 {
-  Check_Type(script, T_STRING);
-  
+  VALUE script, filename, linenum;
+
   OurContext* context;
   Data_Get_Struct(self, OurContext, context);
     
+  rb_scan_args( argc, argv, "12", &script, &filename, &linenum );
+
   // clean things up first
   context->ex = 0;
   memset(context->msg, 0, MAX_EXCEPTION_MESSAGE_SIZE);  
   
   char* scriptz = StringValuePtr(script);
+  char* filenamez = RTEST(filename) ? StringValuePtr(filename) : NULL;
+  int linenumi = RTEST(linenum) ? NUM2INT(linenum) : 1;
+
   jsval js;
     
   JSBool ok = JS_EvaluateScript(context->js, context->global,
-    scriptz, strlen(scriptz), NULL, 1, &js);
+    scriptz, strlen(scriptz), filenamez, linenumi, &js);
 
   if (!ok)
   {
@@ -118,7 +123,7 @@ void init_Johnson_SpiderMonkey_Context(VALUE spidermonkey)
   rb_define_private_method(context, "initialize_native", initialize_native, 1);
 
   rb_define_method(context, "global", global, 0);  
-  rb_define_method(context, "evaluate", evaluate, 1);
+  rb_define_method(context, "evaluate", evaluate, -1);
 }
 
 VALUE Johnson_SpiderMonkey_JSLandProxy()

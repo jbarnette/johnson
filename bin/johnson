@@ -56,7 +56,7 @@ unless options.files_to_evaluate.empty?
 end
 
 unless options.expressions.empty?
-  options.expressions.each { |e| CONTEXT.evaluate(e) }
+  options.expressions.each { |e| CONTEXT.evaluate(e, '-e') }
   exit
 end
 
