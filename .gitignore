@@ -6,8 +6,10 @@
 /ext/spidermonkey/*.log
 /ext/spidermonkey/immutable_node.c
 /ext/spidermonkey/*.o
+/ext/spidermonkey/*.so
 
 /lib/johnson/*.bundle
+/lib/johnson/*.so
 
 /vendor/spidermonkey/*.OBJ
 
