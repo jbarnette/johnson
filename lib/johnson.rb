@@ -26,6 +26,7 @@ require "johnson/context"
 require "johnson/parser"
 
 $LOAD_PATH.push(File.expand_path("#{File.dirname(__FILE__)}/../js"))
+$LOAD_PATH.push(File.expand_path("#{File.dirname(__FILE__)}/../browser"))
 
 module Johnson
   PRELUDE = IO.read(File.dirname(__FILE__) + "/../js/johnson/prelude.js")
