@@ -3,6 +3,38 @@
 #include "error.h"
 #include "idhash.h"
 
+static JSBool global_enumerate(JSContext *js_context, JSObject *obj)
+{
+  return JS_EnumerateStandardClasses(js_context, obj);
+}
+
+static JSBool global_resolve(
+  JSContext *js_context, JSObject *obj, jsval id, uintN flags, JSObject **objp)
+{
+  if ((flags & JSRESOLVE_ASSIGNING) == 0) {
+    JSBool resolved_p;
+
+    assert(JS_ResolveStandardClass(js_context, obj, id, &resolved_p));
+    if (resolved_p) *objp = obj;
+  }
+
+  return JS_TRUE;
+}
+
+
+static JSClass OurGlobalClass = {
+  "global", JSCLASS_NEW_RESOLVE | JSCLASS_GLOBAL_FLAGS,
+  JS_PropertyStub, // addProperty
+  JS_PropertyStub, // delProperty
+  JS_PropertyStub, // getProperty
+  JS_PropertyStub, // setProperty
+  global_enumerate,
+  (JSResolveOp) global_resolve,
+  JS_ConvertStub,
+  JS_FinalizeStub,
+  JSCLASS_NO_OPTIONAL_MEMBERS
+};
+
 static VALUE global(VALUE self)
 {
   OurContext* context;
@@ -24,8 +56,9 @@ static VALUE evaluate(VALUE self, VALUE script)
   char* scriptz = StringValuePtr(script);
   jsval js;
     
+  // FIXME: should be able to pass in the 'file' name
   JSBool ok = JS_EvaluateScript(context->js, context->global,
-    scriptz, strlen(scriptz), NULL, 1, &js);
+    scriptz, strlen(scriptz), "(johnson)", 1, &js);
 
   if (!ok)
   {
@@ -101,7 +134,7 @@ static VALUE initialize_native(VALUE self, VALUE options)
   assert(context->gcthings = JS_NewObject(context->js, NULL, 0, 0));
   assert(context->global = JS_NewObject(context->js, &OurGlobalClass, NULL, NULL));
   
-  assert(JS_InitStandardClasses(context->js, context->global));
+  // assert(JS_InitStandardClasses(context->js, context->global));
   assert(JS_AddRoot(context->js, &(context->gcthings)));
 
   JS_SetErrorReporter(context->js, error);

@@ -19,18 +19,6 @@ typedef struct {
   
 } OurContext;
 
-static JSClass OurGlobalClass = {
-  "global", JSCLASS_NEW_RESOLVE | JSCLASS_GLOBAL_FLAGS,
-  JS_PropertyStub, // addProperty
-  JS_PropertyStub, // delProperty
-  JS_PropertyStub, // getProperty
-  JS_PropertyStub, // setProperty
-  JS_EnumerateStub,
-  JS_ResolveStub,
-  JS_ConvertStub,
-  JS_FinalizeStub
-};
-
 void init_Johnson_SpiderMonkey_Context(VALUE spidermonkey);
 VALUE Johnson_SpiderMonkey_JSLandProxy();
 static JSBool define_property(JSContext *context, JSObject *obj, uintN argc, jsval *argv, jsval *retval);

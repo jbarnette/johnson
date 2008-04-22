@@ -154,9 +154,9 @@ module Johnson
         assert_equal(42, indexable["monkey"])
       end
       
-      def test_calls_0_arity_method
+      def test_calls_attr_reader
         @context["foo"] = Foo.new
-        assert_js_equal(10, "foo.bar()")
+        assert_js_equal(10, "foo.bar")
       end
       
       def test_calls_1_arity_method
