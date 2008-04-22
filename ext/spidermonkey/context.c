@@ -143,24 +143,22 @@ static VALUE initialize_native(VALUE self, VALUE options)
             if (JS_AddNamedRoot(context->js, &(context->gcthings), "context->gcthings")) {
               if ((context->global = JS_NewObject(context->js, &OurGlobalClass, NULL, NULL))) {
                 if (JS_AddNamedRoot(context->js, &(context->global), "context->global")) {
-                  if (JS_InitStandardClasses(context->js, context->global)) {
-                    JS_SetErrorReporter(context->js, error);
-                    JS_SetContextPrivate(context->js, (void *)self);
-                    jsval js_cObject;
-                    if (JS_GetProperty(context->js, context->global, "Object", &js_cObject)
-                        && JS_AddNamedRoot(context->js, &js_cObject, "context.Object")) {
-                      if (JS_DefineFunction(context->js, JSVAL_TO_OBJECT(js_cObject), "defineProperty", define_property, 4, 0)
-                          && JS_DefineProperty(context->js, JSVAL_TO_OBJECT(js_cObject), "READ_ONLY", 
-                                INT_TO_JSVAL(0x02), NULL, NULL, JSPROP_READONLY)
-                          && JS_DefineProperty(context->js, JSVAL_TO_OBJECT(js_cObject), "ITERABLE", 
-                                INT_TO_JSVAL(0x01), NULL, NULL, JSPROP_READONLY)
-                          && JS_DefineProperty(context->js, JSVAL_TO_OBJECT(js_cObject), "NON_DELETABLE", 
-                                INT_TO_JSVAL(0x04), NULL, NULL, JSPROP_READONLY)) {
-                        JS_RemoveRoot(context->js, &js_cObject);
-                        return self;
-                      }
+                  JS_SetErrorReporter(context->js, error);
+                  JS_SetContextPrivate(context->js, (void *)self);
+                  jsval js_cObject;
+                  if (JS_GetProperty(context->js, context->global, "Object", &js_cObject)
+                      && JS_AddNamedRoot(context->js, &js_cObject, "context.Object")) {
+                    if (JS_DefineFunction(context->js, JSVAL_TO_OBJECT(js_cObject), "defineProperty", define_property, 4, 0)
+                        && JS_DefineProperty(context->js, JSVAL_TO_OBJECT(js_cObject), "READ_ONLY", 
+                              INT_TO_JSVAL(0x02), NULL, NULL, JSPROP_READONLY)
+                        && JS_DefineProperty(context->js, JSVAL_TO_OBJECT(js_cObject), "ITERABLE", 
+                              INT_TO_JSVAL(0x01), NULL, NULL, JSPROP_READONLY)
+                        && JS_DefineProperty(context->js, JSVAL_TO_OBJECT(js_cObject), "NON_DELETABLE", 
+                              INT_TO_JSVAL(0x04), NULL, NULL, JSPROP_READONLY)) {
                       JS_RemoveRoot(context->js, &js_cObject);
+                      return self;
                     }
+                    JS_RemoveRoot(context->js, &js_cObject);
                   }
                   JS_RemoveRoot(context->js, &(context->global));
                 }
