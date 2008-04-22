@@ -5,6 +5,39 @@
 
 static JSBool define_property(JSContext *context, JSObject *obj, uintN argc, jsval *argv, jsval *retval);
 
+static JSBool global_enumerate(JSContext *js_context, JSObject *obj)
+{
+  return JS_EnumerateStandardClasses(js_context, obj);
+}
+
+static JSBool global_resolve(
+  JSContext *js_context, JSObject *obj, jsval id, uintN flags, JSObject **objp)
+{
+  if ((flags & JSRESOLVE_ASSIGNING) == 0) {
+    JSBool resolved_p;
+
+    if (!JS_ResolveStandardClass(js_context, obj, id, &resolved_p))
+      return JS_FALSE;
+    if (resolved_p) *objp = obj;
+  }
+
+  return JS_TRUE;
+}
+
+
+static JSClass OurGlobalClass = {
+  "global", JSCLASS_NEW_RESOLVE | JSCLASS_GLOBAL_FLAGS,
+  JS_PropertyStub, // addProperty
+  JS_PropertyStub, // delProperty
+  JS_PropertyStub, // getProperty
+  JS_PropertyStub, // setProperty
+  global_enumerate,
+  (JSResolveOp) global_resolve,
+  JS_ConvertStub,
+  JS_FinalizeStub,
+  JSCLASS_NO_OPTIONAL_MEMBERS
+};
+
 static VALUE global(VALUE self)
 {
   OurContext* context;
@@ -30,6 +63,7 @@ static VALUE evaluate(int argc, VALUE* argv, VALUE self)
 
   jsval js;
     
+  // FIXME: should be able to pass in the 'file' name
   JSBool ok = JS_EvaluateScript(context->js, context->global,
     StringValuePtr(script), StringValueLen(script), filenamez, linenumi, &js);
 
@@ -112,11 +146,9 @@ static VALUE initialize_native(VALUE self, VALUE options)
                   if (JS_InitStandardClasses(context->js, context->global)) {
                     JS_SetErrorReporter(context->js, error);
                     JS_SetContextPrivate(context->js, (void *)self);
-
                     jsval js_cObject;
                     if (JS_GetProperty(context->js, context->global, "Object", &js_cObject)
                         && JS_AddNamedRoot(context->js, &js_cObject, "context.Object")) {
-
                       if (JS_DefineFunction(context->js, JSVAL_TO_OBJECT(js_cObject), "defineProperty", define_property, 4, 0)
                           && JS_DefineProperty(context->js, JSVAL_TO_OBJECT(js_cObject), "READ_ONLY", 
                                 INT_TO_JSVAL(0x02), NULL, NULL, JSPROP_READONLY)
@@ -124,7 +156,6 @@ static VALUE initialize_native(VALUE self, VALUE options)
                                 INT_TO_JSVAL(0x01), NULL, NULL, JSPROP_READONLY)
                           && JS_DefineProperty(context->js, JSVAL_TO_OBJECT(js_cObject), "NON_DELETABLE", 
                                 INT_TO_JSVAL(0x04), NULL, NULL, JSPROP_READONLY)) {
-
                         JS_RemoveRoot(context->js, &js_cObject);
                         return self;
                       }

@@ -1,0 +1,3 @@
+[submodule "vendor/spidermonkey"]
+	path = vendor/spidermonkey
+	url = git://github.com/jbarnette/spidermonkey.git

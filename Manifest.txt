@@ -93,6 +93,10 @@ test/johnson/spidermonkey/ruby_land_proxy_test.rb
 test/johnson/version_test.rb
 test/johnson_test.rb
 test/parser_test.rb
+vendor/spidermonkey/.cvsignore
+vendor/spidermonkey/CVS/Entries
+vendor/spidermonkey/CVS/Repository
+vendor/spidermonkey/CVS/Root
 vendor/spidermonkey/Makefile.in
 vendor/spidermonkey/Makefile.ref
 vendor/spidermonkey/README.html
@@ -103,6 +107,9 @@ vendor/spidermonkey/config.mk
 vendor/spidermonkey/config/AIX4.1.mk
 vendor/spidermonkey/config/AIX4.2.mk
 vendor/spidermonkey/config/AIX4.3.mk
+vendor/spidermonkey/config/CVS/Entries
+vendor/spidermonkey/config/CVS/Repository
+vendor/spidermonkey/config/CVS/Root
 vendor/spidermonkey/config/Darwin.mk
 vendor/spidermonkey/config/Darwin1.3.mk
 vendor/spidermonkey/config/Darwin1.4.mk
@@ -137,6 +144,9 @@ vendor/spidermonkey/config/WINNT5.1.mk
 vendor/spidermonkey/config/WINNT5.2.mk
 vendor/spidermonkey/config/WINNT6.0.mk
 vendor/spidermonkey/config/dgux.mk
+vendor/spidermonkey/editline/CVS/Entries
+vendor/spidermonkey/editline/CVS/Repository
+vendor/spidermonkey/editline/CVS/Root
 vendor/spidermonkey/editline/Makefile.ref
 vendor/spidermonkey/editline/README
 vendor/spidermonkey/editline/editline.3
@@ -145,6 +155,9 @@ vendor/spidermonkey/editline/editline.h
 vendor/spidermonkey/editline/sysunix.c
 vendor/spidermonkey/editline/unix.h
 vendor/spidermonkey/fdlibm/.cvsignore
+vendor/spidermonkey/fdlibm/CVS/Entries
+vendor/spidermonkey/fdlibm/CVS/Repository
+vendor/spidermonkey/fdlibm/CVS/Root
 vendor/spidermonkey/fdlibm/Makefile.in
 vendor/spidermonkey/fdlibm/Makefile.ref
 vendor/spidermonkey/fdlibm/e_acos.c
@@ -283,6 +296,7 @@ vendor/spidermonkey/jshash.h
 vendor/spidermonkey/jsify.pl
 vendor/spidermonkey/jsinterp.c
 vendor/spidermonkey/jsinterp.h
+vendor/spidermonkey/jsinvoke.c
 vendor/spidermonkey/jsiter.c
 vendor/spidermonkey/jsiter.h
 vendor/spidermonkey/jskeyword.tbl
@@ -303,7 +317,6 @@ vendor/spidermonkey/jsobj.h
 vendor/spidermonkey/jsopcode.c
 vendor/spidermonkey/jsopcode.h
 vendor/spidermonkey/jsopcode.tbl
-vendor/spidermonkey/jsosdep.h
 vendor/spidermonkey/jsotypes.h
 vendor/spidermonkey/jsparse.c
 vendor/spidermonkey/jsparse.h

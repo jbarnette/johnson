@@ -288,7 +288,7 @@ function_args(VALUE self) {
 
   func_args = rb_ary_new2(f->nargs);
   if(f->nargs > 0) {
-    names = js_GetLocalNames(ctx->js, f, &ctx->js->tempPool, NULL);
+    names = js_GetLocalNameArray(ctx->js, f, &ctx->js->tempPool);
     for(i = 0; i < f->nargs; i++) {
       rb_ary_push(func_args,
           rb_str_new2(JS_GetStringBytes(ATOM_TO_STRING(names[i])))
