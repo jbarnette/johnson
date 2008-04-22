@@ -15,7 +15,7 @@ static JSClass JSLandProxyClass = {
   get,
   set,
   JS_EnumerateStub,
-  (JSResolveOp)resolve,
+  (JSResolveOp) resolve,
   JS_ConvertStub,
   finalize
 };

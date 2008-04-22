@@ -181,11 +181,11 @@ static VALUE initialize_native(VALUE self, VALUE options)
 }
 
 // Argv is [ object, name, value, READ_ONLY | ITERABLE | NON_DELETABLE ]
-static JSBool define_property(JSContext *context, JSObject *obj, uintN argc, jsval *argv, jsval *retval) {
+static JSBool define_property(JSContext *js_context, JSObject *obj, uintN argc, jsval *argv, jsval *retval) {
   char *name = JS_GetStringBytes(JSVAL_TO_STRING(argv[1]));
   int flags = JSVAL_TO_INT(argv[3]);
   
-  return JS_DefineProperty(context, JSVAL_TO_OBJECT(argv[0]), name, argv[2], NULL, NULL, flags);
+  return JS_DefineProperty(js_context, JSVAL_TO_OBJECT(argv[0]), name, argv[2], NULL, NULL, flags);
 }
 
 void init_Johnson_SpiderMonkey_Context(VALUE spidermonkey)
