@@ -122,6 +122,12 @@ static bool respond_to_p(JSContext* js_context, JSObject* obj, char* name)
     || has_key_p(self, name);
 }
 
+static jsval evaluate_js_property_expression(OurContext * context, char * property, jsval* retval) {
+  return JS_EvaluateScript(context->js, context->global,
+      property, strlen(property), "johnson:evaluate_js_property_expression", 1,
+      retval);
+}
+
 static JSBool get(JSContext* js_context, JSObject* obj, jsval id, jsval* retval)
 {
   JS_AddNamedRoot(js_context, &id, "JSLandProxy#get");
@@ -159,39 +165,10 @@ static JSBool get(JSContext* js_context, JSObject* obj, jsval id, jsval* retval)
 
   JS_RemoveRoot(js_context, &id);
   
-  // FIXME: this is necessarily ugly. Maybe we should write something like
-  // jsval foo = property_expression(context->js, context->global, "Johnson.Generator.create")
-  // this would make the code where we look up Johnson.Symbol cleaner too (in conversions.c)
-  
   // FIXME: we should probably just JS_DefineProperty this, and it shouldn't be enumerable
   
   if (!strcasecmp("__iterator__", name)) {
-    jsval nsJohnson;
-    if(!(JS_GetProperty(context->js, context->global, "Johnson", &nsJohnson)))
-      return JS_FALSE;
-
-    JS_AddNamedRoot(context->js, &nsJohnson, "JSLandProxy#get");
-
-    jsval nsGenerator;
-    if(!(JS_GetProperty(context->js, JSVAL_TO_OBJECT(nsJohnson), "Generator", &nsGenerator))) {
-      JS_RemoveRoot(context->js, &nsJohnson);
-      return JS_FALSE;
-    }
-
-    JS_AddNamedRoot(context->js, &nsGenerator, "JSLandProxy#get");
-
-    jsval create;
-    if(!(JS_GetProperty(context->js, JSVAL_TO_OBJECT(nsGenerator), "create", &create))) {
-      JS_RemoveRoot(context->js, &nsGenerator);
-      JS_RemoveRoot(context->js, &nsJohnson);
-      return JS_FALSE;
-    }
-
-    JS_RemoveRoot(context->js, &nsGenerator);
-    JS_RemoveRoot(context->js, &nsJohnson);
-
-    *retval = create;
-    return JS_TRUE;
+    return evaluate_js_property_expression(context, "Johnson.Generator.create", retval);
   }
   
   // if the Ruby object has a dynamic js property with a key

@@ -15,16 +15,14 @@ ext/spidermonkey/idhash.h
 ext/spidermonkey/immutable_node.c
 ext/spidermonkey/immutable_node.c.erb
 ext/spidermonkey/immutable_node.h
-ext/spidermonkey/js_function_proxy.c
-ext/spidermonkey/js_function_proxy.h
 ext/spidermonkey/js_land_proxy.c
 ext/spidermonkey/js_land_proxy.h
 ext/spidermonkey/ruby_land_proxy.c
 ext/spidermonkey/ruby_land_proxy.h
 ext/spidermonkey/spidermonkey.c
 ext/spidermonkey/spidermonkey.h
-js/prelude.js
-js/template.js
+js/johnson/prelude.js
+js/johnson/template.js
 lib/johnson.rb
 lib/johnson/cli/options.rb
 lib/johnson/context.rb
@@ -61,6 +59,7 @@ test/johnson/conversions/string_test.rb
 test/johnson/conversions/struct_test.rb
 test/johnson/conversions/symbol_test.rb
 test/johnson/error_test.rb
+test/johnson/extensions_test.rb
 test/johnson/nodes/array_literal_test.rb
 test/johnson/nodes/array_node_test.rb
 test/johnson/nodes/binary_node_test.rb

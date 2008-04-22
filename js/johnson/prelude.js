@@ -41,16 +41,23 @@ Johnson.Generator.create = function() {
 Johnson.required = {};
 
 Johnson.require = function(file) {
+  file = Ruby.File.join(Ruby.File.dirname(file),
+    Ruby.File.basename(file, ".js") + ".js");
+  
   if(Johnson.required[file]) return false;
-  for(var directory in Ruby['$LOAD_PATH']) {
-    var filename = directory + "/" + Ruby.File.basename(file, ".js") + ".js";
-    if(Ruby.File['exists?'](filename)) {
+  
+  for(var directory in Ruby["$LOAD_PATH"]) {
+    var path = Ruby.File.join(directory, file);
+    
+    if(Ruby.File.send("file?", path)) {
       Johnson.required[file] = true;
-      eval(Ruby.File.read(filename));
+      eval(Ruby.File.read(path));
+      
       return true;
     }
   }
-  throw FileNotFound;
+  
+  throw LoadError;
 }
 
 null; // no need to marshal a result
