@@ -8,6 +8,7 @@ $CFLAGS << " -g -DXP_UNIX"
 spidermonkey_base_dir = "../../vendor/spidermonkey"
 
 # we can't even run the extconf unless Spidermonkey has built
+Dir.chdir("../..") { system "git submodule init && git submodule update" }
 Dir.chdir(spidermonkey_base_dir) { system "make -f Makefile.ref" }
 
 spidermonkey_obj_dir = Dir[spidermonkey_base_dir + "/*.OBJ"].first
