@@ -41,12 +41,17 @@ static VALUE parse_io(VALUE klass, VALUE stream) {
   jschar* chars;
   assert(chars = js_InflateString(context->js, StringValuePtr(file_contents), &length));
 
-  // FIXME: Ask +stream+ for its path as the filename
+  VALUE filename = NULL;
+  if(rb_respond_to(stream, rb_intern("path"))) {
+    filename = rb_funcall(stream, rb_intern("path"), 0);
+  }
+  char* filenamez = RTEST(filename) ? StringValueCStr(filename) : "boner";
+
   assert(js_InitParseContext(context->js, context->pc, 
       NULL,
       chars,
       length,
-      NULL, "boner", 0));
+      NULL, filenamez, 0));
 
   context->node = js_ParseScript(context->js, 
       JS_NewObject(context->js, NULL, NULL, NULL),
