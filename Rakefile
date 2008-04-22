@@ -37,7 +37,11 @@ Rake::Task[:check_manifest].prerequisites << GENERATED_NODE
 Rake::Task[:gem].prerequisites << :extensions
 
 desc "Our johnson requires extensions."
-task :extensions => "lib/johnson/spidermonkey.#{kind}"
+task :extensions => [:submodules, "lib/johnson/spidermonkey.#{kind}"]
+
+task :submodules do
+  sh "git submodule init && git submodule update"
+end
 
 # for testing, we toss the SpiderMonkey extension in lib/johnson
 file "lib/johnson/spidermonkey.#{kind}" =>
