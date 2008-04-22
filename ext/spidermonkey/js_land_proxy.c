@@ -104,17 +104,16 @@ static bool has_key_p(VALUE self, char* name)
 
 static bool respond_to_p(JSContext* js_context, JSObject* obj, char* name)
 {
-  VALUE ruby_context;
-  assert(ruby_context = (VALUE)JS_GetContextPrivate(js_context));
-  
+  VALUE ruby_context = (VALUE)JS_GetContextPrivate(js_context);
+
   OurContext* context;
   Data_Get_Struct(ruby_context, OurContext, context);
-  
-  VALUE self;
-  
-  assert(self = (VALUE)JS_GetInstancePrivate(
-    context->js, obj, JS_GET_CLASS(context->js, obj), NULL));
-  
+
+  VALUE self = (VALUE)JS_GetInstancePrivate(
+    context->js, obj, JS_GET_CLASS(context->js, obj), NULL);
+
+  if (!self) return false;
+
   return autovivified_p(ruby_context, self, name)
     || const_p(self, name)
     || global_p(name)
@@ -125,10 +124,11 @@ static bool respond_to_p(JSContext* js_context, JSObject* obj, char* name)
 
 static JSBool get(JSContext* js_context, JSObject* obj, jsval id, jsval* retval)
 {
+  JS_AddNamedRoot(js_context, &id, "JSLandProxy#get");
+
   // pull out our Ruby context, which is embedded in js_context
   
-  VALUE ruby_context;
-  assert(ruby_context = (VALUE)JS_GetContextPrivate(js_context));
+  VALUE ruby_context = (VALUE)JS_GetContextPrivate(js_context);
   
   // get our struct, which is embedded in ruby_context
   
@@ -137,22 +137,27 @@ static JSBool get(JSContext* js_context, JSObject* obj, jsval id, jsval* retval)
     
   // get the Ruby object that backs this proxy
   
-  VALUE self;
-  assert(self = (VALUE)JS_GetInstancePrivate(context->js, obj, JS_GET_CLASS(context->js, obj), NULL));
+  VALUE self = (VALUE)JS_GetInstancePrivate(context->js, obj, JS_GET_CLASS(context->js, obj), NULL);
   
   // Short-circuit for numeric indexes
   
   if (JSVAL_IS_INT(id))
   {
-    if (indexable_p(self))
-      return convert_to_js(context,
+    if (indexable_p(self)) {
+      JSBool okay = convert_to_js(context,
         rb_funcall(self, rb_intern("[]"), 1, INT2FIX(JSVAL_TO_INT(id))), retval);
+      JS_RemoveRoot(js_context, &id);
+      return okay;
+    }
     
+    JS_RemoveRoot(js_context, &id);
     return JS_TRUE;
   }
   
   char* name = JS_GetStringBytes(JSVAL_TO_STRING(id));
   VALUE ruby_id = rb_intern(name);
+
+  JS_RemoveRoot(js_context, &id);
   
   // FIXME: this is necessarily ugly. Maybe we should write something like
   // jsval foo = property_expression(context->js, context->global, "Johnson.Generator.create")
@@ -162,13 +167,29 @@ static JSBool get(JSContext* js_context, JSObject* obj, jsval id, jsval* retval)
   
   if (!strcasecmp("__iterator__", name)) {
     jsval nsJohnson;
-    assert(JS_GetProperty(context->js, context->global, "Johnson", &nsJohnson) || JSVAL_VOID == nsJohnson);
+    if(!(JS_GetProperty(context->js, context->global, "Johnson", &nsJohnson)))
+      return JS_FALSE;
+
+    JS_AddNamedRoot(context->js, &nsJohnson, "JSLandProxy#get");
 
     jsval nsGenerator;
-    assert(JS_GetProperty(context->js, JSVAL_TO_OBJECT(nsJohnson), "Generator", &nsGenerator) || JSVAL_VOID == nsGenerator);
+    if(!(JS_GetProperty(context->js, JSVAL_TO_OBJECT(nsJohnson), "Generator", &nsGenerator))) {
+      JS_RemoveRoot(context->js, &nsJohnson);
+      return JS_FALSE;
+    }
+
+    JS_AddNamedRoot(context->js, &nsGenerator, "JSLandProxy#get");
 
     jsval create;
-    assert(JS_GetProperty(context->js, JSVAL_TO_OBJECT(nsGenerator), "create", &create) || JSVAL_VOID == create);
+    if(!(JS_GetProperty(context->js, JSVAL_TO_OBJECT(nsGenerator), "create", &create))) {
+      JS_RemoveRoot(context->js, &nsGenerator);
+      JS_RemoveRoot(context->js, &nsJohnson);
+      return JS_FALSE;
+    }
+
+    JS_RemoveRoot(context->js, &nsGenerator);
+    JS_RemoveRoot(context->js, &nsJohnson);
+
     *retval = create;
     return JS_TRUE;
   }
@@ -235,21 +256,24 @@ static JSBool get(JSContext* js_context, JSObject* obj, jsval id, jsval* retval)
 static JSBool get_and_destroy_resolved_property(
   JSContext* js_context, JSObject* obj, jsval id, jsval* retval)
 {
+  JS_AddNamedRoot(js_context, &id, "JSLandProxy#get_and_destroy_resolved_property");
   char* name = JS_GetStringBytes(JSVAL_TO_STRING(id));
   JS_DeleteProperty(js_context, obj, name);
+  JS_RemoveRoot(js_context, &id);
   return get(js_context, obj, id, retval);
 }
 
 static JSBool set(JSContext* js_context, JSObject* obj, jsval id, jsval* value)
 {
-  VALUE ruby_context;
-  assert(ruby_context = (VALUE)JS_GetContextPrivate(js_context));
+  JS_AddNamedRoot(js_context, &id, "JSLandProxy#set");
+  JS_AddNamedRoot(js_context, value, "JSLandProxy#set");
+
+  VALUE ruby_context = (VALUE)JS_GetContextPrivate(js_context);
   
   OurContext* context;
   Data_Get_Struct(ruby_context, OurContext, context);
     
-  VALUE self;
-  assert(self = (VALUE)JS_GetInstancePrivate(context->js, obj, JS_GET_CLASS(context->js, obj), NULL));
+  VALUE self = (VALUE)JS_GetInstancePrivate(context->js, obj, JS_GET_CLASS(context->js, obj), NULL);
   
   // Short-circuit for numeric indexes
   
@@ -258,12 +282,17 @@ static JSBool set(JSContext* js_context, JSObject* obj, jsval id, jsval* value)
     if (indexable_p(self))
       rb_funcall(self, rb_intern("[]="),
         2, INT2FIX(JSVAL_TO_INT(id)), convert_to_ruby(context, *value));
+
+    JS_RemoveRoot(js_context, value);
+    JS_RemoveRoot(js_context, &id);
     
     return JS_TRUE;
   }
   
   char* key = JS_GetStringBytes(JSVAL_TO_STRING(id));
   VALUE ruby_key = rb_str_new2(key);
+
+  JS_RemoveRoot(js_context, &id);
   
   VALUE setter = rb_str_append(rb_str_new3(ruby_key), rb_str_new2("="));
   VALUE setter_id = rb_intern(StringValuePtr(setter));
@@ -294,14 +323,15 @@ static JSBool set(JSContext* js_context, JSObject* obj, jsval id, jsval* value)
     rb_funcall(Johnson_SpiderMonkey_JSLandProxy(), rb_intern("autovivify"),
       3, self, ruby_key, convert_to_ruby(context, *value));
   }
+
+  JS_RemoveRoot(js_context, value);
   
   return JS_TRUE;
 }
 
 static JSBool construct(JSContext* js_context, JSObject* obj, uintN argc, jsval* argv, jsval* retval)
 {
-  VALUE ruby_context;
-  assert(ruby_context = (VALUE)JS_GetContextPrivate(js_context));
+  VALUE ruby_context = (VALUE)JS_GetContextPrivate(js_context);
   
   OurContext* context;
   Data_Get_Struct(ruby_context, OurContext, context);
@@ -321,41 +351,53 @@ static JSBool construct(JSContext* js_context, JSObject* obj, uintN argc, jsval*
 
 static JSBool resolve(JSContext *js_context, JSObject *obj, jsval id, uintN flags, JSObject **objp)
 {
-  VALUE ruby_context;
-  assert(ruby_context = (VALUE)JS_GetContextPrivate(js_context));
+  JS_AddNamedRoot(js_context, &id, "JSLandProxy#resolve");
+
+  VALUE ruby_context = (VALUE)JS_GetContextPrivate(js_context);
   
   OurContext* context;
   Data_Get_Struct(ruby_context, OurContext, context);
   
   char* name = JS_GetStringBytes(JS_ValueToString(js_context, id));
-  
+
   if (respond_to_p(js_context, obj, name))
   {
-    assert(JS_DefineProperty(js_context, obj, name, JSVAL_VOID,
-      get_and_destroy_resolved_property, set, JSPROP_ENUMERATE));
-    
+    if(!(JS_DefineProperty(js_context, obj, name, JSVAL_VOID,
+        get_and_destroy_resolved_property, set, JSPROP_ENUMERATE))) {
+      JS_RemoveRoot(js_context, &id);
+      return JS_FALSE;
+    }
+
     *objp = obj;
   }
-  
+
+  JS_RemoveRoot(js_context, &id);
+
   return JS_TRUE;
 }
 
 static JSBool method_missing(JSContext* js_context, JSObject* obj, uintN argc, jsval* argv, jsval* retval)
 {
-  VALUE ruby_context;
-  assert(ruby_context = (VALUE)JS_GetContextPrivate(js_context));
+  VALUE ruby_context = (VALUE)JS_GetContextPrivate(js_context);
   
   OurContext* context;
   Data_Get_Struct(ruby_context, OurContext, context);
     
-  VALUE self;
-  assert(self = (VALUE)JS_GetInstancePrivate(context->js, obj, JS_GET_CLASS(context->js, obj), NULL));
+  VALUE self = (VALUE)JS_GetInstancePrivate(context->js, obj, JS_GET_CLASS(context->js, obj), NULL);
   
+  assert(argc >= 2);
+
+  JS_AddNamedRoot(js_context, &(argv[0]), "JSLandProxy#method_missing");
+  JS_AddNamedRoot(js_context, &(argv[1]), "JSLandProxy#method_missing");
+
   char* key = JS_GetStringBytes(JSVAL_TO_STRING(argv[0]));
   VALUE ruby_id = rb_intern(key);
   
   // FIXME: this is horrible and lazy, to_a comes from enumerable on proxy (argv[1] is a JSArray)
   VALUE args = rb_funcall(convert_to_ruby(context, argv[1]), rb_intern("to_a"), 0);
+
+  JS_RemoveRoot(js_context, &(argv[1]));
+  JS_RemoveRoot(js_context, &(argv[0]));
   
   return convert_to_js(context,
     rb_funcall(Johnson_SpiderMonkey_JSLandProxy(), rb_intern("send_with_possible_block"),
@@ -364,14 +406,12 @@ static JSBool method_missing(JSContext* js_context, JSObject* obj, uintN argc, j
 
 static JSBool call(JSContext* js_context, JSObject* obj, uintN argc, jsval* argv, jsval* retval)
 {
-  VALUE ruby_context;
-  assert(ruby_context = (VALUE)JS_GetContextPrivate(js_context));
+  VALUE ruby_context = (VALUE)JS_GetContextPrivate(js_context);
   
   OurContext* context;
   Data_Get_Struct(ruby_context, OurContext, context);
   
-  VALUE self;// = convert_to_ruby(context, JS_ARGV_CALLEE(argv));
-  assert(self = (VALUE)JS_GetInstancePrivate(context->js, JSVAL_TO_OBJECT(JS_ARGV_CALLEE(argv)), &JSLandCallableProxyClass, NULL));
+  VALUE self = (VALUE)JS_GetInstancePrivate(context->js, JSVAL_TO_OBJECT(JS_ARGV_CALLEE(argv)), &JSLandCallableProxyClass, NULL);
   
   VALUE args = rb_ary_new();  
   int i;
@@ -398,8 +438,8 @@ VALUE unwrap_js_land_proxy(OurContext* context, jsval proxy)
   VALUE value;
   JSObject *proxy_object = JSVAL_TO_OBJECT(proxy);
   
-  assert(value = (VALUE)JS_GetInstancePrivate(context->js, proxy_object,
-          JS_GET_CLASS(context->js, proxy_object), NULL));
+  value = (VALUE)JS_GetInstancePrivate(context->js, proxy_object,
+          JS_GET_CLASS(context->js, proxy_object), NULL);
   
   return value;
 }
@@ -413,9 +453,8 @@ static void finalize(JSContext* js_context, JSObject* obj)
     OurContext* context;
     Data_Get_Struct(ruby_context, OurContext, context);
     
-    VALUE self;
-    assert(self = (VALUE)JS_GetInstancePrivate(context->js, obj,
-            JS_GET_CLASS(context->js, obj), NULL));
+    VALUE self = (VALUE)JS_GetInstancePrivate(context->js, obj,
+            JS_GET_CLASS(context->js, obj), NULL);
     
     // remove the proxy OID from the id map
     JS_HashTableRemove(context->rbids, (void *)rb_obj_id(self));
@@ -451,20 +490,26 @@ JSBool make_js_land_proxy(OurContext* context, VALUE value, jsval* retval)
     if (callable_p)
       klass = &JSLandCallableProxyClass;
         
-    assert(jsobj = JS_NewObject(context->js, klass, NULL, NULL));
-    assert(JS_SetPrivate(context->js, jsobj, (void*)value));
+    if(!(jsobj = JS_NewObject(context->js, klass, NULL, NULL)))
+      return JS_FALSE;
+    if(!(JS_SetPrivate(context->js, jsobj, (void*)value)))
+      return JS_FALSE;
 
-    if (!callable_p)
-      assert(JS_DefineFunction(context->js, jsobj,
-        "__noSuchMethod__", method_missing, 2, 0));
+    if (!callable_p) {
+      if(!(JS_DefineFunction(context->js, jsobj,
+          "__noSuchMethod__", method_missing, 2, 0)))
+        return JS_FALSE;
+    }
 
     *retval = OBJECT_TO_JSVAL(jsobj);
 
     jsval newid;
-    assert(JS_ValueToId(context->js, *retval, &newid));
+    if(!(JS_ValueToId(context->js, *retval, &newid)))
+      return JS_FALSE;
   
     // put the proxy OID in the id map
-    assert(JS_HashTableAdd(context->rbids, (void *)rb_obj_id(value), (void *)newid));
+    if(!(JS_HashTableAdd(context->rbids, (void *)rb_obj_id(value), (void *)newid)))
+      return JS_FALSE;
     
     // root the ruby value for GC
     VALUE ruby_context = (VALUE)JS_GetContextPrivate(context->js);

@@ -7,4 +7,6 @@
 JSBool convert_to_js(OurContext* context, VALUE ruby, jsval* retval);
 VALUE convert_to_ruby(OurContext* context, jsval js);
 
+void raise_js_error_in_ruby(OurContext* context);
+
 #endif

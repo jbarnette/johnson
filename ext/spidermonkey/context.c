@@ -73,7 +73,8 @@ static void deallocate(OurContext* context)
 {
   JS_SetContextPrivate(context->js, 0);
   
-  assert(JS_RemoveRoot(context->js, &(context->gcthings)));
+  JS_RemoveRoot(context->js, &(context->global));
+  JS_RemoveRoot(context->js, &(context->gcthings));
   JS_HashTableDestroy(context->rbids);
   JS_HashTableDestroy(context->jsids);
 
@@ -96,22 +97,38 @@ static VALUE initialize_native(VALUE self, VALUE options)
 {
   OurContext* context;
   Data_Get_Struct(self, OurContext, context);
-  
-  assert(context->runtime = JS_NewRuntime(0x100000));
-  assert(context->js = JS_NewContext(context->runtime, 8192));
 
-  assert(context->jsids = create_id_hash());  
-  assert(context->rbids = create_id_hash());  
-  assert(context->gcthings = JS_NewObject(context->js, NULL, 0, 0));
-  assert(context->global = JS_NewObject(context->js, &OurGlobalClass, NULL, NULL));
-  
-  assert(JS_InitStandardClasses(context->js, context->global));
-  assert(JS_AddRoot(context->js, &(context->gcthings)));
+  // FIXME: Surely there's a less ugly way of doing this...
+  if((context->runtime = JS_NewRuntime(0x100000))) {
+    if((context->js = JS_NewContext(context->runtime, 8192))) {
+      if ((context->jsids = create_id_hash())) {
+        if ((context->rbids = create_id_hash())) {
+          if ((context->gcthings = JS_NewObject(context->js, NULL, 0, 0))) {
+            if (JS_AddNamedRoot(context->js, &(context->gcthings), "context->gcthings")) {
+              if ((context->global = JS_NewObject(context->js, &OurGlobalClass, NULL, NULL))) {
+                if (JS_AddNamedRoot(context->js, &(context->global), "context->global")) {
+                  if (JS_InitStandardClasses(context->js, context->global)) {
+                    JS_SetErrorReporter(context->js, error);
+                    JS_SetContextPrivate(context->js, (void *)self);
 
-  JS_SetErrorReporter(context->js, error);
-  JS_SetContextPrivate(context->js, (void *)self);
+                    return self;
+                  }
+                  JS_RemoveRoot(context->js, &(context->global));
+                }
+              }
+              JS_RemoveRoot(context->js, &(context->gcthings));
+            }
+          }
+          JS_HashTableDestroy(context->rbids);
+        }
+        JS_HashTableDestroy(context->jsids);
+      }
+      JS_DestroyContext(context->js);
+    }
+    JS_DestroyRuntime(context->runtime);
+  }
 
-  return self;
+  rb_raise(rb_eRuntimeError, "Failed to initialize SpiderMonkey context");
 }
 
 void init_Johnson_SpiderMonkey_Context(VALUE spidermonkey)
