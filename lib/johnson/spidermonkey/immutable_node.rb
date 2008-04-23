@@ -188,40 +188,6 @@ module Johnson #:nodoc:
           handle_divop(visitor)
         when :tok_shop
           handle_shiftop(visitor)
-        when :tok_bitand
-          visitor.visit_OpBitAnd(self)
-        when :tok_bitxor
-          visitor.visit_OpBitXor(self)
-        when :tok_bitor
-          visitor.visit_OpBitOr(self)
-        when :tok_plus
-          visitor.visit_OpAdd(self)
-        when :tok_minus
-          visitor.visit_OpSubtract(self)
-        when :tok_lb
-          visitor.visit_BracketAccess(self)
-        when :tok_star
-          visitor.visit_OpMultiply(self)
-        when :tok_or
-          visitor.visit_Or(self)
-        when :tok_and
-          visitor.visit_And(self)
-        when :tok_in
-          visitor.visit_In(self)
-        when :tok_instanceof
-          visitor.visit_InstanceOf(self)
-        when :tok_do
-          visitor.visit_DoWhile(self)
-        when :tok_switch
-          visitor.visit_Switch(self)
-        when :tok_case
-          visitor.visit_Case(self)
-        when :tok_default
-          visitor.visit_Default(self)
-        when :tok_with
-          visitor.visit_With(self)
-        when :tok_while
-          visitor.visit_While(self)
         when :tok_eqop
           handle_eqop(visitor)
         when :tok_colon
@@ -241,7 +207,27 @@ module Johnson #:nodoc:
             visitor.visit_For(self)
           end
         else
-          raise "Unknown binary type: #{pn_type}"
+          m = {
+            :tok_while      => :visit_While,
+            :tok_with       => :visit_With,
+            :tok_default    => :visit_Default,
+            :tok_case       => :visit_Case,
+            :tok_switch     => :visit_Switch,
+            :tok_do         => :visit_DoWhile,
+            :tok_instanceof => :visit_InstanceOf,
+            :tok_in         => :visit_In,
+            :tok_and        => :visit_And,
+            :tok_or         => :visit_Or,
+            :tok_star       => :visit_OpMultiply,
+            :tok_lb         => :visit_BracketAccess,
+            :tok_minus      => :visit_OpSubtract,
+            :tok_plus       => :visit_OpAdd,
+            :tok_bitor      => :visit_OpBitOr,
+            :tok_bitxor     => :visit_OpBitXor,
+            :tok_bitand     => :visit_OpBitAnd,
+          }[pn_type]
+          raise "Unknown binary type: #{pn_type}" unless m
+          visitor.send(m, self)
         end
       end
 
