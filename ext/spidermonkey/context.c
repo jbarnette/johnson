@@ -45,6 +45,33 @@ evaluate(int argc, VALUE* argv, VALUE self)
       JS_ClearPendingException(context->js);
     }
 
+    if (context->ex)
+    {
+      return rb_funcall(self, rb_intern("handle_js_exception"),
+        1, convert_to_ruby(context, context->ex));
+      
+      // VALUE message, file, line, stack;
+      // 
+      // jsval js_message;
+      // assert(JS_GetProperty(context->js, JSVAL_TO_OBJECT(context->ex), "message", &js_message));
+      // message = convert_to_ruby(context, js_message);
+      // 
+      // jsval js_file;
+      // assert(JS_GetProperty(context->js, JSVAL_TO_OBJECT(context->ex), "fileName", &js_file));
+      // file = convert_to_ruby(context, js_file);
+      // 
+      // jsval js_line;
+      // assert(JS_GetProperty(context->js, JSVAL_TO_OBJECT(context->ex), "lineNumber", &js_line));
+      // line = convert_to_ruby(context, js_line);
+      // 
+      // jsval js_stack;
+      // assert(JS_GetProperty(context->js, JSVAL_TO_OBJECT(context->ex), "stack", &js_stack));
+      // stack = convert_to_ruby(context, js_stack);
+      // 
+      // return rb_funcall(self, rb_intern("handle_js_exception"),
+      //   4, message, file, line, stack);
+    }
+    
     char* msg = context->msg;
 
     // toString() whatever the exception object is (if we have one)
