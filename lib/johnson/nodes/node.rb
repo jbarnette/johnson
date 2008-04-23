@@ -53,6 +53,10 @@ module Johnson
       end
 
       alias_method :to_js, :to_ecma
+
+      def to_dot
+        DotVisitor.new { |d| d.accept(self) }
+      end
     end
     SINGLE_NODES.each { |se| const_set(se.to_sym, Class.new(Node)) }
   end
