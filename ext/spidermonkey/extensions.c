@@ -25,10 +25,10 @@ bool init_spidermonkey_extensions(OurContext* context)
           INT_TO_JSVAL(0x02), NULL, NULL, JSPROP_READONLY)
         
         && JS_DefineProperty(context->js, JSVAL_TO_OBJECT(Object), "ITERABLE",
-                             INT_TO_JSVAL(0x01), NULL, NULL, JSPROP_READONLY)
+          INT_TO_JSVAL(0x01), NULL, NULL, JSPROP_READONLY)
         
         && JS_DefineProperty(context->js, JSVAL_TO_OBJECT(Object), "NON_DELETABLE",
-                             INT_TO_JSVAL(0x04), NULL, NULL, JSPROP_READONLY))
+          INT_TO_JSVAL(0x04), NULL, NULL, JSPROP_READONLY))
       {
         JS_RemoveRoot(context->js, &Object);
         return true;
