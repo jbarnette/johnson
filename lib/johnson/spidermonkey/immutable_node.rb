@@ -286,8 +286,8 @@ module Johnson #:nodoc:
         visitor.send(m, self)
       end
 
-      def raise_parse_error
-        raise Johnson::Parser::SyntaxError
+      def raise_parse_error(message, file_name, line_number)
+        raise Johnson::Parser::SyntaxError.new(message, file_name, line_number)
       end
     end
   end

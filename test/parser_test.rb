@@ -23,6 +23,36 @@ class ParserTest < Test::Unit::TestCase
     }
   end
 
+  def test_exception_has_info
+    begin
+      @parser.parse('if(')
+    rescue Johnson::Parser::SyntaxError => ex
+      assert_equal(1, ex.line_number)
+      assert_equal('', ex.file_name)
+      assert_equal('syntax error', ex.message)
+    end
+  end
+
+  def test_exception_has_filename
+    begin
+      @parser.parse('if(', 'test.js')
+    rescue Johnson::Parser::SyntaxError => ex
+      assert_equal(1, ex.line_number)
+      assert_equal('test.js', ex.file_name)
+      assert_equal('syntax error', ex.message)
+    end
+  end
+
+  def test_exception_has_linenum
+    begin
+      @parser.parse('if(', 'test.js', 10)
+    rescue Johnson::Parser::SyntaxError => ex
+      assert_equal(10, ex.line_number)
+      assert_equal('test.js', ex.file_name)
+      assert_equal('syntax error', ex.message)
+    end
+  end
+
   def test_variable_declaration_no_init
     assert_sexp(
       [[:var, [[:name, 'foo']]]],
