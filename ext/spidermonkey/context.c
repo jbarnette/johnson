@@ -1,51 +1,20 @@
 #include "context.h"
 #include "conversions.h"
+#include "global.h"
 #include "error.h"
 #include "extensions.h"
 #include "idhash.h"
 
-static JSBool define_property(JSContext *context, JSObject *obj, uintN argc, jsval *argv, jsval *retval);
-
-static JSBool global_enumerate(JSContext *js_context, JSObject *obj)
-{
-  return JS_EnumerateStandardClasses(js_context, obj);
-}
-
-static JSBool global_resolve(
-  JSContext *js_context, JSObject *obj, jsval id, uintN flags, JSObject **objp)
-{
-  if ((flags & JSRESOLVE_ASSIGNING) == 0) {
-    JSBool resolved_p;
-
-    if (!JS_ResolveStandardClass(js_context, obj, id, &resolved_p))
-      return JS_FALSE;
-    if (resolved_p) *objp = obj;
-  }
-
-  return JS_TRUE;
-}
-
-static JSClass OurGlobalClass = {
-  "global", JSCLASS_NEW_RESOLVE | JSCLASS_GLOBAL_FLAGS,
-  JS_PropertyStub, // addProperty
-  JS_PropertyStub, // delProperty
-  JS_PropertyStub, // getProperty
-  JS_PropertyStub, // setProperty
-  global_enumerate,
-  (JSResolveOp) global_resolve,
-  JS_ConvertStub,
-  JS_FinalizeStub,
-  JSCLASS_NO_OPTIONAL_MEMBERS
-};
-
-static VALUE global(VALUE self)
+static VALUE /* Context#global */
+global(VALUE self)
 {
   OurContext* context;
   Data_Get_Struct(self, OurContext, context);
   return convert_to_ruby(context, OBJECT_TO_JSVAL(context->global));
 }
 
-static VALUE evaluate(int argc, VALUE* argv, VALUE self)
+static VALUE /* Context#evaluate(script, filename=nil, linenum=nil) */
+evaluate(int argc, VALUE* argv, VALUE self)
 {
   VALUE script, filename, linenum;
 
@@ -87,7 +56,8 @@ static VALUE evaluate(int argc, VALUE* argv, VALUE self)
   return convert_to_ruby(context, js);
 }
 
-static void error(JSContext* js, const char* message, JSErrorReport* report)
+// callback for JS_SetErrorReporter
+static void report_js_error(JSContext* js, const char* message, JSErrorReport* report)
 {
   // first we find ourselves
   VALUE self = (VALUE)JS_GetContextPrivate(js);
@@ -105,31 +75,9 @@ static void error(JSContext* js, const char* message, JSErrorReport* report)
   JS_GetPendingException(context->js, &context->ex);
 }
 
-static void deallocate(OurContext* context)
+/* private */ static VALUE /* Context#initialize_native(options={}) */
+initialize_native(VALUE self, VALUE options)
 {
-  JS_SetContextPrivate(context->js, 0);
-
-  JS_RemoveRoot(context->js, &(context->global));
-  JS_RemoveRoot(context->js, &(context->gcthings));
-  JS_HashTableDestroy(context->rbids);
-  JS_HashTableDestroy(context->jsids);
-
-  context->jsids = 0;
-  context->rbids = 0;
-
-  JS_DestroyContext(context->js);
-  JS_DestroyRuntime(context->runtime);
-
-  free(context);
-}
-
-static VALUE allocate(VALUE klass)
-{
-  OurContext* context = calloc(1, sizeof(OurContext));
-  return Data_Wrap_Struct(klass, 0, deallocate, context);
-}
-
-static VALUE initialize_native(VALUE self, VALUE options) {
   OurContext* context;
   bool gthings_rooted_p = false;
 
@@ -141,10 +89,10 @@ static VALUE initialize_native(VALUE self, VALUE options) {
     && (context->rbids = create_id_hash())
     && (context->gcthings = JS_NewObject(context->js, NULL, 0, 0))
     && (gthings_rooted_p = JS_AddNamedRoot(context->js, &(context->gcthings), "context->gcthings"))
-    && (context->global = JS_NewObject(context->js, &OurGlobalClass, NULL, NULL))
+    && (context->global = create_global_object(context))
     && (JS_AddNamedRoot(context->js, &(context->global), "context->global")))
   {
-    JS_SetErrorReporter(context->js, error);
+    JS_SetErrorReporter(context->js, report_js_error);
     JS_SetContextPrivate(context->js, (void *)self);
 
     if (init_spidermonkey_extensions(context))
@@ -169,6 +117,34 @@ static VALUE initialize_native(VALUE self, VALUE options) {
     JS_DestroyRuntime(context->runtime);
 
   rb_raise(rb_eRuntimeError, "Failed to initialize SpiderMonkey context");
+}
+
+///////////////////////////////////////////////////////////////////////////
+//// INFRASTRUCTURE BELOW HERE ////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////
+
+static void deallocate(OurContext* context)
+{
+  JS_SetContextPrivate(context->js, 0);
+
+  JS_RemoveRoot(context->js, &(context->global));
+  JS_RemoveRoot(context->js, &(context->gcthings));
+  JS_HashTableDestroy(context->rbids);
+  JS_HashTableDestroy(context->jsids);
+
+  context->jsids = 0;
+  context->rbids = 0;
+
+  JS_DestroyContext(context->js);
+  JS_DestroyRuntime(context->runtime);
+
+  free(context);
+}
+
+static VALUE allocate(VALUE klass)
+{
+  OurContext* context = calloc(1, sizeof(OurContext));
+  return Data_Wrap_Struct(klass, 0, deallocate, context);
 }
 
 void init_Johnson_SpiderMonkey_Context(VALUE spidermonkey)
