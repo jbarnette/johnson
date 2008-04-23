@@ -33,27 +33,50 @@ end
 Rake::Task[:test].prerequisites << :extensions
 Rake::Task[:check_manifest].prerequisites << GENERATED_NODE
 
+task :build => :extensions
+
 # gem depends on the native extension actually building
 Rake::Task[:gem].prerequisites << :extensions
 
 desc "Our johnson requires extensions."
-task :extensions => [:submodules, "lib/johnson/spidermonkey.#{kind}"]
+task :extensions => ["lib/johnson/spidermonkey.#{kind}"]
+
+task :spidermonkey => :submodules do
+  if ENV['CROSS']
+    Dir.chdir("vendor/spidermonkey") { sh "make -f Makefile.ref OS_CONFIG=#{ENV['CROSS']}" }
+  else
+    Dir.chdir("vendor/spidermonkey") { sh "make -f Makefile.ref" }
+  end
+end
+task :spidermonkey => "vendor/spidermonkey/config/#{ENV['CROSS']}.mk" if ENV['CROSS']
+
+file "vendor/spidermonkey/config/MINGW32.mk" => "MINGW32.mk" do |t|
+  File.copy(t.prerequisites.first, t.name)
+end
 
 task :submodules do
   sh "git submodule init && git submodule update"
 end
 
-# for testing, we toss the SpiderMonkey extension in lib/johnson
-file "lib/johnson/spidermonkey.#{kind}" =>
-  FileList["ext/spidermonkey/Makefile", "ext/spidermonkey/*.{c,h}"] do
+file "ext/spidermonkey/spidermonkey.#{kind}" =>
+  ["ext/spidermonkey/Makefile"] + FileList["ext/spidermonkey/*.{c,h}"].to_a do
   
   Dir.chdir("ext/spidermonkey") { sh "make" }
-  sh "cp ext/spidermonkey/spidermonkey.#{kind} lib/johnson/spidermonkey.#{kind}"
+end
+
+# for testing, we toss the SpiderMonkey extension in lib/johnson
+file "lib/johnson/spidermonkey.#{kind}" =>
+  "ext/spidermonkey/spidermonkey.#{kind}" do |t|
+
+  File.copy(t.prerequisites.first, t.name)
 end
 
 file "ext/spidermonkey/Makefile" =>
-  [GENERATED_NODE, "ext/spidermonkey/extconf.rb"] do
-  Dir.chdir("ext/spidermonkey") { ruby "extconf.rb" }
+  [:spidermonkey, GENERATED_NODE, "ext/spidermonkey/extconf.rb"] do
+  
+  dirs = (ENV['CROSS'] ? [ENV["CROSSLIB"]] : []) + $:
+  command = ["ruby"] + dirs.map{|dir| "-I#{File.expand_path dir}"} + ["extconf.rb"]
+  Dir.chdir("ext/spidermonkey") { sh *command }
 end
 
 def jsops
@@ -81,7 +104,7 @@ def tokens
   toks.uniq
 end
 
-file GENERATED_NODE => "ext/spidermonkey/immutable_node.c.erb" do |t|
+file GENERATED_NODE => ["ext/spidermonkey/immutable_node.c.erb", "vendor/spidermonkey/jsopcode.tbl", "vendor/spidermonkey/jsscan.h"] do |t|
   template = ERB.new(File.open(t.prerequisites.first, 'rb') { |x| x.read })
   File.open(GENERATED_NODE, 'wb') { |f|
     f.write template.result(binding)
