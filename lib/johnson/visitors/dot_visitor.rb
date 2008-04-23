@@ -152,7 +152,7 @@ module Johnson
           @nodes << Node.new(o.object_id, node, [])
           [:left, :right].each do |side|
             if x = o.send(side)
-              @links << Link.new(o.object_id, x.object_id)
+              @links << Link.new(o.object_id, x.object_id, { 'label' => side })
               x.accept(self)
             end
           end
