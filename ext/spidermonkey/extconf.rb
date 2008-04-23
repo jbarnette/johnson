@@ -3,14 +3,16 @@ ENV["ARCHFLAGS"] = "-arch #{`uname -p` =~ /powerpc/ ? 'ppc' : 'i386'}"
 
 require "mkmf"
 
-$CFLAGS << " -g -DXP_UNIX"
+if Config::CONFIG['target_os'] == 'mingw32'
+  $libs = append_library($libs, "winmm")
+  $CFLAGS << " -DXP_WIN -DXP_WIN32"
+else
+  $CFLAGS << " -g -DXP_UNIX"
+end
 
 spidermonkey_base_dir = "../../vendor/spidermonkey"
 
-# we can't even run the extconf unless Spidermonkey has built
-Dir.chdir(spidermonkey_base_dir) { system "make -f Makefile.ref" }
-
-spidermonkey_obj_dir = Dir[spidermonkey_base_dir + "/*.OBJ"].first
+spidermonkey_obj_dir = Dir[spidermonkey_base_dir + "/#{ENV['CROSS'] || ''}*.OBJ"].first
 
 dir_config("johnson/spidermonkey")
 

@@ -1,0 +1,31 @@
+
+CROSS-COMPILING FOR WINDOWS
+
+Based on http://eigenclass.org/hiki.rb?cross+compiling+rcovrt
+
+
+*) Download & extract a ruby tar.gz
+
+*) Double the backslashes in the ALT_SEPARATOR definition in Makefile.in
+
+*) Build & install it:
+
+    env ac_cv_func_getpgrp_void=no \
+       ac_cv_func_setpgrp_void=yes \
+       rb_cv_negative_time_t=no \
+       ac_cv_func_memcmp_working=yes \
+       rb_cv_binary_elf=no \
+       ./configure \
+       --host=i586-mingw32msvc \
+       --target=i386-mingw32 \
+       --build=i686-linux \
+       --prefix=~/ruby-mingw32
+
+    make ruby
+
+    make install
+
+*) Build the extension (rake will build spidermonkey for you)
+
+    rake build CROSS=MINGW32 CROSSLIB=~/ruby-mingw32/lib/ruby/1.8/i386-mingw32
+
