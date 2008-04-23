@@ -51,7 +51,7 @@ Johnson.require = function(file) {
     
     if(Ruby.File.send("file?", path)) {
       Johnson.required[file] = true;
-      eval(Ruby.File.read(path));
+      Johnson.currentContext.load(path);
       
       return true;
     }

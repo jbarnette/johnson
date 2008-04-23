@@ -4,7 +4,8 @@ module Johnson
     
     def initialize(delegate=Johnson::SpiderMonkey::Context)
       @delegate = delegate.is_a?(Class) ? delegate.new : delegate
-      evaluate(Johnson::PRELUDE, 'Johnson::PRELUDE')
+      evaluate(Johnson::PRELUDE, "Johnson::PRELUDE", 1)
+      global.Johnson.currentContext = self
     end
     
     def [](key)
@@ -25,7 +26,7 @@ module Johnson
     end
     
     def load(file)
-      delegate.evaluate(IO.read(file), file)
+      delegate.evaluate(IO.read(file), file, 1)
     end
   end
 end
