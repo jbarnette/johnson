@@ -1,6 +1,7 @@
 #include "context.h"
 #include "conversions.h"
 #include "error.h"
+#include "extensions.h"
 #include "idhash.h"
 
 static JSBool define_property(JSContext *context, JSObject *obj, uintN argc, jsval *argv, jsval *retval);
@@ -23,7 +24,6 @@ static JSBool global_resolve(
 
   return JS_TRUE;
 }
-
 
 static JSClass OurGlobalClass = {
   "global", JSCLASS_NEW_RESOLVE | JSCLASS_GLOBAL_FLAGS,
@@ -147,25 +147,8 @@ static VALUE initialize_native(VALUE self, VALUE options) {
     JS_SetErrorReporter(context->js, error);
     JS_SetContextPrivate(context->js, (void *)self);
 
-    // FIXME: move this to extensions.c or something
-    jsval js_cObject;
-
-    if (JS_GetProperty(context->js, context->global, "Object", &js_cObject)
-        && JS_AddNamedRoot(context->js, &js_cObject, "context.Object")) {
-      if (JS_DefineFunction(context->js, JSVAL_TO_OBJECT(js_cObject), "defineProperty", define_property, 4, 0)
-          && JS_DefineProperty(context->js, JSVAL_TO_OBJECT(js_cObject), "READ_ONLY",
-                               INT_TO_JSVAL(0x02), NULL, NULL, JSPROP_READONLY)
-          && JS_DefineProperty(context->js, JSVAL_TO_OBJECT(js_cObject), "ITERABLE",
-                               INT_TO_JSVAL(0x01), NULL, NULL, JSPROP_READONLY)
-          && JS_DefineProperty(context->js, JSVAL_TO_OBJECT(js_cObject), "NON_DELETABLE",
-                               INT_TO_JSVAL(0x04), NULL, NULL, JSPROP_READONLY)) {
-        JS_RemoveRoot(context->js, &js_cObject);
-
-        return self;
-      }
-
-      JS_RemoveRoot(context->js, &js_cObject);
-    }
+    if (init_spidermonkey_extensions(context))
+      return self;
 
     JS_RemoveRoot(context->js, &(context->global));
   }
@@ -186,15 +169,6 @@ static VALUE initialize_native(VALUE self, VALUE options) {
     JS_DestroyRuntime(context->runtime);
 
   rb_raise(rb_eRuntimeError, "Failed to initialize SpiderMonkey context");
-}
-
-// FIXME: move this to extensions.c or something
-// Argv is [ object, name, value, READ_ONLY | ITERABLE | NON_DELETABLE ]
-static JSBool define_property(JSContext *js_context, JSObject *obj, uintN argc, jsval *argv, jsval *retval) {
-  char *name = JS_GetStringBytes(JSVAL_TO_STRING(argv[1]));
-  int flags = JSVAL_TO_INT(argv[3]);
-
-  return JS_DefineProperty(js_context, JSVAL_TO_OBJECT(argv[0]), name, argv[2], NULL, NULL, flags);
 }
 
 void init_Johnson_SpiderMonkey_Context(VALUE spidermonkey)
