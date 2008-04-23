@@ -27,13 +27,16 @@ static VALUE allocate(VALUE klass)
   return self;
 }
 
-static VALUE parse_io(VALUE klass, VALUE stream) {
+static VALUE parse_io(int argc, VALUE *argv, VALUE klass) {
   VALUE self = allocate(klass);
+  VALUE stream, filename, linenum;
 
   ImmutableNodeContext* context;
   Data_Get_Struct(self, ImmutableNodeContext, context);
 
   assert(context->pc = calloc(1, sizeof(JSParseContext)));
+
+  rb_scan_args( argc, argv, "12", &stream, &filename, &linenum );
   
   VALUE file_contents = rb_funcall(stream, rb_intern("read"), 0);
   size_t length = NUM2INT(rb_funcall(file_contents, rb_intern("length"), 0));
@@ -41,21 +44,39 @@ static VALUE parse_io(VALUE klass, VALUE stream) {
   jschar* chars;
   assert(chars = js_InflateString(context->js, StringValuePtr(file_contents), &length));
 
-  // FIXME: Ask +stream+ for its path as the filename
+  if(!filename && rb_respond_to(stream, rb_intern("path"))) {
+    filename = rb_funcall(stream, rb_intern("path"), 0);
+  }
+  char* filenamez = RTEST(filename) ? StringValueCStr(filename) : NULL;
+  int linenumi = RTEST(linenum) ? NUM2INT(linenum) : 1;
+
   assert(js_InitParseContext(context->js, context->pc, 
       NULL,
       chars,
       length,
-      NULL, "boner", 0));
+      NULL, filenamez, linenumi));
 
   context->node = js_ParseScript(context->js, 
       JS_NewObject(context->js, NULL, NULL, NULL),
       context->pc);
   if(JS_IsExceptionPending(context->js)) {
-    jsval exception;
+    jsval exception, message, file_name, line_number;
     JS_GetPendingException(context->js, &exception);
+    JS_GetProperty(context->js, JSVAL_TO_OBJECT(exception), "message",&message);
+    JS_GetProperty(context->js, JSVAL_TO_OBJECT(exception), "fileName",&file_name);
+    JS_GetProperty(context->js, JSVAL_TO_OBJECT(exception), "lineNumber",&line_number);
     JS_ClearPendingException(context->js);
-    rb_funcall(self, rb_intern("raise_parse_error"), 0);
+
+    rb_funcall( self,
+                rb_intern("raise_parse_error"),
+                3,
+                message == JSVAL_NULL ? 
+                  Qnil :
+                  rb_str_new2(JS_GetStringBytes(JSVAL_TO_STRING(message))),
+                rb_str_new2(JS_GetStringBytes(JSVAL_TO_STRING(file_name))),
+                INT2NUM(JSVAL_TO_INT(line_number))
+                );
+
   }
   return self;
 }
@@ -278,7 +299,7 @@ function_args(VALUE self) {
   ImmutableNodeContext * ctx;
   JSFunction * f;
   JSObject * object;
-  JSAtom ** names;
+  jsuword* names;
   VALUE func_args;
   int i;
 
@@ -360,7 +381,7 @@ void init_Johnson_SpiderMonkey_Immutable_Node(VALUE spidermonkey)
   cNode = rb_define_class_under(spidermonkey, "ImmutableNode", rb_cObject);
 
   rb_define_alloc_func(cNode, allocate);
-  rb_define_singleton_method(cNode, "parse_io", parse_io, 1);
+  rb_define_singleton_method(cNode, "parse_io", parse_io, -1);
   rb_define_method(cNode, "line", line, 0);
   rb_define_method(cNode, "index", begin_index, 0);
   rb_define_method(cNode, "pn_arity", pn_arity, 0);

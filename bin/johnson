@@ -39,7 +39,7 @@ rescue Object => e
 end
 
 def eval_in_js(expression)
-  rescued { puts "=> " + CONTEXT.evaluate(expression).inspect }
+  rescued { puts "=> " + CONTEXT.evaluate(expression, "(console)").inspect }
 end
 
 def eval_in_ruby(expression, bind_to)
