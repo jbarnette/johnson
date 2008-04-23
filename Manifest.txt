@@ -3,6 +3,9 @@ Manifest.txt
 README.txt
 Rakefile
 bin/johnson
+browser/env.js
+browser/xmlsax.js
+browser/xmlw3cdom.js
 ext/spidermonkey/context.c
 ext/spidermonkey/context.h
 ext/spidermonkey/conversions.c

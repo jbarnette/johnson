@@ -138,7 +138,7 @@ Ruby.require("uri");
   
   window.DOMDocument = function(file){
     this._file = file;
-    var parser = new DOMImplementation();
+    var parser = new W3CDOMImplementation();
     this._dom = parser.loadXML(file);
     
     if ( !obj_nodes["key?"]( this._dom ) )

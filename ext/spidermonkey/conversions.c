@@ -132,6 +132,11 @@ static VALUE convert_regexp_to_ruby(OurContext* context, jsval regexp)
   return result;
 }
 
+static VALUE convert_error_to_ruby(OurContext* context, jsval error)
+{
+  
+}
+
 static bool js_value_is_regexp(OurContext* context, jsval maybe_regexp)
 {
   JS_AddNamedRoot(context->js, &maybe_regexp, "js_value_is_regexp");
