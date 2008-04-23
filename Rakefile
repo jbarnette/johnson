@@ -51,7 +51,7 @@ end
 task :spidermonkey => "vendor/spidermonkey/config/#{ENV['CROSS']}.mk" if ENV['CROSS']
 
 file "vendor/spidermonkey/config/MINGW32.mk" => "MINGW32.mk" do |t|
-  File.copy(t.prerequisites.first, t.name)
+  cp t.prerequisites.first, t.name
 end
 
 task :submodules do
@@ -68,7 +68,7 @@ end
 file "lib/johnson/spidermonkey.#{kind}" =>
   "ext/spidermonkey/spidermonkey.#{kind}" do |t|
 
-  File.copy(t.prerequisites.first, t.name)
+  cp t.prerequisites.first, t.name
 end
 
 file "ext/spidermonkey/Makefile" =>
