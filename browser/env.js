@@ -588,9 +588,10 @@ Ruby.require("uri");
         var url = curLocation.merge(self.url);
         var connection;
         
-        if ( url.scheme() == "file" ) {
+        if ( url.scheme == "file" ) {
           if ( self.method == "PUT" ) {
-            var out = new Ruby.File(url.path()), text = data || "";
+            var out = new Ruby.File(url.path);
+            var text = data || "";
             
             out.puts( text );
             out.flush();
