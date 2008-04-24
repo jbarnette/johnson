@@ -1,4 +1,5 @@
 History.txt
+MINGW32.mk
 Manifest.txt
 README.txt
 Rakefile
@@ -6,6 +7,7 @@ bin/johnson
 browser/env.js
 browser/xmlsax.js
 browser/xmlw3cdom.js
+cross-compile.txt
 ext/spidermonkey/context.c
 ext/spidermonkey/context.h
 ext/spidermonkey/conversions.c
@@ -51,6 +53,7 @@ lib/johnson/spidermonkey/ruby_land_proxy.rb
 lib/johnson/version.rb
 lib/johnson/visitable.rb
 lib/johnson/visitors.rb
+lib/johnson/visitors/dot_visitor.rb
 lib/johnson/visitors/ecma_visitor.rb
 lib/johnson/visitors/sexp_visitor.rb
 test/helper.rb
@@ -98,6 +101,7 @@ test/johnson/spidermonkey/immutable_node_test.rb
 test/johnson/spidermonkey/js_land_proxy_test.rb
 test/johnson/spidermonkey/ruby_land_proxy_test.rb
 test/johnson/version_test.rb
+test/johnson/visitors/dot_visitor_test.rb
 test/johnson_test.rb
 test/parser_test.rb
 vendor/spidermonkey/.cvsignore
