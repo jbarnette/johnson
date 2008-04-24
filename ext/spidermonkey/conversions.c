@@ -103,8 +103,8 @@ JSBool convert_to_js(OurContext* context, VALUE ruby, jsval* retval)
       if (ruby_value_is_proxy(ruby))
         return unwrap_ruby_land_proxy(context, ruby, retval);
 
-      if (rb_cProc == rb_class_of(ruby) || rb_cMethod == rb_class_of(ruby))
-        return make_js_land_proxy(context, ruby, retval);
+      // If we can't identify the object, just wrap it
+      return make_js_land_proxy(context, ruby, retval);
     
     default:
       Johnson_Error_raise("unknown ruby type in switch");
