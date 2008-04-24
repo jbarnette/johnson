@@ -10,7 +10,7 @@ get(VALUE self, VALUE name)
   RubyLandProxy* proxy;
   Data_Get_Struct(self, RubyLandProxy, proxy);
 
-  JS_AddNamedRoot(proxy->context->js, &(proxy->value), "RubyLandProxy->value");
+  JS_AddNamedRoot(proxy->context->js, &(proxy->value), "RubyLandProxy#get");
 
   jsval js_value;  
 
@@ -42,11 +42,13 @@ set(VALUE self, VALUE name, VALUE value)
   RubyLandProxy* proxy;
   Data_Get_Struct(self, RubyLandProxy, proxy);
   
-  JS_AddNamedRoot(proxy->context->js, &(proxy->value), "RubyLandProxy->value");
+  JS_AddNamedRoot(proxy->context->js, &(proxy->value), "RubyLandProxy#set");
 
   jsval js_value;
-  if(!convert_to_js(proxy->context, value, &js_value))
+  if(!convert_to_js(proxy->context, value, &js_value)) {
+    JS_RemoveRoot(proxy->context->js, &(proxy->value));
     raise_js_error_in_ruby(proxy->context);
+  }
   
   if(!JS_AddNamedRoot(proxy->context->js, &js_value, "RubyLandProxy#set")) {
     JS_RemoveRoot(proxy->context->js, &(proxy->value));
@@ -99,7 +101,7 @@ respond_to_p(VALUE self, VALUE sym)
   if (name[strlen(name) - 1] == '=')
     return Qtrue;
   
-  JS_AddNamedRoot(proxy->context->js, &(proxy->value), "RubyLandProxy->value");
+  JS_AddNamedRoot(proxy->context->js, &(proxy->value), "RubyLandProxy#respond_to?");
 
   JSObject *obj;
   JSBool found;
@@ -133,7 +135,7 @@ native_call(int argc, VALUE* argv, VALUE self)
   RubyLandProxy* proxy;
   Data_Get_Struct(self, RubyLandProxy, proxy);
   
-  JS_AddNamedRoot(proxy->context->js, &(proxy->value), "RubyLandProxy->value");
+  JS_AddNamedRoot(proxy->context->js, &(proxy->value), "RubyLandProxy#native_call");
 
   jsval global;
   if(!convert_to_js(proxy->context, argv[0], &global)) {
@@ -184,7 +186,7 @@ each(VALUE self)
   RubyLandProxy* proxy;
   Data_Get_Struct(self, RubyLandProxy, proxy);
   
-  JS_AddNamedRoot(proxy->context->js, &(proxy->value), "RubyLandProxy->value");
+  JS_AddNamedRoot(proxy->context->js, &(proxy->value), "RubyLandProxy#each");
 
   JSObject* value = JSVAL_TO_OBJECT(proxy->value);
   JS_AddNamedRoot(proxy->context->js, &value, "RubyLandProxy#each:value");
@@ -256,7 +258,7 @@ length(VALUE self)
   RubyLandProxy* proxy;
   Data_Get_Struct(self, RubyLandProxy, proxy);
   
-  JS_AddNamedRoot(proxy->context->js, &(proxy->value), "RubyLandProxy->value");
+  JS_AddNamedRoot(proxy->context->js, &(proxy->value), "RubyLandProxy#length");
 
   JSObject* value = JSVAL_TO_OBJECT(proxy->value);
   JS_AddNamedRoot(proxy->context->js, &value, "RubyLandProxy#length");
@@ -298,7 +300,7 @@ function_property_p(VALUE self, VALUE name)
   RubyLandProxy* proxy;
   Data_Get_Struct(self, RubyLandProxy, proxy);
 
-  JS_AddNamedRoot(proxy->context->js, &(proxy->value), "RubyLandProxy->value");
+  JS_AddNamedRoot(proxy->context->js, &(proxy->value), "RubyLandProxy#property?");
 
   jsval js_value;  
 
@@ -324,7 +326,7 @@ call_function_property(int argc, VALUE* argv, VALUE self)
   RubyLandProxy* proxy;
   Data_Get_Struct(self, RubyLandProxy, proxy);
   
-  JS_AddNamedRoot(proxy->context->js, &(proxy->value), "RubyLandProxy->value");
+  JS_AddNamedRoot(proxy->context->js, &(proxy->value), "RubyLandProxy#call_function_property");
 
   jsval function;
   
