@@ -102,6 +102,15 @@ static void report_js_error(JSContext* js, const char* message, JSErrorReport* r
   JS_GetPendingException(context->js, &context->ex);
 }
 
+// callback for JS_SetBranchCallback
+static JSBool branch_callback(JSContext* js, JSScript* script)
+{
+  static unsigned long branch_counter = 0;
+  if( ++branch_counter % 0x1000 == 0 )
+    JS_MaybeGC( js );
+  return JS_TRUE;
+}
+
 /* private */ static VALUE /* Context#initialize_native(options={}) */
 initialize_native(VALUE self, VALUE options)
 {
@@ -120,6 +129,7 @@ initialize_native(VALUE self, VALUE options)
     && (JS_AddNamedRoot(context->js, &(context->global), "context->global")))
   {
     JS_SetErrorReporter(context->js, report_js_error);
+    JS_SetBranchCallback(context->js, branch_callback);
     JS_SetContextPrivate(context->js, (void *)self);
 
     if (init_spidermonkey_extensions(context))
