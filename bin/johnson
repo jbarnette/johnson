@@ -42,7 +42,7 @@ def rescued(&block)
   yield
 rescue Exception => e
   puts e.message
-  puts e.backtrace
+  puts e.backtrace.reject { |l| l =~ /bin\/johnson/ }
 end
 
 def eval_in_js(expression)
