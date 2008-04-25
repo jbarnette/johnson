@@ -1,13 +1,15 @@
 #include "extensions.h"
 
 static JSBool /* Object.defineProperty(target, name, value, flags) */
-define_property(JSContext *js_context, JSObject *obj, uintN argc, jsval *argv, jsval *retval) {
+define_property(JSContext *js_context, JSObject* UNUSED(obj), uintN argc, jsval *argv, jsval *retval) {
+  assert(argc > 1);
   char *name = JS_GetStringBytes(JSVAL_TO_STRING(argv[1]));
 
   // READ_ONLY | ITERABLE | NON_DELETABLE
-  int flags = JSVAL_TO_INT(argv[3]);
+  jsuint flags = argc > 3 ? (unsigned) JSVAL_TO_INT(argv[3]) : 0;
 
-  return JS_DefineProperty(js_context, JSVAL_TO_OBJECT(argv[0]), name, argv[2], NULL, NULL, flags);
+  *retval = JSVAL_VOID;
+  return JS_DefineProperty(js_context, JSVAL_TO_OBJECT(argv[0]), name, argc > 2 ? argv[2] : JSVAL_VOID, NULL, NULL, flags);
 }
 
 bool init_spidermonkey_extensions(OurContext* context)

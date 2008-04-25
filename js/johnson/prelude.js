@@ -24,12 +24,19 @@ Johnson.symbolize = function(string) {
 };
 
 Johnson.Generator = function(enumerableProxy) {
-  this.generator = new Ruby.Generator(enumerableProxy);
+  this.items = enumerableProxy.toArray();
+  this.index = 0;
 };
 
+Johnson.Generator.prototype.hasNext = function() {
+  var len = this.items.length;
+  if (typeof len != 'number') len = this.items.length();
+  return this.index < len;
+}
+
 Johnson.Generator.prototype.next = function() {
-  if(this.generator.send("next?")) {
-    return this.generator.next();
+  if (this.hasNext()) {
+    return this.items[this.index++];
   }
   throw StopIteration;
 }

@@ -125,7 +125,7 @@ JSBool call_ruby_from_js2(OurContext* context, VALUE* retval, VALUE self, ID id,
   return okay;
 }
 
-static bool autovivified_p(VALUE ruby_context, VALUE self, char* name)
+static bool autovivified_p(VALUE UNUSED(ruby_context), VALUE self, char* name)
 {
   return RTEST(rb_funcall(Johnson_SpiderMonkey_JSLandProxy(), rb_intern("autovivified?"), 2,
     self, rb_str_new2(name)));
@@ -196,7 +196,7 @@ static bool respond_to_p(JSContext* js_context, JSObject* obj, char* name)
     || has_key_p(self, name);
 }
 
-static jsval evaluate_js_property_expression(OurContext * context, char * property, jsval* retval) {
+static jsval evaluate_js_property_expression(OurContext * context, const char * property, jsval* retval) {
   return JS_EvaluateScript(context->js, context->global,
       property, strlen(property), "johnson:evaluate_js_property_expression", 1,
       retval);
@@ -388,7 +388,7 @@ static JSBool set(JSContext* js_context, JSObject* obj, jsval id, jsval* value)
   return JS_TRUE;
 }
 
-static JSBool construct(JSContext* js_context, JSObject* obj, uintN argc, jsval* argv, jsval* retval)
+static JSBool construct(JSContext* js_context, JSObject* UNUSED(obj), uintN argc, jsval* argv, jsval* retval)
 {
   VALUE ruby_context = (VALUE)JS_GetContextPrivate(js_context);
   
@@ -398,8 +398,7 @@ static JSBool construct(JSContext* js_context, JSObject* obj, uintN argc, jsval*
   VALUE klass = convert_to_ruby(context, JS_ARGV_CALLEE(argv));
   VALUE args = rb_ary_new();
 
-  int i;
-  
+  uintN i;
   for (i = 0; i < argc; ++i)
     rb_ary_push(args, convert_to_ruby(context, argv[i]));
     
@@ -407,7 +406,7 @@ static JSBool construct(JSContext* js_context, JSObject* obj, uintN argc, jsval*
     rb_intern("send_with_possible_block"), 3, klass, ID2SYM(rb_intern("new")), args);
 }
 
-static JSBool resolve(JSContext *js_context, JSObject *obj, jsval id, uintN flags, JSObject **objp)
+static JSBool resolve(JSContext *js_context, JSObject *obj, jsval id, uintN UNUSED(flags), JSObject **objp)
 {
   JS_AddNamedRoot(js_context, &id, "JSLandProxy#resolve");
 
@@ -432,6 +431,30 @@ static JSBool resolve(JSContext *js_context, JSObject *obj, jsval id, uintN flag
   JS_RemoveRoot(js_context, &id);
 
   return JS_TRUE;
+}
+
+static JSBool to_string(JSContext* js_context, JSObject* obj, uintN UNUSED(argc), jsval* UNUSED(argv), jsval* retval)
+{
+  VALUE ruby_context = (VALUE)JS_GetContextPrivate(js_context);
+
+  OurContext* context;
+  Data_Get_Struct(ruby_context, OurContext, context);
+
+  VALUE self = (VALUE)JS_GetInstancePrivate(context->js, obj, JS_GET_CLASS(context->js, obj), NULL);
+
+  return call_ruby_from_js(context, retval, self, rb_intern("to_s"), 0);
+}
+
+static JSBool to_array(JSContext* js_context, JSObject* obj, uintN UNUSED(argc), jsval* UNUSED(argv), jsval* retval)
+{
+  VALUE ruby_context = (VALUE)JS_GetContextPrivate(js_context);
+
+  OurContext* context;
+  Data_Get_Struct(ruby_context, OurContext, context);
+
+  VALUE self = (VALUE)JS_GetInstancePrivate(context->js, obj, JS_GET_CLASS(context->js, obj), NULL);
+
+  return call_ruby_from_js(context, retval, self, rb_intern("to_a"), 0);
 }
 
 static JSBool method_missing(JSContext* js_context, JSObject* obj, uintN argc, jsval* argv, jsval* retval)
@@ -464,7 +487,7 @@ static JSBool method_missing(JSContext* js_context, JSObject* obj, uintN argc, j
     rb_intern("send_with_possible_block"), 3, self, ID2SYM(ruby_id), args);
 }
 
-static JSBool call(JSContext* js_context, JSObject* obj, uintN argc, jsval* argv, jsval* retval)
+static JSBool call(JSContext* js_context, JSObject* UNUSED(obj), uintN argc, jsval* argv, jsval* retval)
 {
   VALUE ruby_context = (VALUE)JS_GetContextPrivate(js_context);
   
@@ -474,8 +497,8 @@ static JSBool call(JSContext* js_context, JSObject* obj, uintN argc, jsval* argv
   VALUE self = (VALUE)JS_GetInstancePrivate(context->js, JSVAL_TO_OBJECT(JS_ARGV_CALLEE(argv)), &JSLandCallableProxyClass, NULL);
   
   VALUE args = rb_ary_new();  
-  int i;
-  
+
+  uintN i;
   for (i = 0; i < argc; ++i)
     rb_ary_push(args, convert_to_ruby(context, argv[i]));
   
@@ -483,7 +506,7 @@ static JSBool call(JSContext* js_context, JSObject* obj, uintN argc, jsval* argv
     rb_intern("send_with_possible_block"), 3, self, ID2SYM(rb_intern("call")), args);
 }
 
-bool js_value_is_proxy(OurContext* context, jsval maybe_proxy)
+bool js_value_is_proxy(OurContext* MAYBE_UNUSED(context), jsval maybe_proxy)
 {
   JSClass* klass = JS_GET_CLASS(context->js, JSVAL_TO_OBJECT(maybe_proxy));  
   
@@ -560,6 +583,12 @@ JSBool make_js_land_proxy(OurContext* context, VALUE value, jsval* retval)
           "__noSuchMethod__", method_missing, 2, 0)))
         return JS_FALSE;
     }
+
+    if(!(JS_DefineFunction(context->js, jsobj, "toArray", to_array, 0, 0)))
+      return JS_FALSE;
+
+    if(!(JS_DefineFunction(context->js, jsobj, "toString", to_string, 0, 0)))
+      return JS_FALSE;
 
     *retval = OBJECT_TO_JSVAL(jsobj);
 
