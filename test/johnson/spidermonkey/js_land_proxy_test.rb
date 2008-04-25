@@ -219,6 +219,18 @@ module Johnson
       def test_method_for_with
         assert_js_equal(84, "with (rb) { b(42) }", :rb => MethodForWith.new)
       end
+
+      def test_raises_string_to_ruby
+        assert_raise(Johnson::Error) { @context.evaluate("throw 'my string';") }
+      end
+
+      def test_raises_object_to_ruby
+        assert_raise(Johnson::Error) { @context.evaluate("throw { bad: true };") }
+      end
+
+      def test_raises_exception_to_ruby
+        assert_raise(Johnson::Error) { @context.evaluate("undefinedValue();") }
+      end
     end
   end
 end

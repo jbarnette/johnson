@@ -173,6 +173,12 @@ module Johnson
         proxy = @context.evaluate("x = { foo: 'foo', bar: 'bar', 0: 42 }")
         assert_equal(3, proxy.length)
       end
+
+      def test_raises_in_js
+        err = RuntimeError.new("an exception")
+        asplode = lambda { raise err }
+        assert_js_equal(err, "x = null; try { foo(); } catch(ex) { x = ex; }; x", :foo => asplode)
+      end
     end
   end
 end
