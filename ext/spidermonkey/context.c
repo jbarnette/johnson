@@ -132,6 +132,18 @@ initialize_native(VALUE self, VALUE options)
     JS_SetBranchCallback(context->js, branch_callback);
     JS_SetContextPrivate(context->js, (void *)self);
 
+    JS_SetOptions(context->js, JS_GetOptions(context->js)
+#ifdef JSOPTION_DONT_REPORT_UNCAUGHT
+      | JSOPTION_DONT_REPORT_UNCAUGHT
+#endif
+#ifdef JSOPTION_VAROBJFIX
+      | JSOPTION_VAROBJFIX
+#endif
+#ifdef JSOPTION_XML
+      | JSOPTION_XML
+#endif
+    );
+
     if (init_spidermonkey_extensions(context))
       return self;
 

@@ -114,9 +114,14 @@ JSBool convert_to_js(OurContext* context, VALUE ruby, jsval* retval)
   return JS_TRUE;
 }
 
-static VALUE jsstring_to_ruby(JSString* str)
+static VALUE convert_jsstring_to_ruby(OurContext* context, JSString* str)
 {
-  return rb_str_new(JS_GetStringBytes(str), JS_GetStringLength(str));
+  JS_AddNamedRoot(context->js, &str, "convert_jsstring_to_ruby");
+  char* bytes = JS_GetStringBytes(str);
+  assert(bytes);
+  VALUE result = rb_str_new(bytes, JS_GetStringLength(str));
+  JS_RemoveRoot(context->js, &str);
+  return result;
 }
 
 static VALUE convert_regexp_to_ruby(OurContext* context, jsval regexp)
@@ -125,7 +130,7 @@ static VALUE convert_regexp_to_ruby(OurContext* context, jsval regexp)
   JSRegExp* re = (JSRegExp*)JS_GetPrivate(context->js, JSVAL_TO_OBJECT(regexp));
 
   VALUE result = rb_funcall(rb_cRegexp, rb_intern("new"), 2,
-    jsstring_to_ruby(re->source),
+    convert_jsstring_to_ruby(context, re->source),
     INT2NUM(re->flags));
 
   JS_RemoveRoot(context->js, &regexp);
@@ -218,7 +223,7 @@ VALUE convert_to_ruby(OurContext* context, jsval js)
       return JSVAL_TRUE == js ? Qtrue : Qfalse;
       
     case JSTYPE_STRING:
-      return jsstring_to_ruby(JSVAL_TO_STRING(js));
+      return convert_jsstring_to_ruby(context, JSVAL_TO_STRING(js));
       
     case JSTYPE_NUMBER:
       if (JSVAL_IS_INT(js)) return INT2FIX(JSVAL_TO_INT(js));

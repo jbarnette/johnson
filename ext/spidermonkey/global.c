@@ -36,5 +36,5 @@ static JSClass OurGlobalClass = {
 
 JSObject* create_global_object(OurContext* context)
 {
-  JS_NewObject(context->js, &OurGlobalClass, NULL, NULL);
+  return JS_NewObject(context->js, &OurGlobalClass, NULL, NULL);
 }
