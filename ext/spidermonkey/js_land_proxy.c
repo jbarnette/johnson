@@ -51,6 +51,80 @@ static JSClass JSLandCallableProxyClass = {
   call
 };
 
+#define TAG_RAISE 0x6
+#define TAG_THROW 0x7
+
+static VALUE call_ruby_from_js_invoke(VALUE args)
+{
+  VALUE self = rb_ary_pop(args);
+  VALUE id = rb_ary_pop(args);
+  return rb_apply(self, SYM2ID(id), args);
+}
+
+JSBool call_ruby_from_js_va(OurContext* context, VALUE* result, VALUE self, ID id, int argc, va_list va)
+{
+  VALUE old_errinfo = ruby_errinfo;
+  VALUE args = rb_ary_new2(argc + 2);
+
+  int i;
+  for(i = 0; i < argc; i++)
+    rb_ary_store(args, i, va_arg(va, VALUE));
+
+  rb_ary_store(args, argc, ID2SYM(id));
+  rb_ary_store(args, argc + 1, self);
+
+  int state;
+  *result = rb_protect(call_ruby_from_js_invoke, args, &state);
+
+  switch (state)
+  {
+    case 0:
+      return JS_TRUE;
+
+    case TAG_RAISE:
+      {
+        VALUE local_error = ruby_errinfo;
+        jsval js_err;
+        ruby_errinfo = old_errinfo;
+        if (!convert_to_js(context, local_error, &js_err))
+          return JS_FALSE;
+        JS_SetPendingException(context->js, js_err);
+        return JS_FALSE;
+      }
+
+    case TAG_THROW:
+      // FIXME: This should be propagated to JS... as an exception?
+
+    default:
+      {
+        JSString* str = JS_NewStringCopyZ(context->js, "Unexpected longjmp from ruby!");
+        if (str)
+          JS_SetPendingException(context->js, STRING_TO_JSVAL(str));
+        return JS_FALSE;
+      }
+  }
+}
+
+JSBool call_ruby_from_js(OurContext* context, jsval* retval, VALUE self, ID id, int argc, ...)
+{
+  VALUE result;
+  va_list va;
+  va_start(va, argc);
+  JSBool okay = call_ruby_from_js_va(context, &result, self, id, argc, va);
+  va_end(va);
+  if (!okay) return JS_FALSE;
+  return retval ? convert_to_js(context, result, retval) : JS_TRUE;
+}
+
+JSBool call_ruby_from_js2(OurContext* context, VALUE* retval, VALUE self, ID id, int argc, ...)
+{
+  va_list va;
+  va_start(va, argc);
+  JSBool okay = call_ruby_from_js_va(context, retval, self, id, argc, va);
+  va_end(va);
+  return okay;
+}
+
 static bool autovivified_p(VALUE ruby_context, VALUE self, char* name)
 {
   return RTEST(rb_funcall(Johnson_SpiderMonkey_JSLandProxy(), rb_intern("autovivified?"), 2,
@@ -150,10 +224,9 @@ static JSBool get(JSContext* js_context, JSObject* obj, jsval id, jsval* retval)
   if (JSVAL_IS_INT(id))
   {
     if (indexable_p(self)) {
-      JSBool okay = convert_to_js(context,
-        rb_funcall(self, rb_intern("[]"), 1, INT2FIX(JSVAL_TO_INT(id))), retval);
+      VALUE idx = INT2FIX(JSVAL_TO_INT(id));
       JS_RemoveRoot(js_context, &id);
-      return okay;
+      return call_ruby_from_js(context, retval, self, rb_intern("[]"), 1, idx);
     }
     
     JS_RemoveRoot(js_context, &id);
@@ -177,9 +250,8 @@ static JSBool get(JSContext* js_context, JSObject* obj, jsval id, jsval* retval)
   
   else if (autovivified_p(ruby_context, self, name))
   {
-    return convert_to_js(context,
-      rb_funcall(Johnson_SpiderMonkey_JSLandProxy(),
-        rb_intern("autovivified"), 2, self, rb_str_new2(name)), retval);
+    return call_ruby_from_js(context, retval, Johnson_SpiderMonkey_JSLandProxy(),
+      rb_intern("autovivified"), 2, self, rb_str_new2(name));
   }
 
   // if the Ruby object is a Module or Class and has a matching
@@ -187,8 +259,8 @@ static JSBool get(JSContext* js_context, JSObject* obj, jsval id, jsval* retval)
   
   else if (const_p(self, name))
   {
-    return convert_to_js(context,
-      rb_funcall(self, rb_intern("const_get"), 1, ID2SYM(ruby_id)), retval);
+    return call_ruby_from_js(context, retval, self, rb_intern("const_get"),
+      1, ID2SYM(ruby_id));
   }  
 
   // otherwise, if it's a global, return the global
@@ -202,7 +274,7 @@ static JSBool get(JSContext* js_context, JSObject* obj, jsval id, jsval* retval)
   
   else if (attribute_p(self, name))
   {
-    return convert_to_js(context, rb_funcall(self, ruby_id, 0), retval);
+    return call_ruby_from_js(context, retval, self, ruby_id, 0);
   }
 
   // otherwise, if the Ruby object quacks sorta like a hash (it responds to
@@ -210,7 +282,7 @@ static JSBool get(JSContext* js_context, JSObject* obj, jsval id, jsval* retval)
   
   else if (has_key_p(self, name))
   {
-    return convert_to_js(context, rb_funcall(self, rb_intern("[]"), 1, rb_str_new2(name)), retval);
+    return call_ruby_from_js(context, retval, self, rb_intern("[]"), 1, rb_str_new2(name));
   }
   
   // otherwise, it's a method being accessed as a property, which means
@@ -221,8 +293,7 @@ static JSBool get(JSContext* js_context, JSObject* obj, jsval id, jsval* retval)
   
   else if (method_p(self, name))
   {
-    convert_to_js(context,
-      rb_funcall(self, rb_intern("method"), 1, rb_str_new2(name)), retval);
+    return call_ruby_from_js(context, retval, self, rb_intern("method"), 1, rb_str_new2(name));
   }
   
   // else it's undefined (JS_VOID) by default
@@ -257,8 +328,14 @@ static JSBool set(JSContext* js_context, JSObject* obj, jsval id, jsval* value)
   if (JSVAL_IS_INT(id))
   {
     if (indexable_p(self))
-      rb_funcall(self, rb_intern("[]="),
-        2, INT2FIX(JSVAL_TO_INT(id)), convert_to_ruby(context, *value));
+    {
+      VALUE idx = INT2FIX(JSVAL_TO_INT(id));
+      VALUE val = convert_to_ruby(context, *value);
+      JS_RemoveRoot(js_context, value);
+      JS_RemoveRoot(js_context, &id);
+
+      return call_ruby_from_js(context, NULL, self, rb_intern("[]="), 2, idx, val);
+    }
 
     JS_RemoveRoot(js_context, value);
     JS_RemoveRoot(js_context, &id);
@@ -266,43 +343,48 @@ static JSBool set(JSContext* js_context, JSObject* obj, jsval id, jsval* value)
     return JS_TRUE;
   }
   
-  char* key = JS_GetStringBytes(JSVAL_TO_STRING(id));
-  VALUE ruby_key = rb_str_new2(key);
+  VALUE ruby_key = convert_to_ruby(context, id);
+  VALUE ruby_value = convert_to_ruby(context, *value);
 
+  JS_RemoveRoot(js_context, value);
   JS_RemoveRoot(js_context, &id);
   
   VALUE setter = rb_str_append(rb_str_new3(ruby_key), rb_str_new2("="));
-  VALUE setter_id = rb_intern(StringValuePtr(setter));
+  VALUE setter_id = rb_intern(StringValueCStr(setter));
   
-  VALUE settable_p = rb_funcall(self, rb_intern("respond_to?"), 1, ID2SYM(setter_id));
-  VALUE indexable_p = rb_funcall(self, rb_intern("respond_to?"), 1, ID2SYM(rb_intern("[]=")));
+  VALUE settable_p, indexable_p;
+  if (!call_ruby_from_js2(context, &settable_p, self, rb_intern("respond_to?"), 1, ID2SYM(setter_id)))
+    return JS_FALSE;
+  if (!call_ruby_from_js2(context, &indexable_p, self, rb_intern("respond_to?"), 1, ID2SYM(rb_intern("[]="))))
+    return JS_FALSE;
   
   if (settable_p)
   {
-    VALUE method = rb_funcall(self, rb_intern("method"), 1, ID2SYM(setter_id));
-    int arity = NUM2INT(rb_funcall(method, rb_intern("arity"), 0));
-    
+    VALUE method, arity;
+    if (!call_ruby_from_js2(context, &method, self, rb_intern("method"), 1, ID2SYM(setter_id)))
+      return JS_FALSE;
+    if (!call_ruby_from_js2(context, &arity, method, rb_intern("arity"), 0))
+      return JS_FALSE;
+
     // if the Ruby object has a 1-arity method named "property=",
     // call it with the converted value
     
-    if (arity == 1)
-      rb_funcall(self, setter_id, 1, convert_to_ruby(context, *value));
+    if (NUM2INT(arity) == 1)
+      return call_ruby_from_js(context, NULL, self, setter_id, 1, ruby_value);
   }
   else if(indexable_p)
   {
     // otherwise, if the Ruby object quacks sorta like a hash for assignment
     // (it responds to "[]="), assign it by key
     
-    rb_funcall(self, rb_intern("[]="), 2, ruby_key, convert_to_ruby(context, *value));
+    return call_ruby_from_js(context, NULL, self, rb_intern("[]="), 2, ruby_key, ruby_value);
   }
   else
   {
-    rb_funcall(Johnson_SpiderMonkey_JSLandProxy(), rb_intern("autovivify"),
-      3, self, ruby_key, convert_to_ruby(context, *value));
+    return call_ruby_from_js(context, NULL, Johnson_SpiderMonkey_JSLandProxy(), rb_intern("autovivify"), 
+      3, self, ruby_key, ruby_value);
   }
 
-  JS_RemoveRoot(js_context, value);
-  
   return JS_TRUE;
 }
 
@@ -321,9 +403,8 @@ static JSBool construct(JSContext* js_context, JSObject* obj, uintN argc, jsval*
   for (i = 0; i < argc; ++i)
     rb_ary_push(args, convert_to_ruby(context, argv[i]));
     
-  return convert_to_js(context,
-    rb_funcall(Johnson_SpiderMonkey_JSLandProxy(), rb_intern("send_with_possible_block"),
-      3, klass, ID2SYM(rb_intern("new")), args), retval);
+  return call_ruby_from_js(context, retval, Johnson_SpiderMonkey_JSLandProxy(), 
+    rb_intern("send_with_possible_block"), 3, klass, ID2SYM(rb_intern("new")), args);
 }
 
 static JSBool resolve(JSContext *js_context, JSObject *obj, jsval id, uintN flags, JSObject **objp)
@@ -371,14 +452,16 @@ static JSBool method_missing(JSContext* js_context, JSObject* obj, uintN argc, j
   VALUE ruby_id = rb_intern(key);
   
   // FIXME: this is horrible and lazy, to_a comes from enumerable on proxy (argv[1] is a JSArray)
-  VALUE args = rb_funcall(convert_to_ruby(context, argv[1]), rb_intern("to_a"), 0);
+  VALUE args;
+  JSBool okay = call_ruby_from_js2(context, &args, convert_to_ruby(context, argv[1]), rb_intern("to_a"), 0);
 
   JS_RemoveRoot(js_context, &(argv[1]));
   JS_RemoveRoot(js_context, &(argv[0]));
   
-  return convert_to_js(context,
-    rb_funcall(Johnson_SpiderMonkey_JSLandProxy(), rb_intern("send_with_possible_block"),
-      3, self, ID2SYM(ruby_id), args), retval);
+  if (!okay) return JS_FALSE;
+
+  return call_ruby_from_js(context, retval, Johnson_SpiderMonkey_JSLandProxy(),
+    rb_intern("send_with_possible_block"), 3, self, ID2SYM(ruby_id), args);
 }
 
 static JSBool call(JSContext* js_context, JSObject* obj, uintN argc, jsval* argv, jsval* retval)
@@ -396,9 +479,8 @@ static JSBool call(JSContext* js_context, JSObject* obj, uintN argc, jsval* argv
   for (i = 0; i < argc; ++i)
     rb_ary_push(args, convert_to_ruby(context, argv[i]));
   
-  return convert_to_js(context,
-    rb_funcall(Johnson_SpiderMonkey_JSLandProxy(), rb_intern("send_with_possible_block"),
-      3, self, ID2SYM(rb_intern("call")), args), retval);
+  return call_ruby_from_js(context, retval, Johnson_SpiderMonkey_JSLandProxy(),
+    rb_intern("send_with_possible_block"), 3, self, ID2SYM(rb_intern("call")), args);
 }
 
 bool js_value_is_proxy(OurContext* context, jsval maybe_proxy)
@@ -438,6 +520,7 @@ static void finalize(JSContext* js_context, JSObject* obj)
     
     // free up the ruby value for GC
     rb_funcall(ruby_context, rb_intern("remove_gcthing"), 1, self);
+    call_ruby_from_js(context, NULL, ruby_context, rb_intern("remove_gcthing"), 1, self);
   }  
 }
 

@@ -18,12 +18,18 @@ module Johnson #:nodoc:
       protected
       
       def handle_js_exception(jsex)
-        message = jsex.message
-        message = "<no message>" if message.nil? || message.length == 0
+        raise jsex if Exception === jsex
+        raise Johnson::Error.new(jsex.to_s) unless Johnson::SpiderMonkey::RubyLandProxy === jsex
         
         # FIXME: sanitize stack traces
-        ex = Johnson::Error.new("#{jsex.name}: #{message}")
-        ex.set_backtrace(jsex.stack.split("\n") + caller)
+        stack = jsex.stack rescue nil
+        
+        ex = Johnson::Error.new(jsex)
+        if stack
+          ex.set_backtrace(stack.split("\n") + caller)
+        else
+          ex.set_backtrace(caller)
+        end
         
         raise ex
       end
