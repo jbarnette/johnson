@@ -16,4 +16,4 @@
 /vendor/spidermonkey/editline/*.OBJ
 .*.swp
 tags
-
+.DS_Store
