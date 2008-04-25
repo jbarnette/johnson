@@ -15,4 +15,14 @@
 #define StringValueLen(v) (RSTRING(v)->len)
 #endif
 
+#ifndef UNUSED
+# if defined(__GNUC__)
+#  define MAYBE_UNUSED(name) name __attribute__((unused))
+#  define UNUSED(name) MAYBE_UNUSED(UNUSED_ ## name)
+# else
+#  define MAYBE_UNUSED(name) name
+#  define UNUSED(name) name
+# endif
+#endif
+
 #endif

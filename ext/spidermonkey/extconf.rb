@@ -9,7 +9,7 @@ if Config::CONFIG['target_os'] == 'mingw32'
 else
   $CFLAGS << " -g -DXP_UNIX"
 end
-$CFLAGS << " -Wall"
+$CFLAGS << " -O3 -Wall -Wextra -Wcast-qual -Wwrite-strings -Wconversion -Wmissing-noreturn -Winline"
 
 spidermonkey_base_dir = "../../vendor/spidermonkey"
 

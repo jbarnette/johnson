@@ -162,7 +162,7 @@ native_call(int argc, VALUE* argv, VALUE self)
 
   if (okay)
     okay = JS_CallFunctionValue(proxy->context->js,
-      JSVAL_TO_OBJECT(global), proxy->value, argc - 1, args, &js);
+      JSVAL_TO_OBJECT(global), proxy->value, (unsigned) argc - 1, args, &js);
   if (okay)
     okay = JS_AddNamedRoot(proxy->context->js, &js, "RubyLandProxy#native_call:result");
 
@@ -202,11 +202,11 @@ each(VALUE self)
       raise_js_error_in_ruby(proxy->context);
     }
     
-    int i = 0;
+    jsuint i = 0;
     for (i = 0; i < length; ++i)
     {
       jsval element;
-      if(!JS_GetElement(proxy->context->js, value, i, &element))
+      if(!JS_GetElement(proxy->context->js, value, (signed) i, &element))
       {
         JS_RemoveRoot(proxy->context->js, &value);
         JS_RemoveRoot(proxy->context->js, &(proxy->value));
@@ -395,7 +395,7 @@ call_function_property(int argc, VALUE* argv, VALUE self)
   jsval js;
   
   if (!JS_CallFunctionValue(proxy->context->js,
-    JSVAL_TO_OBJECT(proxy->value), function, argc - 1, args, &js))
+    JSVAL_TO_OBJECT(proxy->value), function, (unsigned) argc - 1, args, &js))
   {
     JS_RemoveRoot(proxy->context->js, &(proxy->value));
     raise_js_error_in_ruby(proxy->context);
@@ -434,7 +434,7 @@ bool ruby_value_is_proxy(VALUE maybe_proxy)
   return proxy_class == CLASS_OF(maybe_proxy); 
 }
 
-JSBool unwrap_ruby_land_proxy(OurContext* context, VALUE wrapped, jsval* retval)
+JSBool unwrap_ruby_land_proxy(OurContext* UNUSED(context), VALUE wrapped, jsval* retval)
 {
   assert(ruby_value_is_proxy(wrapped));
   
@@ -480,6 +480,18 @@ VALUE make_ruby_land_proxy(OurContext* context, jsval value)
   }
 }
 
+static VALUE to_s(VALUE self)
+{
+  RubyLandProxy* proxy;
+  Data_Get_Struct(self, RubyLandProxy, proxy);
+
+  JS_AddNamedRoot(proxy->context->js, &(proxy->value), "RubyLandProxy#to_s");
+  JSString* str = JS_ValueToString(proxy->context->js, proxy->value);
+  JS_RemoveRoot(proxy->context->js, &(proxy->value));
+
+  return convert_jsstring_to_ruby(proxy->context, str);
+}
+
 void init_Johnson_SpiderMonkey_Proxy(VALUE spidermonkey)
 {
   proxy_class = rb_define_class_under(spidermonkey, "RubyLandProxy", rb_cObject);
@@ -490,6 +502,7 @@ void init_Johnson_SpiderMonkey_Proxy(VALUE spidermonkey)
   rb_define_method(proxy_class, "respond_to?", respond_to_p, 1);
   rb_define_method(proxy_class, "each", each, 0);
   rb_define_method(proxy_class, "length", length, 0);
+  rb_define_method(proxy_class, "to_s", to_s, 0);
 
   rb_define_private_method(proxy_class, "native_call", native_call, -1);
   rb_define_private_method(proxy_class, "context", context, 0);
