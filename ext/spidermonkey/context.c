@@ -34,7 +34,7 @@ evaluate(int argc, VALUE* argv, VALUE self)
 
   // FIXME: should be able to pass in the 'file' name
   JSBool ok = JS_EvaluateScript(context->js, context->global,
-    StringValuePtr(script), StringValueLen(script), filenamez, linenumi, &js);
+    StringValuePtr(script), (unsigned)StringValueLen(script), filenamez, (unsigned)linenumi, &js);
 
   if (!ok)
   {
@@ -84,7 +84,7 @@ evaluate(int argc, VALUE* argv, VALUE self)
 }
 
 // callback for JS_SetErrorReporter
-static void report_js_error(JSContext* js, const char* message, JSErrorReport* report)
+static void report_js_error(JSContext* js, const char* message, JSErrorReport* UNUSED(report))
 {
   // first we find ourselves
   VALUE self = (VALUE)JS_GetContextPrivate(js);
@@ -103,7 +103,7 @@ static void report_js_error(JSContext* js, const char* message, JSErrorReport* r
 }
 
 // callback for JS_SetBranchCallback
-static JSBool branch_callback(JSContext* js, JSScript* script)
+static JSBool branch_callback(JSContext* js, JSScript* UNUSED(script))
 {
   static unsigned long branch_counter = 0;
   if( ++branch_counter % 0x1000 == 0 )
@@ -112,7 +112,7 @@ static JSBool branch_callback(JSContext* js, JSScript* script)
 }
 
 /* private */ static VALUE /* Context#initialize_native(options={}) */
-initialize_native(VALUE self, VALUE options)
+initialize_native(VALUE self, VALUE UNUSED(options))
 {
   OurContext* context;
   bool gthings_rooted_p = false;

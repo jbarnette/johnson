@@ -11,7 +11,7 @@ static JSBool convert_float_or_bignum_to_js(OurContext* context, VALUE float_or_
 static JSBool convert_symbol_to_js(OurContext* context, VALUE symbol, jsval* retval)
 {
   VALUE to_s = rb_funcall(symbol, rb_intern("to_s"), 0);
-  jsval name = STRING_TO_JSVAL(JS_NewStringCopyN(context->js, StringValuePtr(to_s), StringValueLen(to_s)));
+  jsval name = STRING_TO_JSVAL(JS_NewStringCopyN(context->js, StringValuePtr(to_s), (unsigned) StringValueLen(to_s)));
   JS_AddNamedRoot(context->js, &name, "convert_symbol_to_js");
 
   // calls Johnson.symbolize(name) in JS-land. See lib/prelude.js
@@ -38,8 +38,8 @@ static JSBool convert_regexp_to_js(OurContext* context, VALUE regexp, jsval* ret
 
   JSObject* obj = JS_NewRegExpObject(context->js,
         StringValuePtr(source),
-        StringValueLen(source),
-        options);
+        (unsigned) StringValueLen(source),
+        (unsigned) options);
 
   if (obj) {
     *retval = OBJECT_TO_JSVAL(obj);
@@ -67,7 +67,7 @@ JSBool convert_to_js(OurContext* context, VALUE ruby, jsval* retval)
 
     case T_STRING:
       {
-        JSString* str = JS_NewStringCopyN(context->js, StringValuePtr(ruby), StringValueLen(ruby));
+        JSString* str = JS_NewStringCopyN(context->js, StringValuePtr(ruby), (unsigned) StringValueLen(ruby));
         if (str) {
           *retval = STRING_TO_JSVAL(str);
           return JS_TRUE;
@@ -114,12 +114,12 @@ JSBool convert_to_js(OurContext* context, VALUE ruby, jsval* retval)
   return JS_TRUE;
 }
 
-static VALUE convert_jsstring_to_ruby(OurContext* context, JSString* str)
+VALUE convert_jsstring_to_ruby(OurContext* context, JSString* str)
 {
   JS_AddNamedRoot(context->js, &str, "convert_jsstring_to_ruby");
   char* bytes = JS_GetStringBytes(str);
   assert(bytes);
-  VALUE result = rb_str_new(bytes, JS_GetStringLength(str));
+  VALUE result = rb_str_new(bytes, (signed)JS_GetStringLength(str));
   JS_RemoveRoot(context->js, &str);
   return result;
 }
@@ -135,11 +135,6 @@ static VALUE convert_regexp_to_ruby(OurContext* context, jsval regexp)
 
   JS_RemoveRoot(context->js, &regexp);
   return result;
-}
-
-static VALUE convert_error_to_ruby(OurContext* context, jsval error)
-{
-  
 }
 
 static bool js_value_is_regexp(OurContext* context, jsval maybe_regexp)
@@ -236,7 +231,7 @@ VALUE convert_to_ruby(OurContext* context, jsval js)
   return Qnil;
 }
 
-void raise_js_error_in_ruby(OurContext* context)
+NORETURN(void) raise_js_error_in_ruby(OurContext* UNUSED(context))
 {
   rb_raise(rb_eRuntimeError, "JavaScript Error");
 }
