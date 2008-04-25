@@ -31,9 +31,16 @@ def paste_history(old_history)
   end
 end
 
+def handle_exit(input)
+  if EXIT_VERBS.include?(input)
+    puts if input.nil?
+    exit
+  end
+end
+
 def rescued(&block)
   yield
-rescue Object => e
+rescue Exception => e
   puts e.message
   puts e.backtrace
 end
@@ -62,7 +69,7 @@ end
 
 loop do
   input = Readline.readline("js> ", true)
-  break if EXIT_VERBS.include?(input)
+  handle_exit(input)
   
   if input =~ /^rb\s+(.+)$/
     eval_in_ruby($1, local_binding)
@@ -75,8 +82,9 @@ loop do
     
     loop do
       input = Readline.readline("rb> ", true)
+      handle_exit(input)
+
       break if input == "js"
-      exit if EXIT_VERBS.include?(input)
 
       if input =~ /^js\s+(.+)$/
         eval_in_js($1)
