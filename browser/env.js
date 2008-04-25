@@ -11,6 +11,8 @@ Johnson.require("xmlw3cdom");
 Johnson.require("xmlsax");
 Ruby.require("uri");
 
+print = function(txt) { Ruby.puts(txt); };
+
 (function(){
 
   // Browser Navigator
@@ -599,6 +601,15 @@ Ruby.require("uri");
           } else if ( self.method == "DELETE" ) {
             var file = new Ruby.File(url.path());
             file["delete"]();
+          } else if ( self.method == "GET" ) {
+            var file = Ruby.File.read(url.path);
+            print(file);
+            connection = {
+              code: "200",
+              message: "Ok",
+              body: file.read()
+            }
+            handleResponse();
           } else {
             connection = Ruby.Net.HTTP.start(url.host, url.port, function(http) {
               http.get(url.path);
