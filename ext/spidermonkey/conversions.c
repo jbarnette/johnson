@@ -231,8 +231,24 @@ VALUE convert_to_ruby(OurContext* context, jsval js)
   return Qnil;
 }
 
-NORETURN(void) raise_js_error_in_ruby(OurContext* UNUSED(context))
+NORETURN(void) raise_js_error_in_ruby(OurContext* context)
 {
-  rb_raise(rb_eRuntimeError, "JavaScript Error");
+  if (JS_IsExceptionPending(context->js))
+  {
+    assert(JS_GetPendingException(context->js, &(context->ex)));
+    JS_AddNamedRoot(context->js, &(context->ex), "raise_js_error_in_ruby");
+    JS_ClearPendingException(context->js);
+    JS_RemoveRoot(context->js, &(context->ex));
+  }
+
+  VALUE ruby_context = (VALUE)JS_GetContextPrivate(context->js);
+  if (context->ex)
+    rb_funcall(ruby_context, rb_intern("handle_js_exception"),
+      1, convert_to_ruby(context, context->ex));
+
+  if (!context->msg)
+    Johnson_Error_raise("Unknown JavaScript Error");
+
+  Johnson_Error_raise(context->msg);
 }
 

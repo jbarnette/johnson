@@ -468,20 +468,13 @@ static JSBool method_missing(JSContext* js_context, JSObject* obj, uintN argc, j
   
   assert(argc >= 2);
 
-  JS_AddNamedRoot(js_context, &(argv[0]), "JSLandProxy#method_missing");
-  JS_AddNamedRoot(js_context, &(argv[1]), "JSLandProxy#method_missing");
-
   char* key = JS_GetStringBytes(JSVAL_TO_STRING(argv[0]));
   VALUE ruby_id = rb_intern(key);
   
   // FIXME: this is horrible and lazy, to_a comes from enumerable on proxy (argv[1] is a JSArray)
   VALUE args;
-  JSBool okay = call_ruby_from_js2(context, &args, convert_to_ruby(context, argv[1]), rb_intern("to_a"), 0);
-
-  JS_RemoveRoot(js_context, &(argv[1]));
-  JS_RemoveRoot(js_context, &(argv[0]));
-  
-  if (!okay) return JS_FALSE;
+  if (!call_ruby_from_js2(context, &args, convert_to_ruby(context, argv[1]), rb_intern("to_a"), 0))
+    return JS_FALSE;
 
   return call_ruby_from_js(context, retval, Johnson_SpiderMonkey_JSLandProxy(),
     rb_intern("send_with_possible_block"), 3, self, ID2SYM(ruby_id), args);

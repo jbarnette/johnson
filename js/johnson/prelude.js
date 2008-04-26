@@ -23,6 +23,10 @@ Johnson.symbolize = function(string) {
   return Johnson.symbolCache[string];
 };
 
+Object.defineProperty(String.prototype, "toSymbol", function() {
+  return Johnson.symbolize(this.toString());
+}, Object.READ_ONLY | Object.NON_DELETABLE);
+
 Johnson.Generator = function(enumerableProxy) {
   this.items = enumerableProxy.toArray();
   this.index = 0;

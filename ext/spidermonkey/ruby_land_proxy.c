@@ -132,6 +132,9 @@ native_call(int argc, VALUE* argv, VALUE self)
   if (!function_p(self))
     Johnson_Error_raise("This Johnson::SpiderMonkey::RubyLandProxy isn't a function.");
 
+  if (argc < 1)
+    rb_raise(rb_eArgError, "Target object required");
+
   RubyLandProxy* proxy;
   Data_Get_Struct(self, RubyLandProxy, proxy);
   
@@ -362,7 +365,10 @@ call_function_property(int argc, VALUE* argv, VALUE self)
 {
   RubyLandProxy* proxy;
   Data_Get_Struct(self, RubyLandProxy, proxy);
-  
+
+  if (argc < 1)
+    rb_raise(rb_eArgError, "Function name required");
+
   JS_AddNamedRoot(proxy->context->js, &(proxy->value), "RubyLandProxy#call_function_property");
 
   jsval function;
@@ -375,10 +381,10 @@ call_function_property(int argc, VALUE* argv, VALUE self)
   }
   
   // should never be anything but a function
-  if (!JS_TypeOfValue(proxy->context->js, function) == JSTYPE_FUNCTION)
+  if (JS_TypeOfValue(proxy->context->js, function) != JSTYPE_FUNCTION)
   {
     JS_RemoveRoot(proxy->context->js, &(proxy->value));
-    raise_js_error_in_ruby(proxy->context);
+    Johnson_Error_raise("Specified property isn't a function.");
   }
   
   // first thing in argv is the property name; skip it

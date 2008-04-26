@@ -9,7 +9,19 @@ module Johnson
     def test_symbols_are_interned
       assert(@context.evaluate("Johnson.symbolize('foo') === Johnson.symbolize('foo')"))
     end
-
+    
+    def test_strings_had_a_to_symbol_method
+      assert_js_equal(:monkeys, "'monkeys'.toSymbol()")
+    end
+    
+    def test_string_to_symbol_is_not_enumerable
+      assert(!@context.evaluate(<<-END))
+        var flag = false;
+        for (x in "foo") { if (x == 'toSymbol') flag = true }
+        flag
+      END
+    end
+    
     def test_symbol_to_string
       assert_equal("monkey", @context.evaluate("Johnson.symbolize('monkey').toString()"))
     end
@@ -39,7 +51,7 @@ module Johnson
         var flag = false;
         
         try { Johnson.require("johnson/__nonexistent"); }
-        catch(FileNotFound) { flag = true; }
+        catch(ex) { flag = true; }
         
         flag;
       END
