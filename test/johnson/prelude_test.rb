@@ -9,6 +9,14 @@ module Johnson
     def test_symbols_are_interned
       assert(@context.evaluate("Johnson.symbolize('foo') === Johnson.symbolize('foo')"))
     end
+    
+    def test_strings_can_be_symbolized
+      assert_js_equal(:monkeys, "'monkeys'.symbolize()")
+    end
+    
+    def test_intern_is_a_synonym_for_symbolize
+      assert_js_equal(:monkeys, "'monkeys'.intern()")
+    end
 
     def test_symbol_to_string
       assert_equal("monkey", @context.evaluate("Johnson.symbolize('monkey').toString()"))
@@ -39,7 +47,7 @@ module Johnson
         var flag = false;
         
         try { Johnson.require("johnson/__nonexistent"); }
-        catch(FileNotFound) { flag = true; }
+        catch(ex) { flag = true; }
         
         flag;
       END
