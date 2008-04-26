@@ -8,6 +8,6 @@ JSBool convert_to_js(OurContext* context, VALUE ruby, jsval* retval);
 VALUE convert_to_ruby(OurContext* context, jsval js);
 VALUE convert_jsstring_to_ruby(OurContext* context, JSString* str);
 
-void raise_js_error_in_ruby(OurContext* context);
+NORETURN(void raise_js_error_in_ruby(OurContext* context));
 
 #endif
