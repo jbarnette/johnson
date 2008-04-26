@@ -10,14 +10,18 @@ module Johnson
       assert(@context.evaluate("Johnson.symbolize('foo') === Johnson.symbolize('foo')"))
     end
     
-    def test_strings_can_be_symbolized
-      assert_js_equal(:monkeys, "'monkeys'.symbolize()")
+    def test_strings_had_a_to_symbol_method
+      assert_js_equal(:monkeys, "'monkeys'.toSymbol()")
     end
     
-    def test_intern_is_a_synonym_for_symbolize
-      assert_js_equal(:monkeys, "'monkeys'.intern()")
+    def test_string_to_symbol_is_not_enumerable
+      assert(!@context.evaluate(<<-END))
+        var flag = false;
+        for (x in "foo") { if (x == 'toSymbol') flag = true }
+        flag
+      END
     end
-
+    
     def test_symbol_to_string
       assert_equal("monkey", @context.evaluate("Johnson.symbolize('monkey').toString()"))
     end
