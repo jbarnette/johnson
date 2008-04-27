@@ -2,7 +2,7 @@ require File.expand_path(File.join(File.dirname(__FILE__), "/../../helper"))
 
 module Johnson
   module Conversions
-    class ProcTest < Johnson::TestCase
+    class CallableTest < Johnson::TestCase
       def setup
         @context = Johnson::Context.new
       end
@@ -21,6 +21,17 @@ module Johnson
         @context[:k] = k = lambda { |x| x }
         @context[:kk] = k
         assert_js("k === kk")
+      end
+      
+      class CallableThing
+        def call
+          "foo"
+        end
+      end
+      
+      def test_anything_with_a_call_method_can_be_called_as_a_method
+        @context[:c] = CallableThing.new
+        assert_js_equal("foo", "c()")
       end
     end
   end

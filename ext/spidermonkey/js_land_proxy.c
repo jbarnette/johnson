@@ -40,8 +40,8 @@ static JSClass JSLandCallableProxyClass = {
   "JSLandCallableProxy", JSCLASS_HAS_PRIVATE,
   JS_PropertyStub,
   JS_PropertyStub,
-  JS_PropertyStub,
-  JS_PropertyStub,
+  get,
+  set,
   JS_EnumerateStub,
   JS_ResolveStub,
   JS_ConvertStub,
@@ -560,22 +560,20 @@ JSBool make_js_land_proxy(OurContext* context, VALUE value, jsval* retval)
       rb_funcall(Johnson_SpiderMonkey_JSLandProxy(),
         rb_intern("treat_all_properties_as_methods"), 1, value);
 
-    bool callable_p = rb_class_of(value) == rb_cMethod
-      || rb_class_of(value) == rb_cProc;
+    bool callable_p = Qtrue == rb_funcall(value,
+      rb_intern("respond_to?"), 1, rb_str_new2("call"));
       
     if (callable_p)
       klass = &JSLandCallableProxyClass;
         
     if(!(jsobj = JS_NewObject(context->js, klass, NULL, NULL)))
       return JS_FALSE;
+    
     if(!(JS_SetPrivate(context->js, jsobj, (void*)value)))
       return JS_FALSE;
 
-    if (!callable_p) {
-      if(!(JS_DefineFunction(context->js, jsobj,
-          "__noSuchMethod__", method_missing, 2, 0)))
-        return JS_FALSE;
-    }
+    if(!(JS_DefineFunction(context->js, jsobj, "__noSuchMethod__", method_missing, 2, 0)))
+      return JS_FALSE;
 
     if(!(JS_DefineFunction(context->js, jsobj, "toArray", to_array, 0, 0)))
       return JS_FALSE;
