@@ -152,16 +152,25 @@ static bool attribute_p(VALUE self, char* name)
 {
   if (!method_p(self, name))
     return false;
-    
+
   VALUE rb_id = rb_intern(name);
   VALUE rb_method = rb_funcall(self, rb_intern("method"), 1, ID2SYM(rb_id));
 
-  METHOD* method;
-  Data_Get_Struct(rb_method, METHOD, method);
-  
-  return nd_type(method->body) == NODE_IVAR
-    || RTEST(rb_funcall(Johnson_SpiderMonkey_JSLandProxy(),
-        rb_intern("js_property?"), 2, self, ID2SYM(rb_id)));
+  if (TYPE(rb_method) == T_DATA)
+  {
+    VALUE klass = CLASS_OF(rb_method);
+    if (klass == rb_cMethod)
+    {
+      METHOD* method;
+      Data_Get_Struct(rb_method, METHOD, method);
+
+      if (method && nd_type(method->body) == NODE_IVAR)
+        return true;
+    }
+  }
+
+  return RTEST(rb_funcall(Johnson_SpiderMonkey_JSLandProxy(),
+    rb_intern("js_property?"), 2, self, ID2SYM(rb_id)));
 }
 
 static bool indexable_p(VALUE self)
