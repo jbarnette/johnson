@@ -4,6 +4,48 @@
 
 static VALUE proxy_class = Qnil;
 
+static VALUE call_js_function_value(OurContext* context, jsval target, jsval function, int argc, VALUE* argv)
+{
+  JS_AddNamedRoot(context->js, &target, "call_js_function_value:target");
+  JS_AddNamedRoot(context->js, &function, "call_js_function_value:function");
+
+  assert(JSVAL_IS_OBJECT(target));
+
+  jsval args[argc];
+  jsval result;
+
+  int i;
+
+  JSBool okay = JS_TRUE;
+
+  for(i = 0; i < argc; ++i)
+    if (convert_to_js(context, argv[i], &(args[i]))) {
+      JS_AddNamedRoot(context->js, &(args[i]), "call_js_function_value:argN");
+    } else {
+      okay = JS_FALSE;
+      break;
+    }
+
+  if (okay)
+    okay = JS_CallFunctionValue(context->js,
+      JSVAL_TO_OBJECT(target), function, (unsigned) argc, args, &result);
+  if (okay)
+    okay = JS_AddNamedRoot(context->js, &result, "call_js_function_value:result");
+
+  for(--i; i >= 0; --i) {
+    JS_RemoveRoot(context->js, &args[i]);
+  }
+  JS_RemoveRoot(context->js, &function);
+  JS_RemoveRoot(context->js, &target);
+
+  if (!okay)
+    raise_js_error_in_ruby(context);
+
+  JS_RemoveRoot(context->js, &result);
+
+  return convert_to_ruby(context, result);
+}
+
 static VALUE /* [] */
 get(VALUE self, VALUE name)
 {
@@ -145,42 +187,10 @@ native_call(int argc, VALUE* argv, VALUE self)
     JS_RemoveRoot(proxy->context->js, &(proxy->value));
     raise_js_error_in_ruby(proxy->context);
   }
-  JS_AddNamedRoot(proxy->context->js, &global, "RubyLandProxy#native_call:global");
 
-  jsval args[argc - 1];
-  jsval js;
-  
-  int i;
-
-  JSBool okay = JS_TRUE;
-
-  for (i = 1; i < argc; ++i) {
-    if (convert_to_js(proxy->context, argv[i], &(args[i - 1]))) {
-      JS_AddNamedRoot(proxy->context->js, &(args[i - 1]), "RubyLandProxy#native_call:argN");
-    } else {
-      okay = JS_FALSE;
-      break;
-    }
-  }
-
-  if (okay)
-    okay = JS_CallFunctionValue(proxy->context->js,
-      JSVAL_TO_OBJECT(global), proxy->value, (unsigned) argc - 1, args, &js);
-  if (okay)
-    okay = JS_AddNamedRoot(proxy->context->js, &js, "RubyLandProxy#native_call:result");
-
-  for(--i; i > 0; --i) {
-    JS_RemoveRoot(proxy->context->js, &args[i - 1]);
-  }
-  JS_RemoveRoot(proxy->context->js, &global);
   JS_RemoveRoot(proxy->context->js, &(proxy->value));
 
-  if (!okay)
-    return JS_FALSE;
-
-  JS_RemoveRoot(proxy->context->js, &js);
-
-  return convert_to_ruby(proxy->context, js);
+  return call_js_function_value(proxy->context, global, proxy->value, argc - 1, &(argv[1]));
 }
 
 static VALUE /* each(&block) */ 
@@ -369,7 +379,7 @@ call_function_property(int argc, VALUE* argv, VALUE self)
   if (argc < 1)
     rb_raise(rb_eArgError, "Function name required");
 
-  JS_AddNamedRoot(proxy->context->js, &(proxy->value), "RubyLandProxy#call_function_property");
+  JS_AddNamedRoot(proxy->context->js, &(proxy->value), "call_function_property");
 
   jsval function;
   
@@ -379,36 +389,16 @@ call_function_property(int argc, VALUE* argv, VALUE self)
     JS_RemoveRoot(proxy->context->js, &(proxy->value));
     raise_js_error_in_ruby(proxy->context);
   }
-  
-  // should never be anything but a function
-  if (JS_TypeOfValue(proxy->context->js, function) != JSTYPE_FUNCTION)
-  {
-    JS_RemoveRoot(proxy->context->js, &(proxy->value));
-    Johnson_Error_raise("Specified property isn't a function.");
-  }
-  
-  // first thing in argv is the property name; skip it
-  jsval args[argc - 1];
-  int i;
-  
-  for(i = 1; i < argc; ++i)
-    if (!convert_to_js(proxy->context, argv[i], &(args[i - 1])))
-    {
-      JS_RemoveRoot(proxy->context->js, &(proxy->value));
-      raise_js_error_in_ruby(proxy->context);
-    }
-  
-  jsval js;
-  
-  if (!JS_CallFunctionValue(proxy->context->js,
-    JSVAL_TO_OBJECT(proxy->value), function, (unsigned) argc - 1, args, &js))
-  {
-    JS_RemoveRoot(proxy->context->js, &(proxy->value));
-    raise_js_error_in_ruby(proxy->context);
-  }
+
+  JSType funtype = JS_TypeOfValue(proxy->context->js, function);
   
   JS_RemoveRoot(proxy->context->js, &(proxy->value));
-  return convert_to_ruby(proxy->context, js);
+
+  // should never be anything but a function
+  if (funtype != JSTYPE_FUNCTION)
+    Johnson_Error_raise("Specified property isn't a function.");
+
+  return call_js_function_value(proxy->context, proxy->value, function, argc - 1, &(argv[1]));
 }
 
 ///////////////////////////////////////////////////////////////////////////
