@@ -236,11 +236,10 @@ static JSBool get(JSContext* js_context, JSObject* obj, jsval id, jsval* retval)
   char* name = JS_GetStringBytes(JSVAL_TO_STRING(id));
   VALUE ruby_id = rb_intern(name);
 
-  JS_RemoveRoot(js_context, &id);
-  
   // FIXME: we should probably just JS_DefineProperty this, and it shouldn't be enumerable
   
   if (!strcasecmp("__iterator__", name)) {
+    JS_RemoveRoot(js_context, &id);
     return evaluate_js_property_expression(context, "Johnson.Generator.create", retval);
   }
   
@@ -250,6 +249,7 @@ static JSBool get(JSContext* js_context, JSObject* obj, jsval id, jsval* retval)
   
   else if (autovivified_p(ruby_context, self, name))
   {
+    JS_RemoveRoot(js_context, &id);
     return call_ruby_from_js(context, retval, Johnson_SpiderMonkey_JSLandProxy(),
       rb_intern("autovivified"), 2, self, rb_str_new2(name));
   }
@@ -259,6 +259,7 @@ static JSBool get(JSContext* js_context, JSObject* obj, jsval id, jsval* retval)
   
   else if (const_p(self, name))
   {
+    JS_RemoveRoot(js_context, &id);
     return call_ruby_from_js(context, retval, self, rb_intern("const_get"),
       1, ID2SYM(ruby_id));
   }  
@@ -266,6 +267,7 @@ static JSBool get(JSContext* js_context, JSObject* obj, jsval id, jsval* retval)
   // otherwise, if it's a global, return the global
   else if (global_p(name))
   {
+    JS_RemoveRoot(js_context, &id);
     return convert_to_js(context, rb_gv_get(name), retval);
   }
   
@@ -274,6 +276,7 @@ static JSBool get(JSContext* js_context, JSObject* obj, jsval id, jsval* retval)
   
   else if (attribute_p(self, name))
   {
+    JS_RemoveRoot(js_context, &id);
     return call_ruby_from_js(context, retval, self, ruby_id, 0);
   }
 
@@ -282,6 +285,7 @@ static JSBool get(JSContext* js_context, JSObject* obj, jsval id, jsval* retval)
   
   else if (has_key_p(self, name))
   {
+    JS_RemoveRoot(js_context, &id);
     return call_ruby_from_js(context, retval, self, rb_intern("[]"), 1, rb_str_new2(name));
   }
   
@@ -293,8 +297,11 @@ static JSBool get(JSContext* js_context, JSObject* obj, jsval id, jsval* retval)
   
   else if (method_p(self, name))
   {
+    JS_RemoveRoot(js_context, &id);
     return call_ruby_from_js(context, retval, self, rb_intern("method"), 1, rb_str_new2(name));
   }
+
+  JS_RemoveRoot(js_context, &id);
   
   // else it's undefined (JS_VOID) by default
   return JS_TRUE;
