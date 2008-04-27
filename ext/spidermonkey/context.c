@@ -144,10 +144,7 @@ initialize_native(VALUE self, VALUE UNUSED(options))
 #endif
     );
 
-    if (init_spidermonkey_extensions(context))
-      return self;
-
-    JS_RemoveRoot(context->js, &(context->global));
+    return init_spidermonkey_extensions(context, self);
   }
 
   if (gthings_rooted_p)

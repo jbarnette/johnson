@@ -10,25 +10,22 @@ static JSBool convert_float_or_bignum_to_js(OurContext* context, VALUE float_or_
 
 static JSBool convert_symbol_to_js(OurContext* context, VALUE symbol, jsval* retval)
 {
+  PREPARE_JROOTS(context, "convert_symbol_to_js", 2);
+
   VALUE to_s = rb_funcall(symbol, rb_intern("to_s"), 0);
   jsval name = STRING_TO_JSVAL(JS_NewStringCopyN(context->js, StringValuePtr(to_s), (unsigned) StringValueLen(to_s)));
-  JS_AddNamedRoot(context->js, &name, "convert_symbol_to_js");
+
+  JROOT(name);
 
   // calls Johnson.symbolize(name) in JS-land. See lib/prelude.js
 
   jsval nsJohnson;    
-  if (!(JS_GetProperty(context->js, context->global, "Johnson", &nsJohnson))
-      || !(JS_AddNamedRoot(context->js, &nsJohnson, "convert_symbol_to_js"))) {
-    JS_RemoveRoot(context->js, &name);
-    return JS_FALSE;
-  }
+  JCHECK(JS_GetProperty(context->js, context->global, "Johnson", &nsJohnson));
+  JROOT(nsJohnson);
 
-  JSBool okay = JS_CallFunctionName(context->js, JSVAL_TO_OBJECT(nsJohnson), "symbolize", 1, &name, retval);
+  JCHECK(JS_CallFunctionName(context->js, JSVAL_TO_OBJECT(nsJohnson), "symbolize", 1, &name, retval));
 
-  JS_RemoveRoot(context->js, &nsJohnson);
-  JS_RemoveRoot(context->js, &name);
-
-  return okay;
+  JRETURN;
 }
 
 static JSBool convert_regexp_to_js(OurContext* context, VALUE regexp, jsval* retval)
@@ -116,119 +113,104 @@ JSBool convert_to_js(OurContext* context, VALUE ruby, jsval* retval)
 
 VALUE convert_jsstring_to_ruby(OurContext* context, JSString* str)
 {
-  JS_AddNamedRoot(context->js, &str, "convert_jsstring_to_ruby");
+  PREPARE_RUBY_JROOTS(context, "convert_jsstring_to_ruby", 1);
+  JROOT(str);
   char* bytes = JS_GetStringBytes(str);
   assert(bytes);
   VALUE result = rb_str_new(bytes, (signed)JS_GetStringLength(str));
-  JS_RemoveRoot(context->js, &str);
-  return result;
+  JRETURN_RUBY(result);
 }
 
 static VALUE convert_regexp_to_ruby(OurContext* context, jsval regexp)
 {
-  JS_AddNamedRoot(context->js, &regexp, "convert_regexp_to_ruby");
+  PREPARE_RUBY_JROOTS(context, "convert_regexp_to_ruby", 1);
+  JROOT(regexp);
   JSRegExp* re = (JSRegExp*)JS_GetPrivate(context->js, JSVAL_TO_OBJECT(regexp));
 
   VALUE result = rb_funcall(rb_cRegexp, rb_intern("new"), 2,
     convert_jsstring_to_ruby(context, re->source),
     INT2NUM(re->flags));
 
-  JS_RemoveRoot(context->js, &regexp);
-  return result;
+  JRETURN_RUBY(result);
 }
 
 static bool js_value_is_regexp(OurContext* context, jsval maybe_regexp)
 {
-  JS_AddNamedRoot(context->js, &maybe_regexp, "js_value_is_regexp");
+  PREPARE_RUBY_JROOTS(context, "js_value_is_regexp", 1);
+  JROOT(maybe_regexp);
   JSBool result = JS_InstanceOf(context->js, JSVAL_TO_OBJECT(maybe_regexp), &js_RegExpClass, NULL);
-  JS_RemoveRoot(context->js, &maybe_regexp);
-  return result;
+  JRETURN_RUBY(result ? true : false);
 }
 
 static bool js_value_is_symbol(OurContext* context, jsval maybe_symbol)
 {
   jsval nsJohnson, cSymbol;
 
-  JS_AddNamedRoot(context->js, &maybe_symbol, "js_value_is_symbol");
+  PREPARE_RUBY_JROOTS(context, "js_value_is_symbol", 3);
+  JROOT(maybe_symbol);
 
-  if(!(JS_GetProperty(context->js, context->global, "Johnson", &nsJohnson))
-     || !JSVAL_IS_OBJECT(nsJohnson)) {
-    JS_RemoveRoot(context->js, &maybe_symbol);
-    rb_raise(rb_eArgError, "Unable to retrieve Johnson from JSLand");
-  }
+  JCHECK(JS_GetProperty(context->js, context->global, "Johnson", &nsJohnson));
+  if (!JSVAL_IS_OBJECT(nsJohnson))
+    JERROR("Unable to retrieve Johnson from JSLand");
+  JROOT(nsJohnson);
 
-  JS_AddNamedRoot(context->js, &nsJohnson, "js_value_is_symbol");
-
-  if(!(JS_GetProperty(context->js, JSVAL_TO_OBJECT(nsJohnson), "Symbol", &cSymbol))
-     || !JSVAL_IS_OBJECT(cSymbol)) {
-    JS_RemoveRoot(context->js, &nsJohnson);
-    JS_RemoveRoot(context->js, &maybe_symbol);
-    rb_raise(rb_eArgError, "Unable to retrieve Johnson.Symbol from JSLand");
-  }
-
-  JS_AddNamedRoot(context->js, &cSymbol, "js_value_is_symbol");
+  JCHECK(JS_GetProperty(context->js, JSVAL_TO_OBJECT(nsJohnson), "Symbol", &cSymbol));
+  if (!JSVAL_IS_OBJECT(cSymbol))
+    JERROR("Unable to retrieve Johnson.Symbol from JSLand");
+  JROOT(cSymbol);
 
   JSBool is_a_symbol;
-  if(!(JS_HasInstance(context->js, JSVAL_TO_OBJECT(cSymbol), maybe_symbol, &is_a_symbol))) {
-    JS_RemoveRoot(context->js, &cSymbol);
-    JS_RemoveRoot(context->js, &nsJohnson);
-    JS_RemoveRoot(context->js, &maybe_symbol);
-    rb_raise(rb_eArgError, "HasInstance failed against Johnson.Symbol from JSLand");
-  }
+  JCHECK(JS_HasInstance(context->js, JSVAL_TO_OBJECT(cSymbol), maybe_symbol, &is_a_symbol));
 
-  JS_RemoveRoot(context->js, &cSymbol);
-  JS_RemoveRoot(context->js, &nsJohnson);
-  JS_RemoveRoot(context->js, &maybe_symbol);
-
-  return is_a_symbol != JS_FALSE;
+  JRETURN_RUBY(is_a_symbol != JS_FALSE);
 }
 
 VALUE convert_to_ruby(OurContext* context, jsval js)
 {
   if (JSVAL_NULL == js) return Qnil;
+
+  PREPARE_RUBY_JROOTS(context, "convert_to_ruby", 1);
   
   switch (JS_TypeOfValue(context->js, js))
   {
     case JSTYPE_VOID:
-      return Qnil;
+      JRETURN_RUBY(Qnil);
       
     case JSTYPE_FUNCTION: 
     case JSTYPE_OBJECT:
+      JROOT(js);
+
       if (OBJECT_TO_JSVAL(context->global) == js)
         // global gets special treatment, since the Prelude might not be loaded
-        return make_ruby_land_proxy(context, js);
+        JRETURN_RUBY(make_ruby_land_proxy(context, js));
       
       // this conditional requires the Prelude
-      if (js_value_is_symbol(context, js)) {
-        JS_AddNamedRoot(context->js, &js, "convert_to_ruby");
-        VALUE sym = ID2SYM(rb_intern(JS_GetStringBytes(JS_ValueToString(context->js, js))));
-        JS_RemoveRoot(context->js, &js);
-        return sym;
-      }
+      if (js_value_is_symbol(context, js))
+        JRETURN_RUBY(ID2SYM(rb_intern(JS_GetStringBytes(JS_ValueToString(context->js, js)))));
     
       if (js_value_is_proxy(context, js))
-        return unwrap_js_land_proxy(context, js);
+        JRETURN_RUBY(unwrap_js_land_proxy(context, js));
 
       if (js_value_is_regexp(context, js))
-        return convert_regexp_to_ruby(context, js);
+        JRETURN_RUBY(convert_regexp_to_ruby(context, js));
     
-      return make_ruby_land_proxy(context, js);
+      JRETURN_RUBY(make_ruby_land_proxy(context, js));
         
     case JSTYPE_BOOLEAN:
-      return JSVAL_TRUE == js ? Qtrue : Qfalse;
+      JRETURN_RUBY(JSVAL_TRUE == js ? Qtrue : Qfalse);
       
     case JSTYPE_STRING:
-      return convert_jsstring_to_ruby(context, JSVAL_TO_STRING(js));
+      JRETURN_RUBY(convert_jsstring_to_ruby(context, JSVAL_TO_STRING(js)));
       
     case JSTYPE_NUMBER:
-      if (JSVAL_IS_INT(js)) return INT2FIX(JSVAL_TO_INT(js));
-      else return rb_float_new(*JSVAL_TO_DOUBLE(js));
+      if (JSVAL_IS_INT(js)) JRETURN_RUBY(INT2FIX(JSVAL_TO_INT(js)));
+      else JRETURN_RUBY(rb_float_new(*JSVAL_TO_DOUBLE(js)));
 
     default:
-      Johnson_Error_raise("unknown js type in switch");
+      JERROR("unknown js type in switch");
   }
   
-  return Qnil;
+  JRETURN_RUBY(Qnil);
 }
 
 NORETURN(void) raise_js_error_in_ruby(OurContext* context)

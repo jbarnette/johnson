@@ -12,33 +12,25 @@ define_property(JSContext *js_context, JSObject* UNUSED(obj), uintN argc, jsval 
   return JS_DefineProperty(js_context, JSVAL_TO_OBJECT(argv[0]), name, argc > 2 ? argv[2] : JSVAL_VOID, NULL, NULL, flags);
 }
 
-bool init_spidermonkey_extensions(OurContext* context)
+VALUE init_spidermonkey_extensions(OurContext* context, VALUE self)
 {
+  PREPARE_RUBY_JROOTS(context, "init_spidermonkey_extensions", 1);
+  
   jsval Object;
-  
-  if (JS_GetProperty(context->js, context->global, "Object", &Object))
-  {
-    if (JS_AddNamedRoot(context->js, &Object, "context.Object"))
-    {
-      if (JS_DefineFunction(context->js, JSVAL_TO_OBJECT(Object),
-        "defineProperty", define_property, 4, 0)
+  JCHECK(JS_GetProperty(context->js, context->global, "Object", &Object));
+  JROOT(Object);
+
+  JCHECK(JS_DefineFunction(context->js, JSVAL_TO_OBJECT(Object),
+    "defineProperty", define_property, 4, 0));
         
-        && JS_DefineProperty(context->js, JSVAL_TO_OBJECT(Object), "READ_ONLY",
-          INT_TO_JSVAL(0x02), NULL, NULL, JSPROP_READONLY)
+  JCHECK(JS_DefineProperty(context->js, JSVAL_TO_OBJECT(Object), "READ_ONLY",
+    INT_TO_JSVAL(0x02), NULL, NULL, JSPROP_READONLY));
         
-        && JS_DefineProperty(context->js, JSVAL_TO_OBJECT(Object), "ITERABLE",
-          INT_TO_JSVAL(0x01), NULL, NULL, JSPROP_READONLY)
+  JCHECK(JS_DefineProperty(context->js, JSVAL_TO_OBJECT(Object), "ITERABLE",
+    INT_TO_JSVAL(0x01), NULL, NULL, JSPROP_READONLY));
         
-        && JS_DefineProperty(context->js, JSVAL_TO_OBJECT(Object), "NON_DELETABLE",
-          INT_TO_JSVAL(0x04), NULL, NULL, JSPROP_READONLY))
-      {
-        JS_RemoveRoot(context->js, &Object);
-        return true;
-      }
-      
-      JS_RemoveRoot(context->js, &Object);
-    }
-  }
-  
-  return false;
+  JCHECK(JS_DefineProperty(context->js, JSVAL_TO_OBJECT(Object), "NON_DELETABLE",
+    INT_TO_JSVAL(0x04), NULL, NULL, JSPROP_READONLY));
+
+  JRETURN_RUBY(self);
 }

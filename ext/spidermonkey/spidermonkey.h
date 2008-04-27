@@ -11,6 +11,8 @@
 #include "jshash.h"
 #include "jsregexp.h"
 
+#include "jroot.h"
+
 #ifndef StringValueLen
 #define StringValueLen(v) (RSTRING(v)->len)
 #endif
