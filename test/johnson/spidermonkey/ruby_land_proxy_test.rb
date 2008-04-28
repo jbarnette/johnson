@@ -147,6 +147,19 @@ module Johnson
         assert_equal({ 'foo' => 'fooval', 'bar' => 'barval', 0 => 42 }, values)
       end
       
+      def test_each_passes_an_exception
+        proxy = @context.evaluate("x = { foo: 'fooval', bar: 'barval' }; x[0] = 42; x")
+        values = {}
+        
+        assert_raise(RuntimeError) do
+          proxy.each do |k, v|
+            values[k] = v
+            raise "splat" if values.keys.size == 2
+          end
+        end
+        assert_equal({ 'foo' => 'fooval', 'bar' => 'barval' }, values)
+      end
+      
       def test_is_enumerable
         proxy = @context.evaluate("[1, 2, 3]")
         assert_kind_of(Enumerable, proxy)

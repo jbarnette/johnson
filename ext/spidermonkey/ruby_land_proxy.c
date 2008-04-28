@@ -163,8 +163,14 @@ each(VALUE self)
     for (i = 0; i < length; ++i)
     {
       jsval element;
+      int state;
       JCHECK(JS_GetElement(proxy->context->js, value, (signed) i, &element));
-      rb_yield(convert_to_ruby(proxy->context, element));
+      rb_protect(rb_yield, convert_to_ruby(proxy->context, element), &state);
+      if (state)
+      {
+        REMOVE_JROOTS;
+        rb_jump_tag(state);
+      }
     }
   }
   else
@@ -200,7 +206,13 @@ each(VALUE self)
       VALUE key = convert_to_ruby(proxy->context, js_key);
       VALUE value = convert_to_ruby(proxy->context, js_value);
 
-      rb_yield(rb_ary_new3(2, key, value));
+      int state;
+      rb_protect(rb_yield, rb_ary_new3(2, key, value), &state);
+      if (state)
+      {
+        REMOVE_JROOTS;
+        rb_jump_tag(state);
+      }
 
       JUNROOT(js_value);
       JUNROOT(js_key);
