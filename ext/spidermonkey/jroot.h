@@ -15,7 +15,6 @@
 #define _PREPARE_JROOTS(rb, context, name, maxcount) \
   const bool __jroot_ruby = rb; \
   const char* const MAYBE_UNUSED(__jroot_basename) = name; \
-  char MAYBE_UNUSED(__jroot_tmpname[_JROOT_NAMESIZE]); \
   int MAYBE_UNUSED(__jroot_max) = maxcount - 1; \
   void* __jroot_map[maxcount]; \
   OurContext* __jroot_context = context; \
@@ -30,12 +29,12 @@
 #define _JROOT(ptr, name) \
   do \
   { \
+    char __jroot_tmpname[_JROOT_NAMESIZE]; \
     assert(__jroot_idx <= __jroot_max); \
     __jroot_map[__jroot_idx] = ptr; \
     snprintf(__jroot_tmpname, _JROOT_NAMESIZE, "%s[%d]:%s: %s", __FILE__, __LINE__, __jroot_basename, name); \
     JCHECK(JS_AddNamedRoot(__jroot_context->js, __jroot_map[__jroot_idx], __jroot_tmpname)); \
     __jroot_idx++; \
-    JS_GC(__jroot_context->js); \
   } while(0)
 
 #define JROOT(var) _JROOT(&(var), #var)
@@ -80,6 +79,7 @@
 #define JRETURN \
   do \
   { \
+    assert(!__jroot_ruby); \
     REMOVE_JROOTS; \
     return JS_TRUE; \
   } while(0)
@@ -87,6 +87,7 @@
 #define JRETURN_RUBY(value) \
   do \
   { \
+    assert(__jroot_ruby); \
     typeof(value) __jroot_result = value; \
     REMOVE_JROOTS; \
     return __jroot_result; \
