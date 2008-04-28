@@ -3,7 +3,8 @@
 
 #include "spidermonkey.h"
 #include "context.h"
+#include "conversions.h"
 
-bool init_spidermonkey_extensions(OurContext* context);
+VALUE init_spidermonkey_extensions(OurContext* context, VALUE self);
 
 #endif

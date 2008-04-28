@@ -16,21 +16,16 @@ Johnson wraps JavaScript in a loving Ruby embrace.
   Johnson.evaluate("4 + 4") # => 8
   Johnson.evaluate("4 + foo", :foo => 4) # => 8
 
-== REQUIREMENTS:
-
-* Mocha (only for development)
-
 == INSTALL:
 
   sudo gem install johnson
 
 == LICENSE:
 
-FIXME: ruby-spidermonkey shoutout
-
 (The MIT License)
 
-Copyright (c) 2008 John Barnette, Aaron Patterson, Yehuda Katz
+Copyright (c) 2008 John Barnette, Aaron Patterson,
+                   Yehuda Katz, Matthew Draper
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the

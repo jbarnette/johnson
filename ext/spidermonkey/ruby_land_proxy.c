@@ -4,36 +4,56 @@
 
 static VALUE proxy_class = Qnil;
 
+static VALUE call_js_function_value(OurContext* context, jsval target, jsval function, int argc, VALUE* argv)
+{
+  PREPARE_RUBY_JROOTS(context, argc + 2, 0);
+
+  JROOT(target);
+  JROOT(function);
+
+  assert(JSVAL_IS_OBJECT(target));
+
+  jsval args[argc];
+  jsval result;
+
+  int i;
+  for(i = 0; i < argc; ++i)
+  {
+    JCHECK(convert_to_js(context, argv[i], &(args[i])));
+    JROOT(args[i]);
+  }
+
+  JCHECK(JS_CallFunctionValue(context->js,
+    JSVAL_TO_OBJECT(target), function, (unsigned) argc, args, &result));
+
+  JRETURN_RUBY(JPROTECT(convert_to_ruby(context, result)));
+}
+
 static VALUE /* [] */
 get(VALUE self, VALUE name)
 {
   RubyLandProxy* proxy;
   Data_Get_Struct(self, RubyLandProxy, proxy);
 
-  JS_AddNamedRoot(proxy->context->js, &(proxy->value), "RubyLandProxy#get");
+  PREPARE_RUBY_JROOTS(proxy->context, 1, 0);
+
+  JROOT(proxy->value);
 
   jsval js_value;  
 
   switch(TYPE(name)) {
     case T_FIXNUM:
-      if(!(JS_GetElement(proxy->context->js,
-          JSVAL_TO_OBJECT(proxy->value), NUM2INT(name), &js_value))) {
-        JS_RemoveRoot(proxy->context->js, &(proxy->value));
-        raise_js_error_in_ruby(proxy->context);
-      }
+      JCHECK(JS_GetElement(proxy->context->js,
+          JSVAL_TO_OBJECT(proxy->value), NUM2INT(name), &js_value));
       break;
     default:
       Check_Type(name, T_STRING);
-      if(!(JS_GetProperty(proxy->context->js,
-          JSVAL_TO_OBJECT(proxy->value), StringValueCStr(name), &js_value))) {
-        JS_RemoveRoot(proxy->context->js, &(proxy->value));
-        raise_js_error_in_ruby(proxy->context);
-      }
+      JCHECK(JS_GetProperty(proxy->context->js,
+          JSVAL_TO_OBJECT(proxy->value), StringValueCStr(name), &js_value));
       break;
   }
 
-  JS_RemoveRoot(proxy->context->js, &(proxy->value));
-  return convert_to_ruby(proxy->context, js_value);
+  JRETURN_RUBY(JPROTECT(convert_to_ruby(proxy->context, js_value)));
 }
 
 static VALUE /* []= */
@@ -42,43 +62,27 @@ set(VALUE self, VALUE name, VALUE value)
   RubyLandProxy* proxy;
   Data_Get_Struct(self, RubyLandProxy, proxy);
   
-  JS_AddNamedRoot(proxy->context->js, &(proxy->value), "RubyLandProxy#set");
+  PREPARE_RUBY_JROOTS(proxy->context, 2, 0);
+  JROOT(proxy->value);
 
   jsval js_value;
-  if(!convert_to_js(proxy->context, value, &js_value)) {
-    JS_RemoveRoot(proxy->context->js, &(proxy->value));
-    raise_js_error_in_ruby(proxy->context);
-  }
+  JCHECK(convert_to_js(proxy->context, value, &js_value));
   
-  if(!JS_AddNamedRoot(proxy->context->js, &js_value, "RubyLandProxy#set")) {
-    JS_RemoveRoot(proxy->context->js, &(proxy->value));
-    raise_js_error_in_ruby(proxy->context);
-  }
+  JROOT(js_value);
 
   switch(TYPE(name)) {
     case T_FIXNUM:
-      if(!(JS_SetElement(proxy->context->js,
-              JSVAL_TO_OBJECT(proxy->value), NUM2INT(name), &js_value))) {
-        JS_RemoveRoot(proxy->context->js, &js_value);
-        JS_RemoveRoot(proxy->context->js, &(proxy->value));
-        raise_js_error_in_ruby(proxy->context);
-      }
+      JCHECK(JS_SetElement(proxy->context->js,
+              JSVAL_TO_OBJECT(proxy->value), NUM2INT(name), &js_value));
       break;
     default:
       Check_Type(name, T_STRING);
-      if(!(JS_SetProperty(proxy->context->js,
-            JSVAL_TO_OBJECT(proxy->value), StringValueCStr(name), &js_value))) {
-        JS_RemoveRoot(proxy->context->js, &js_value);
-        JS_RemoveRoot(proxy->context->js, &(proxy->value));
-        raise_js_error_in_ruby(proxy->context);
-      }
+      JCHECK(JS_SetProperty(proxy->context->js,
+            JSVAL_TO_OBJECT(proxy->value), StringValueCStr(name), &js_value));
       break;
   }
 
-  JS_RemoveRoot(proxy->context->js, &js_value);
-  JS_RemoveRoot(proxy->context->js, &(proxy->value));
-  
-  return value;
+  JRETURN_RUBY(value);
 }
 
 static VALUE /* function? */
@@ -94,36 +98,26 @@ respond_to_p(VALUE self, VALUE sym)
 {
   RubyLandProxy* proxy;
   Data_Get_Struct(self, RubyLandProxy, proxy);
+
+  PREPARE_RUBY_JROOTS(proxy->context, 2, 0);
   
   char* name = rb_id2name(SYM2ID(sym));
   
   // assignment is always okay
   if (name[strlen(name) - 1] == '=')
-    return Qtrue;
+    JRETURN_RUBY(Qtrue);
   
-  JS_AddNamedRoot(proxy->context->js, &(proxy->value), "RubyLandProxy#respond_to?");
+  JROOT(proxy->value);
 
   JSObject *obj;
   JSBool found;
   
-  if(!JS_ValueToObject(proxy->context->js, proxy->value, &obj)) {
-    JS_RemoveRoot(proxy->context->js, &(proxy->value));
-    raise_js_error_in_ruby(proxy->context);
-  }
-  if(!JS_AddNamedRoot(proxy->context->js, &obj, "RubyLandProxy#respond_to?")) {
-    JS_RemoveRoot(proxy->context->js, &(proxy->value));
-    raise_js_error_in_ruby(proxy->context);
-  }
-  if(!JS_HasProperty(proxy->context->js, obj, name, &found)) {
-    JS_RemoveRoot(proxy->context->js, &obj);
-    JS_RemoveRoot(proxy->context->js, &(proxy->value));
-    raise_js_error_in_ruby(proxy->context);
-  }
+  JCHECK(JS_ValueToObject(proxy->context->js, proxy->value, &obj));
+  JROOT(obj);
 
-  JS_RemoveRoot(proxy->context->js, &obj);
-  JS_RemoveRoot(proxy->context->js, &(proxy->value));
+  JCHECK(JS_HasProperty(proxy->context->js, obj, name, &found));
 
-  return found ? Qtrue : rb_call_super(1, &sym);
+  JRETURN_RUBY(found ? Qtrue : JPROTECT(rb_call_super(1, &sym)));
 }
 
 /* private */ static VALUE /* native_call(global, *args) */
@@ -138,49 +132,13 @@ native_call(int argc, VALUE* argv, VALUE self)
   RubyLandProxy* proxy;
   Data_Get_Struct(self, RubyLandProxy, proxy);
   
-  JS_AddNamedRoot(proxy->context->js, &(proxy->value), "RubyLandProxy#native_call");
+  PREPARE_RUBY_JROOTS(proxy->context, 1, 0);
+  JROOT(proxy->value);
 
   jsval global;
-  if(!convert_to_js(proxy->context, argv[0], &global)) {
-    JS_RemoveRoot(proxy->context->js, &(proxy->value));
-    raise_js_error_in_ruby(proxy->context);
-  }
-  JS_AddNamedRoot(proxy->context->js, &global, "RubyLandProxy#native_call:global");
+  JCHECK(convert_to_js(proxy->context, argv[0], &global));
 
-  jsval args[argc - 1];
-  jsval js;
-  
-  int i;
-
-  JSBool okay = JS_TRUE;
-
-  for (i = 1; i < argc; ++i) {
-    if (convert_to_js(proxy->context, argv[i], &(args[i - 1]))) {
-      JS_AddNamedRoot(proxy->context->js, &(args[i - 1]), "RubyLandProxy#native_call:argN");
-    } else {
-      okay = JS_FALSE;
-      break;
-    }
-  }
-
-  if (okay)
-    okay = JS_CallFunctionValue(proxy->context->js,
-      JSVAL_TO_OBJECT(global), proxy->value, (unsigned) argc - 1, args, &js);
-  if (okay)
-    okay = JS_AddNamedRoot(proxy->context->js, &js, "RubyLandProxy#native_call:result");
-
-  for(--i; i > 0; --i) {
-    JS_RemoveRoot(proxy->context->js, &args[i - 1]);
-  }
-  JS_RemoveRoot(proxy->context->js, &global);
-  JS_RemoveRoot(proxy->context->js, &(proxy->value));
-
-  if (!okay)
-    return JS_FALSE;
-
-  JS_RemoveRoot(proxy->context->js, &js);
-
-  return convert_to_ruby(proxy->context, js);
+  JRETURN_RUBY(call_js_function_value(proxy->context, global, proxy->value, argc - 1, &(argv[1])));
 }
 
 static VALUE /* each(&block) */ 
@@ -189,98 +147,67 @@ each(VALUE self)
   RubyLandProxy* proxy;
   Data_Get_Struct(self, RubyLandProxy, proxy);
   
-  JS_AddNamedRoot(proxy->context->js, &(proxy->value), "RubyLandProxy#each");
+  PREPARE_RUBY_JROOTS(proxy->context, 4, 1);
+  JROOT(proxy->value);
 
   JSObject* value = JSVAL_TO_OBJECT(proxy->value);
-  JS_AddNamedRoot(proxy->context->js, &value, "RubyLandProxy#each:value");
+  JROOT(value);
   
   // arrays behave like you'd expect, indexes in order
   if (JS_IsArrayObject(proxy->context->js, value))
   {
     jsuint length;
-    if (!JS_GetArrayLength(proxy->context->js, value, &length))
-    {
-      JS_RemoveRoot(proxy->context->js, &value);
-      JS_RemoveRoot(proxy->context->js, &(proxy->value));
-      raise_js_error_in_ruby(proxy->context);
-    }
+    JCHECK(JS_GetArrayLength(proxy->context->js, value, &length));
     
     jsuint i = 0;
     for (i = 0; i < length; ++i)
     {
       jsval element;
-      if(!JS_GetElement(proxy->context->js, value, (signed) i, &element))
-      {
-        JS_RemoveRoot(proxy->context->js, &value);
-        JS_RemoveRoot(proxy->context->js, &(proxy->value));
-        raise_js_error_in_ruby(proxy->context);
-      }
-      rb_yield(convert_to_ruby(proxy->context, element));
+      JCHECK(JS_GetElement(proxy->context->js, value, (signed) i, &element));
+      JPROTECT(rb_yield(convert_to_ruby(proxy->context, element)));
     }
   }
   else
   {
     // not an array? behave like each on Hash; yield [key, value]
     JSIdArray *ids = JS_Enumerate(proxy->context->js, value);
-    if (!ids)
-    {
-      JS_RemoveRoot(proxy->context->js, &value);
-      JS_RemoveRoot(proxy->context->js, &(proxy->value));
-      raise_js_error_in_ruby(proxy->context);
-    }
-  
+    JCHECK(ids);
+
+    JCLEANUP(JS_DestroyIdArray(proxy->context->js, ids));
+
     int i;
     for (i = 0; i < ids->length; ++i)
     {
       jsval js_key, js_value;
 
-      if (!JS_IdToValue(proxy->context->js, ids->vector[i], &js_key))
-      {
-        JS_RemoveRoot(proxy->context->js, &value);
-        JS_RemoveRoot(proxy->context->js, &(proxy->value));
-        raise_js_error_in_ruby(proxy->context);
-      }
-      JS_AddNamedRoot(proxy->context->js, &js_key, "RubyLandProxy#each:js_key");
+      JCHECK(JS_IdToValue(proxy->context->js, ids->vector[i], &js_key));
+      JROOT(js_key);
 
-      JSBool okay;
       if (JSVAL_IS_STRING(js_key))
       {
         // regular properties have string keys
-        okay = JS_GetProperty(proxy->context->js, value,
-          JS_GetStringBytes(JSVAL_TO_STRING(js_key)), &js_value)
-          && JS_AddNamedRoot(proxy->context->js, &js_value, "RubyLandProxy#each:js_value");
+        JCHECK(JS_GetProperty(proxy->context->js, value,
+          JS_GetStringBytes(JSVAL_TO_STRING(js_key)), &js_value));
       }
       else
       {
         // it's a numeric property, use array access
-        okay = JS_GetElement(proxy->context->js, value,
-          JSVAL_TO_INT(js_key), &js_value)
-          && JS_AddNamedRoot(proxy->context->js, &js_value, "RubyLandProxy#each:js_value");
+        JCHECK(JS_GetElement(proxy->context->js, value,
+          JSVAL_TO_INT(js_key), &js_value));
       }
+      JROOT(js_value);
 
-      if (!okay)
-      {
-        JS_RemoveRoot(proxy->context->js, &value);
-        JS_RemoveRoot(proxy->context->js, &(proxy->value));
-        raise_js_error_in_ruby(proxy->context);
-      }
-    
-      VALUE key = convert_to_ruby(proxy->context, js_key);
-      VALUE value = convert_to_ruby(proxy->context, js_value);
+      VALUE key = JPROTECT(convert_to_ruby(proxy->context, js_key));
+      VALUE value = JPROTECT(convert_to_ruby(proxy->context, js_value));
 
-      rb_yield(rb_ary_new3(2, key, value));
+      JPROTECT(rb_yield(rb_ary_new3(2, key, value)));
 
-      JS_RemoveRoot(proxy->context->js, &js_value);
-      JS_RemoveRoot(proxy->context->js, &js_key);
+      JUNROOT(js_value);
+      JUNROOT(js_key);
     }
-  
-    JS_DestroyIdArray(proxy->context->js, ids);
   }
 
-  JS_RemoveRoot(proxy->context->js, &value);
-  JS_RemoveRoot(proxy->context->js, &(proxy->value));
-  
-  return self; 
+  JRETURN_RUBY(self);
 }
 
 static VALUE
@@ -288,39 +215,30 @@ length(VALUE self)
 {
   RubyLandProxy* proxy;
   Data_Get_Struct(self, RubyLandProxy, proxy);
+
+  PREPARE_RUBY_JROOTS(proxy->context, 2, 0);
   
-  JS_AddNamedRoot(proxy->context->js, &(proxy->value), "RubyLandProxy#length");
+  JROOT(proxy->value);
 
   JSObject* value = JSVAL_TO_OBJECT(proxy->value);
-  JS_AddNamedRoot(proxy->context->js, &value, "RubyLandProxy#length");
+  JROOT(value);
   
   if (JS_IsArrayObject(proxy->context->js, value))
   {
     jsuint length;
-    JSBool okay = JS_GetArrayLength(proxy->context->js, value, &length);
-    JS_RemoveRoot(proxy->context->js, &value);
-    JS_RemoveRoot(proxy->context->js, &(proxy->value));
+    JCHECK(JS_GetArrayLength(proxy->context->js, value, &length));
 
-    if (!okay)
-      raise_js_error_in_ruby(proxy->context);
-
-    return INT2FIX(length);
+    JRETURN_RUBY(INT2FIX(length));
   }
   else
   {
     JSIdArray *ids = JS_Enumerate(proxy->context->js, value);
-    VALUE length = Qnil;
-    if (ids)
-      length = INT2FIX(ids->length);
+    JCHECK(ids);
+    VALUE length = INT2FIX(ids->length);
     
     JS_DestroyIdArray(proxy->context->js, ids);
-    JS_RemoveRoot(proxy->context->js, &value);
-    JS_RemoveRoot(proxy->context->js, &(proxy->value));
 
-    if (!ids)
-      raise_js_error_in_ruby(proxy->context);
-
-    return length;
+    JRETURN_RUBY(length);
   }
 }
 
@@ -340,24 +258,20 @@ function_property_p(VALUE self, VALUE name)
   RubyLandProxy* proxy;
   Data_Get_Struct(self, RubyLandProxy, proxy);
 
-  JS_AddNamedRoot(proxy->context->js, &(proxy->value), "RubyLandProxy#property?");
+  PREPARE_RUBY_JROOTS(proxy->context, 2, 0);
+
+  JROOT(proxy->value);
 
   jsval js_value;  
 
-  if(!JS_GetProperty(proxy->context->js,
-      JSVAL_TO_OBJECT(proxy->value), StringValueCStr(name), &js_value)) {
-    JS_RemoveRoot(proxy->context->js, &(proxy->value));
-    raise_js_error_in_ruby(proxy->context);
-  }
+  JCHECK(JS_GetProperty(proxy->context->js,
+      JSVAL_TO_OBJECT(proxy->value), StringValueCStr(name), &js_value));
 
-  JS_AddNamedRoot(proxy->context->js, &js_value, "RubyLandProxy#function_property?");
+  JROOT(js_value);
 
   JSType type = JS_TypeOfValue(proxy->context->js, js_value);
 
-  JS_RemoveRoot(proxy->context->js, &js_value);
-  JS_RemoveRoot(proxy->context->js, &(proxy->value));
-
-  return type == JSTYPE_FUNCTION;
+  JRETURN_RUBY(type == JSTYPE_FUNCTION ? Qtrue : Qfalse);
 }
 
 /* private */ static VALUE
@@ -369,46 +283,23 @@ call_function_property(int argc, VALUE* argv, VALUE self)
   if (argc < 1)
     rb_raise(rb_eArgError, "Function name required");
 
-  JS_AddNamedRoot(proxy->context->js, &(proxy->value), "RubyLandProxy#call_function_property");
+  PREPARE_RUBY_JROOTS(proxy->context, 2, 0);
+  JROOT(proxy->value);
 
   jsval function;
   
-  if (!JS_GetProperty(proxy->context->js,
-    JSVAL_TO_OBJECT(proxy->value), StringValueCStr(argv[0]), &function))
-  {
-    JS_RemoveRoot(proxy->context->js, &(proxy->value));
-    raise_js_error_in_ruby(proxy->context);
-  }
+  JCHECK(JS_GetProperty(proxy->context->js,
+    JSVAL_TO_OBJECT(proxy->value), StringValueCStr(argv[0]), &function));
+
+  JROOT(function);
+
+  JSType funtype = JS_TypeOfValue(proxy->context->js, function);
   
   // should never be anything but a function
-  if (JS_TypeOfValue(proxy->context->js, function) != JSTYPE_FUNCTION)
-  {
-    JS_RemoveRoot(proxy->context->js, &(proxy->value));
-    Johnson_Error_raise("Specified property isn't a function.");
-  }
-  
-  // first thing in argv is the property name; skip it
-  jsval args[argc - 1];
-  int i;
-  
-  for(i = 1; i < argc; ++i)
-    if (!convert_to_js(proxy->context, argv[i], &(args[i - 1])))
-    {
-      JS_RemoveRoot(proxy->context->js, &(proxy->value));
-      raise_js_error_in_ruby(proxy->context);
-    }
-  
-  jsval js;
-  
-  if (!JS_CallFunctionValue(proxy->context->js,
-    JSVAL_TO_OBJECT(proxy->value), function, (unsigned) argc - 1, args, &js))
-  {
-    JS_RemoveRoot(proxy->context->js, &(proxy->value));
-    raise_js_error_in_ruby(proxy->context);
-  }
-  
-  JS_RemoveRoot(proxy->context->js, &(proxy->value));
-  return convert_to_ruby(proxy->context, js);
+  if (funtype != JSTYPE_FUNCTION)
+    JERROR("Specified property \"%s\" isn't a function.", StringValueCStr(argv[0]));
+
+  JRETURN_RUBY(call_js_function_value(proxy->context, proxy->value, function, argc - 1, &(argv[1])));
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -425,7 +316,7 @@ static void finalize(RubyLandProxy* proxy)
   
     // remove our GC handle on the JS value
     char key[10];
-  	sprintf(key, "%x", (int)proxy->value);
+    sprintf(key, "%x", (int)proxy->value);
     JS_DeleteProperty(proxy->context->js, proxy->context->gcthings, key);
     
     proxy->context = 0;
@@ -467,22 +358,21 @@ VALUE make_ruby_land_proxy(OurContext* context, jsval value)
     RubyLandProxy* our_proxy; 
     VALUE proxy = Data_Make_Struct(proxy_class, RubyLandProxy, 0, finalize, our_proxy);
 
-    JS_AddNamedRoot(context->js, &value, "RubyLandProxy->value");
+    PREPARE_RUBY_JROOTS(context, 1, 0);
+    JROOT(value);
 
     our_proxy->value = value;
     our_proxy->context = context;
 
-  	// put the proxy OID in the id map
-    assert(JS_HashTableAdd(context->jsids, (void *)value, (void *)rb_obj_id(proxy)));
+    // put the proxy OID in the id map
+    JCHECK(JS_HashTableAdd(context->jsids, (void *)value, (void *)rb_obj_id(proxy)));
     
     // root the value for JS GC
     char key[10];
-  	sprintf(key, "%x", (int)value);
-  	JS_SetProperty(context->js, context->gcthings, key, &value);
+    sprintf(key, "%x", (int)value);
+    JCHECK(JS_SetProperty(context->js, context->gcthings, key, &value));
 
-    JS_RemoveRoot(context->js, &value);
-    
-    return proxy;
+    JRETURN_RUBY(proxy);
   }
 }
 
@@ -491,11 +381,11 @@ static VALUE to_s(VALUE self)
   RubyLandProxy* proxy;
   Data_Get_Struct(self, RubyLandProxy, proxy);
 
-  JS_AddNamedRoot(proxy->context->js, &(proxy->value), "RubyLandProxy#to_s");
+  PREPARE_RUBY_JROOTS(proxy->context, 1, 0);
+  JROOT(proxy->value);
   JSString* str = JS_ValueToString(proxy->context->js, proxy->value);
-  JS_RemoveRoot(proxy->context->js, &(proxy->value));
 
-  return convert_jsstring_to_ruby(proxy->context, str);
+  JRETURN_RUBY(convert_jsstring_to_ruby(proxy->context, str));
 }
 
 void init_Johnson_SpiderMonkey_Proxy(VALUE spidermonkey)

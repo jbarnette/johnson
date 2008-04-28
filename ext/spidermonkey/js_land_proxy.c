@@ -40,8 +40,8 @@ static JSClass JSLandCallableProxyClass = {
   "JSLandCallableProxy", JSCLASS_HAS_PRIVATE,
   JS_PropertyStub,
   JS_PropertyStub,
-  JS_PropertyStub,
-  JS_PropertyStub,
+  get,
+  set,
   JS_EnumerateStub,
   JS_ResolveStub,
   JS_ConvertStub,
@@ -50,9 +50,6 @@ static JSClass JSLandCallableProxyClass = {
   NULL,
   call
 };
-
-#define TAG_RAISE 0x6
-#define TAG_THROW 0x7
 
 static VALUE call_ruby_from_js_invoke(VALUE args)
 {
@@ -76,33 +73,10 @@ JSBool call_ruby_from_js_va(OurContext* context, VALUE* result, VALUE self, ID i
   int state;
   *result = rb_protect(call_ruby_from_js_invoke, args, &state);
 
-  switch (state)
-  {
-    case 0:
-      return JS_TRUE;
+  if (state)
+    return report_ruby_error_in_js(context, state, old_errinfo);
 
-    case TAG_RAISE:
-      {
-        VALUE local_error = ruby_errinfo;
-        jsval js_err;
-        ruby_errinfo = old_errinfo;
-        if (!convert_to_js(context, local_error, &js_err))
-          return JS_FALSE;
-        JS_SetPendingException(context->js, js_err);
-        return JS_FALSE;
-      }
-
-    case TAG_THROW:
-      // FIXME: This should be propagated to JS... as an exception?
-
-    default:
-      {
-        JSString* str = JS_NewStringCopyZ(context->js, "Unexpected longjmp from ruby!");
-        if (str)
-          JS_SetPendingException(context->js, STRING_TO_JSVAL(str));
-        return JS_FALSE;
-      }
-  }
+  return JS_TRUE;
 }
 
 JSBool call_ruby_from_js(OurContext* context, jsval* retval, VALUE self, ID id, int argc, ...)
@@ -152,16 +126,25 @@ static bool attribute_p(VALUE self, char* name)
 {
   if (!method_p(self, name))
     return false;
-    
+
   VALUE rb_id = rb_intern(name);
   VALUE rb_method = rb_funcall(self, rb_intern("method"), 1, ID2SYM(rb_id));
 
-  METHOD* method;
-  Data_Get_Struct(rb_method, METHOD, method);
-  
-  return nd_type(method->body) == NODE_IVAR
-    || RTEST(rb_funcall(Johnson_SpiderMonkey_JSLandProxy(),
-        rb_intern("js_property?"), 2, self, ID2SYM(rb_id)));
+  if (TYPE(rb_method) == T_DATA)
+  {
+    VALUE klass = CLASS_OF(rb_method);
+    if (klass == rb_cMethod)
+    {
+      METHOD* method;
+      Data_Get_Struct(rb_method, METHOD, method);
+
+      if (method && nd_type(method->body) == NODE_IVAR)
+        return true;
+    }
+  }
+
+  return RTEST(rb_funcall(Johnson_SpiderMonkey_JSLandProxy(),
+    rb_intern("js_property?"), 2, self, ID2SYM(rb_id)));
 }
 
 static bool indexable_p(VALUE self)
@@ -204,8 +187,6 @@ static jsval evaluate_js_property_expression(OurContext * context, const char * 
 
 static JSBool get(JSContext* js_context, JSObject* obj, jsval id, jsval* retval)
 {
-  JS_AddNamedRoot(js_context, &id, "JSLandProxy#get");
-
   // pull out our Ruby context, which is embedded in js_context
   
   VALUE ruby_context = (VALUE)JS_GetContextPrivate(js_context);
@@ -214,6 +195,9 @@ static JSBool get(JSContext* js_context, JSObject* obj, jsval id, jsval* retval)
   
   OurContext* context;
   Data_Get_Struct(ruby_context, OurContext, context);
+
+  PREPARE_JROOTS(context, 1, 0);
+  JROOT(id);
     
   // get the Ruby object that backs this proxy
   
@@ -225,23 +209,19 @@ static JSBool get(JSContext* js_context, JSObject* obj, jsval id, jsval* retval)
   {
     if (indexable_p(self)) {
       VALUE idx = INT2FIX(JSVAL_TO_INT(id));
-      JS_RemoveRoot(js_context, &id);
-      return call_ruby_from_js(context, retval, self, rb_intern("[]"), 1, idx);
+      JCHECK(call_ruby_from_js(context, retval, self, rb_intern("[]"), 1, idx));
     }
     
-    JS_RemoveRoot(js_context, &id);
-    return JS_TRUE;
+    JRETURN;
   }
   
   char* name = JS_GetStringBytes(JSVAL_TO_STRING(id));
   VALUE ruby_id = rb_intern(name);
 
-  JS_RemoveRoot(js_context, &id);
-  
   // FIXME: we should probably just JS_DefineProperty this, and it shouldn't be enumerable
   
   if (!strcasecmp("__iterator__", name)) {
-    return evaluate_js_property_expression(context, "Johnson.Generator.create", retval);
+    JCHECK(evaluate_js_property_expression(context, "Johnson.Generator.create", retval));
   }
   
   // if the Ruby object has a dynamic js property with a key
@@ -250,8 +230,8 @@ static JSBool get(JSContext* js_context, JSObject* obj, jsval id, jsval* retval)
   
   else if (autovivified_p(ruby_context, self, name))
   {
-    return call_ruby_from_js(context, retval, Johnson_SpiderMonkey_JSLandProxy(),
-      rb_intern("autovivified"), 2, self, rb_str_new2(name));
+    JCHECK(call_ruby_from_js(context, retval, Johnson_SpiderMonkey_JSLandProxy(),
+      rb_intern("autovivified"), 2, self, rb_str_new2(name)));
   }
 
   // if the Ruby object is a Module or Class and has a matching
@@ -259,14 +239,14 @@ static JSBool get(JSContext* js_context, JSObject* obj, jsval id, jsval* retval)
   
   else if (const_p(self, name))
   {
-    return call_ruby_from_js(context, retval, self, rb_intern("const_get"),
-      1, ID2SYM(ruby_id));
+    JCHECK(call_ruby_from_js(context, retval, self, rb_intern("const_get"),
+      1, ID2SYM(ruby_id)));
   }  
 
   // otherwise, if it's a global, return the global
   else if (global_p(name))
   {
-    return convert_to_js(context, rb_gv_get(name), retval);
+    JCHECK(convert_to_js(context, rb_gv_get(name), retval));
   }
   
   // otherwise, if the Ruby object has a an attribute method matching
@@ -274,7 +254,7 @@ static JSBool get(JSContext* js_context, JSObject* obj, jsval id, jsval* retval)
   
   else if (attribute_p(self, name))
   {
-    return call_ruby_from_js(context, retval, self, ruby_id, 0);
+    JCHECK(call_ruby_from_js(context, retval, self, ruby_id, 0));
   }
 
   // otherwise, if the Ruby object quacks sorta like a hash (it responds to
@@ -282,7 +262,7 @@ static JSBool get(JSContext* js_context, JSObject* obj, jsval id, jsval* retval)
   
   else if (has_key_p(self, name))
   {
-    return call_ruby_from_js(context, retval, self, rb_intern("[]"), 1, rb_str_new2(name));
+    JCHECK(call_ruby_from_js(context, retval, self, rb_intern("[]"), 1, rb_str_new2(name)));
   }
   
   // otherwise, it's a method being accessed as a property, which means
@@ -293,36 +273,38 @@ static JSBool get(JSContext* js_context, JSObject* obj, jsval id, jsval* retval)
   
   else if (method_p(self, name))
   {
-    return call_ruby_from_js(context, retval, self, rb_intern("method"), 1, rb_str_new2(name));
+    JCHECK(call_ruby_from_js(context, retval, self, rb_intern("method"), 1, rb_str_new2(name)));
   }
-  
+
   // else it's undefined (JS_VOID) by default
-  return JS_TRUE;
+  JRETURN;
 }
 
 // called for lazily resolved properties, which should go away
 static JSBool get_and_destroy_resolved_property(
   JSContext* js_context, JSObject* obj, jsval id, jsval* retval)
 {
-  JS_AddNamedRoot(js_context, &id, "JSLandProxy#get_and_destroy_resolved_property");
+  PREPARE_JROOTS(OUR_CONTEXT(js_context), 1, 0);
+  JROOT(id);
   char* name = JS_GetStringBytes(JSVAL_TO_STRING(id));
-  JS_DeleteProperty(js_context, obj, name);
-  JS_RemoveRoot(js_context, &id);
-  return get(js_context, obj, id, retval);
+  JCHECK(JS_DeleteProperty(js_context, obj, name));
+  JCHECK(get(js_context, obj, id, retval));
+  JRETURN;
 }
 
 static JSBool set(JSContext* js_context, JSObject* obj, jsval id, jsval* value)
 {
-  JS_AddNamedRoot(js_context, &id, "JSLandProxy#set");
-  JS_AddNamedRoot(js_context, value, "JSLandProxy#set");
-
   VALUE ruby_context = (VALUE)JS_GetContextPrivate(js_context);
   
   OurContext* context;
   Data_Get_Struct(ruby_context, OurContext, context);
+
+  PREPARE_JROOTS(context, 2, 0);
+  JROOT(id);
+  JROOT_PTR(value);
     
   VALUE self = (VALUE)JS_GetInstancePrivate(context->js, obj, JS_GET_CLASS(context->js, obj), NULL);
-  
+
   // Short-circuit for numeric indexes
   
   if (JSVAL_IS_INT(id))
@@ -330,62 +312,50 @@ static JSBool set(JSContext* js_context, JSObject* obj, jsval id, jsval* value)
     if (indexable_p(self))
     {
       VALUE idx = INT2FIX(JSVAL_TO_INT(id));
-      VALUE val = convert_to_ruby(context, *value);
-      JS_RemoveRoot(js_context, value);
-      JS_RemoveRoot(js_context, &id);
+      VALUE val = JPROTECT(convert_to_ruby(context, *value));
 
-      return call_ruby_from_js(context, NULL, self, rb_intern("[]="), 2, idx, val);
+      JCHECK(call_ruby_from_js(context, NULL, self, rb_intern("[]="), 2, idx, val));
     }
 
-    JS_RemoveRoot(js_context, value);
-    JS_RemoveRoot(js_context, &id);
-    
-    return JS_TRUE;
+    JRETURN;
   }
   
-  VALUE ruby_key = convert_to_ruby(context, id);
-  VALUE ruby_value = convert_to_ruby(context, *value);
+  VALUE ruby_key = JPROTECT(convert_to_ruby(context, id));
+  VALUE ruby_value = JPROTECT(convert_to_ruby(context, *value));
 
-  JS_RemoveRoot(js_context, value);
-  JS_RemoveRoot(js_context, &id);
-  
   VALUE setter = rb_str_append(rb_str_new3(ruby_key), rb_str_new2("="));
   VALUE setter_id = rb_intern(StringValueCStr(setter));
   
   VALUE settable_p, indexable_p;
-  if (!call_ruby_from_js2(context, &settable_p, self, rb_intern("respond_to?"), 1, ID2SYM(setter_id)))
-    return JS_FALSE;
-  if (!call_ruby_from_js2(context, &indexable_p, self, rb_intern("respond_to?"), 1, ID2SYM(rb_intern("[]="))))
-    return JS_FALSE;
+  JCHECK(call_ruby_from_js2(context, &settable_p, self, rb_intern("respond_to?"), 1, ID2SYM(setter_id)));
+  JCHECK(call_ruby_from_js2(context, &indexable_p, self, rb_intern("respond_to?"), 1, ID2SYM(rb_intern("[]="))));
   
   if (settable_p)
   {
     VALUE method, arity;
-    if (!call_ruby_from_js2(context, &method, self, rb_intern("method"), 1, ID2SYM(setter_id)))
-      return JS_FALSE;
-    if (!call_ruby_from_js2(context, &arity, method, rb_intern("arity"), 0))
-      return JS_FALSE;
+    JCHECK(call_ruby_from_js2(context, &method, self, rb_intern("method"), 1, ID2SYM(setter_id)));
+    JCHECK(call_ruby_from_js2(context, &arity, method, rb_intern("arity"), 0));
 
     // if the Ruby object has a 1-arity method named "property=",
     // call it with the converted value
     
     if (NUM2INT(arity) == 1)
-      return call_ruby_from_js(context, NULL, self, setter_id, 1, ruby_value);
+      JCHECK(call_ruby_from_js(context, NULL, self, setter_id, 1, ruby_value));
   }
   else if(indexable_p)
   {
     // otherwise, if the Ruby object quacks sorta like a hash for assignment
     // (it responds to "[]="), assign it by key
     
-    return call_ruby_from_js(context, NULL, self, rb_intern("[]="), 2, ruby_key, ruby_value);
+    JCHECK(call_ruby_from_js(context, NULL, self, rb_intern("[]="), 2, ruby_key, ruby_value));
   }
   else
   {
-    return call_ruby_from_js(context, NULL, Johnson_SpiderMonkey_JSLandProxy(), rb_intern("autovivify"), 
-      3, self, ruby_key, ruby_value);
+    JCHECK(call_ruby_from_js(context, NULL, Johnson_SpiderMonkey_JSLandProxy(), rb_intern("autovivify"), 
+      3, self, ruby_key, ruby_value));
   }
 
-  return JS_TRUE;
+  JRETURN;
 }
 
 static JSBool construct(JSContext* js_context, JSObject* UNUSED(obj), uintN argc, jsval* argv, jsval* retval)
@@ -395,42 +365,41 @@ static JSBool construct(JSContext* js_context, JSObject* UNUSED(obj), uintN argc
   OurContext* context;
   Data_Get_Struct(ruby_context, OurContext, context);
 
-  VALUE klass = convert_to_ruby(context, JS_ARGV_CALLEE(argv));
+  PREPARE_JROOTS(context, 0, 0);
+
+  VALUE klass = JPROTECT(convert_to_ruby(context, JS_ARGV_CALLEE(argv)));
   VALUE args = rb_ary_new();
 
   uintN i;
   for (i = 0; i < argc; ++i)
-    rb_ary_push(args, convert_to_ruby(context, argv[i]));
+    rb_ary_push(args, JPROTECT(convert_to_ruby(context, argv[i])));
     
-  return call_ruby_from_js(context, retval, Johnson_SpiderMonkey_JSLandProxy(), 
-    rb_intern("send_with_possible_block"), 3, klass, ID2SYM(rb_intern("new")), args);
+  JCHECK(call_ruby_from_js(context, retval, Johnson_SpiderMonkey_JSLandProxy(),
+    rb_intern("send_with_possible_block"), 3, klass, ID2SYM(rb_intern("new")), args));
+  JRETURN;
 }
 
 static JSBool resolve(JSContext *js_context, JSObject *obj, jsval id, uintN UNUSED(flags), JSObject **objp)
 {
-  JS_AddNamedRoot(js_context, &id, "JSLandProxy#resolve");
-
   VALUE ruby_context = (VALUE)JS_GetContextPrivate(js_context);
   
   OurContext* context;
   Data_Get_Struct(ruby_context, OurContext, context);
+
+  PREPARE_JROOTS(context, 1, 0);
+  JROOT(id);
   
   char* name = JS_GetStringBytes(JS_ValueToString(js_context, id));
 
   if (respond_to_p(js_context, obj, name))
   {
-    if(!(JS_DefineProperty(js_context, obj, name, JSVAL_VOID,
-        get_and_destroy_resolved_property, set, JSPROP_ENUMERATE))) {
-      JS_RemoveRoot(js_context, &id);
-      return JS_FALSE;
-    }
+    JCHECK(JS_DefineProperty(js_context, obj, name, JSVAL_VOID,
+        get_and_destroy_resolved_property, set, JSPROP_ENUMERATE));
 
     *objp = obj;
   }
 
-  JS_RemoveRoot(js_context, &id);
-
-  return JS_TRUE;
+  JRETURN;
 }
 
 static JSBool to_string(JSContext* js_context, JSObject* obj, uintN UNUSED(argc), jsval* UNUSED(argv), jsval* retval)
@@ -440,9 +409,12 @@ static JSBool to_string(JSContext* js_context, JSObject* obj, uintN UNUSED(argc)
   OurContext* context;
   Data_Get_Struct(ruby_context, OurContext, context);
 
+  PREPARE_JROOTS(context, 0, 0);
+
   VALUE self = (VALUE)JS_GetInstancePrivate(context->js, obj, JS_GET_CLASS(context->js, obj), NULL);
 
-  return call_ruby_from_js(context, retval, self, rb_intern("to_s"), 0);
+  JCHECK(call_ruby_from_js(context, retval, self, rb_intern("to_s"), 0));
+  JRETURN;
 }
 
 static JSBool to_array(JSContext* js_context, JSObject* obj, uintN UNUSED(argc), jsval* UNUSED(argv), jsval* retval)
@@ -452,9 +424,12 @@ static JSBool to_array(JSContext* js_context, JSObject* obj, uintN UNUSED(argc),
   OurContext* context;
   Data_Get_Struct(ruby_context, OurContext, context);
 
+  PREPARE_JROOTS(context, 0, 0);
+
   VALUE self = (VALUE)JS_GetInstancePrivate(context->js, obj, JS_GET_CLASS(context->js, obj), NULL);
 
-  return call_ruby_from_js(context, retval, self, rb_intern("to_a"), 0);
+  JCHECK(call_ruby_from_js(context, retval, self, rb_intern("to_a"), 0));
+  JRETURN;
 }
 
 static JSBool method_missing(JSContext* js_context, JSObject* obj, uintN argc, jsval* argv, jsval* retval)
@@ -463,6 +438,8 @@ static JSBool method_missing(JSContext* js_context, JSObject* obj, uintN argc, j
   
   OurContext* context;
   Data_Get_Struct(ruby_context, OurContext, context);
+
+  PREPARE_JROOTS(context, 0, 0);
     
   VALUE self = (VALUE)JS_GetInstancePrivate(context->js, obj, JS_GET_CLASS(context->js, obj), NULL);
   
@@ -473,11 +450,12 @@ static JSBool method_missing(JSContext* js_context, JSObject* obj, uintN argc, j
   
   // FIXME: this is horrible and lazy, to_a comes from enumerable on proxy (argv[1] is a JSArray)
   VALUE args;
-  if (!call_ruby_from_js2(context, &args, convert_to_ruby(context, argv[1]), rb_intern("to_a"), 0))
-    return JS_FALSE;
+  JCHECK(call_ruby_from_js2(context, &args, JPROTECT(convert_to_ruby(context, argv[1])), rb_intern("to_a"), 0));
 
-  return call_ruby_from_js(context, retval, Johnson_SpiderMonkey_JSLandProxy(),
-    rb_intern("send_with_possible_block"), 3, self, ID2SYM(ruby_id), args);
+  JCHECK(call_ruby_from_js(context, retval, Johnson_SpiderMonkey_JSLandProxy(),
+    rb_intern("send_with_possible_block"), 3, self, ID2SYM(ruby_id), args));
+
+  JRETURN;
 }
 
 static JSBool call(JSContext* js_context, JSObject* UNUSED(obj), uintN argc, jsval* argv, jsval* retval)
@@ -486,6 +464,8 @@ static JSBool call(JSContext* js_context, JSObject* UNUSED(obj), uintN argc, jsv
   
   OurContext* context;
   Data_Get_Struct(ruby_context, OurContext, context);
+
+  PREPARE_JROOTS(context, 0, 0);
   
   VALUE self = (VALUE)JS_GetInstancePrivate(context->js, JSVAL_TO_OBJECT(JS_ARGV_CALLEE(argv)), &JSLandCallableProxyClass, NULL);
   
@@ -493,10 +473,11 @@ static JSBool call(JSContext* js_context, JSObject* UNUSED(obj), uintN argc, jsv
 
   uintN i;
   for (i = 0; i < argc; ++i)
-    rb_ary_push(args, convert_to_ruby(context, argv[i]));
+    rb_ary_push(args, JPROTECT(convert_to_ruby(context, argv[i])));
   
-  return call_ruby_from_js(context, retval, Johnson_SpiderMonkey_JSLandProxy(),
-    rb_intern("send_with_possible_block"), 3, self, ID2SYM(rb_intern("call")), args);
+  JCHECK(call_ruby_from_js(context, retval, Johnson_SpiderMonkey_JSLandProxy(),
+    rb_intern("send_with_possible_block"), 3, self, ID2SYM(rb_intern("call")), args));
+  JRETURN;
 }
 
 bool js_value_is_proxy(OurContext* MAYBE_UNUSED(context), jsval maybe_proxy)
@@ -535,7 +516,6 @@ static void finalize(JSContext* js_context, JSObject* obj)
     JS_HashTableRemove(context->rbids, (void *)rb_obj_id(self));
     
     // free up the ruby value for GC
-    rb_funcall(ruby_context, rb_intern("remove_gcthing"), 1, self);
     call_ruby_from_js(context, NULL, ruby_context, rb_intern("remove_gcthing"), 1, self);
   }  
 }
@@ -550,6 +530,8 @@ JSBool make_js_land_proxy(OurContext* context, VALUE value, jsval* retval)
   }
   else
   {
+    PREPARE_JROOTS(context, 1, 0);
+
     JSObject *jsobj;
     
     JSClass *klass = &JSLandProxyClass;
@@ -560,43 +542,34 @@ JSBool make_js_land_proxy(OurContext* context, VALUE value, jsval* retval)
       rb_funcall(Johnson_SpiderMonkey_JSLandProxy(),
         rb_intern("treat_all_properties_as_methods"), 1, value);
 
-    bool callable_p = rb_class_of(value) == rb_cMethod
-      || rb_class_of(value) == rb_cProc;
+    bool callable_p = Qtrue == rb_funcall(value,
+      rb_intern("respond_to?"), 1, rb_str_new2("call"));
       
     if (callable_p)
       klass = &JSLandCallableProxyClass;
         
-    if(!(jsobj = JS_NewObject(context->js, klass, NULL, NULL)))
-      return JS_FALSE;
-    if(!(JS_SetPrivate(context->js, jsobj, (void*)value)))
-      return JS_FALSE;
+    JCHECK((jsobj = JS_NewObject(context->js, klass, NULL, NULL)));
+    JROOT(jsobj);
+    
+    JCHECK(JS_SetPrivate(context->js, jsobj, (void*)value));
 
-    if (!callable_p) {
-      if(!(JS_DefineFunction(context->js, jsobj,
-          "__noSuchMethod__", method_missing, 2, 0)))
-        return JS_FALSE;
-    }
+    JCHECK(JS_DefineFunction(context->js, jsobj, "__noSuchMethod__", method_missing, 2, 0));
 
-    if(!(JS_DefineFunction(context->js, jsobj, "toArray", to_array, 0, 0)))
-      return JS_FALSE;
-
-    if(!(JS_DefineFunction(context->js, jsobj, "toString", to_string, 0, 0)))
-      return JS_FALSE;
+    JCHECK(JS_DefineFunction(context->js, jsobj, "toArray", to_array, 0, 0));
+    JCHECK(JS_DefineFunction(context->js, jsobj, "toString", to_string, 0, 0));
 
     *retval = OBJECT_TO_JSVAL(jsobj);
 
     jsval newid;
-    if(!(JS_ValueToId(context->js, *retval, &newid)))
-      return JS_FALSE;
+    JCHECK(JS_ValueToId(context->js, *retval, &newid));
   
     // put the proxy OID in the id map
-    if(!(JS_HashTableAdd(context->rbids, (void *)rb_obj_id(value), (void *)newid)))
-      return JS_FALSE;
+    JCHECK(JS_HashTableAdd(context->rbids, (void *)rb_obj_id(value), (void *)newid));
     
     // root the ruby value for GC
     VALUE ruby_context = (VALUE)JS_GetContextPrivate(context->js);
     rb_funcall(ruby_context, rb_intern("add_gcthing"), 1, value);
 
-    return JS_TRUE;
+    JRETURN;
   }
 }
