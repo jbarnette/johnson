@@ -26,7 +26,7 @@ static VALUE call_js_function_value(OurContext* context, jsval target, jsval fun
   JCHECK(JS_CallFunctionValue(context->js,
     JSVAL_TO_OBJECT(target), function, (unsigned) argc, args, &result));
 
-  JRETURN_RUBY(convert_to_ruby(context, result));
+  JRETURN_RUBY(JPROTECT(convert_to_ruby(context, result)));
 }
 
 static VALUE /* [] */
@@ -53,7 +53,7 @@ get(VALUE self, VALUE name)
       break;
   }
 
-  JRETURN_RUBY(convert_to_ruby(proxy->context, js_value));
+  JRETURN_RUBY(JPROTECT(convert_to_ruby(proxy->context, js_value)));
 }
 
 static VALUE /* []= */
@@ -117,7 +117,7 @@ respond_to_p(VALUE self, VALUE sym)
 
   JCHECK(JS_HasProperty(proxy->context->js, obj, name, &found));
 
-  JRETURN_RUBY(found ? Qtrue : rb_call_super(1, &sym));
+  JRETURN_RUBY(found ? Qtrue : JPROTECT(rb_call_super(1, &sym)));
 }
 
 /* private */ static VALUE /* native_call(global, *args) */
@@ -163,14 +163,8 @@ each(VALUE self)
     for (i = 0; i < length; ++i)
     {
       jsval element;
-      int state;
       JCHECK(JS_GetElement(proxy->context->js, value, (signed) i, &element));
-      rb_protect(rb_yield, convert_to_ruby(proxy->context, element), &state);
-      if (state)
-      {
-        REMOVE_JROOTS;
-        rb_jump_tag(state);
-      }
+      JPROTECT(rb_yield(convert_to_ruby(proxy->context, element)));
     }
   }
   else
@@ -203,16 +197,10 @@ each(VALUE self)
       }
       JROOT(js_value);
 
-      VALUE key = convert_to_ruby(proxy->context, js_key);
-      VALUE value = convert_to_ruby(proxy->context, js_value);
+      VALUE key = JPROTECT(convert_to_ruby(proxy->context, js_key));
+      VALUE value = JPROTECT(convert_to_ruby(proxy->context, js_value));
 
-      int state;
-      rb_protect(rb_yield, rb_ary_new3(2, key, value), &state);
-      if (state)
-      {
-        REMOVE_JROOTS;
-        rb_jump_tag(state);
-      }
+      JPROTECT(rb_yield(rb_ary_new3(2, key, value)));
 
       JUNROOT(js_value);
       JUNROOT(js_key);

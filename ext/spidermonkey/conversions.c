@@ -12,7 +12,7 @@ static JSBool convert_symbol_to_js(OurContext* context, VALUE symbol, jsval* ret
 {
   PREPARE_JROOTS(context, 2, 0);
 
-  VALUE to_s = rb_funcall(symbol, rb_intern("to_s"), 0);
+  VALUE to_s = JPROTECT(rb_funcall(symbol, rb_intern("to_s"), 0));
   jsval name = STRING_TO_JSVAL(JS_NewStringCopyN(context->js, StringValuePtr(to_s), (unsigned) StringValueLen(to_s)));
 
   JROOT(name);
@@ -116,9 +116,8 @@ VALUE convert_jsstring_to_ruby(OurContext* context, JSString* str)
   PREPARE_RUBY_JROOTS(context, 1, 0);
   JROOT(str);
   char* bytes = JS_GetStringBytes(str);
-  assert(bytes);
-  VALUE result = rb_str_new(bytes, (signed)JS_GetStringLength(str));
-  JRETURN_RUBY(result);
+  JCHECK(bytes);
+  JRETURN_RUBY(JPROTECT(rb_str_new(bytes, (signed)JS_GetStringLength(str))));
 }
 
 static VALUE convert_regexp_to_ruby(OurContext* context, jsval regexp)
@@ -127,11 +126,9 @@ static VALUE convert_regexp_to_ruby(OurContext* context, jsval regexp)
   JROOT(regexp);
   JSRegExp* re = (JSRegExp*)JS_GetPrivate(context->js, JSVAL_TO_OBJECT(regexp));
 
-  VALUE result = rb_funcall(rb_cRegexp, rb_intern("new"), 2,
+  JRETURN_RUBY(JPROTECT(rb_funcall(rb_cRegexp, rb_intern("new"), 2,
     convert_jsstring_to_ruby(context, re->source),
-    INT2NUM(re->flags));
-
-  JRETURN_RUBY(result);
+    INT2NUM(re->flags))));
 }
 
 static bool js_value_is_regexp(OurContext* context, jsval maybe_regexp)
