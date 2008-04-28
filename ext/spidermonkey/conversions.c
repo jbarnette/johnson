@@ -234,3 +234,35 @@ NORETURN(void) raise_js_error_in_ruby(OurContext* context)
   Johnson_Error_raise(context->msg);
 }
 
+#define TAG_RAISE 0x6
+#define TAG_THROW 0x7
+
+JSBool report_ruby_error_in_js(OurContext* context, int state, VALUE old_errinfo)
+{
+  assert(state);
+  switch (state)
+  {
+    case TAG_RAISE:
+      {
+        VALUE local_error = ruby_errinfo;
+        jsval js_err;
+        ruby_errinfo = old_errinfo;
+        if (!convert_to_js(context, local_error, &js_err))
+          return JS_FALSE;
+        JS_SetPendingException(context->js, js_err);
+        return JS_FALSE;
+      }
+
+    case TAG_THROW:
+      // FIXME: This should be propagated to JS... as an exception?
+
+    default:
+      {
+        JSString* str = JS_NewStringCopyZ(context->js, "Unexpected longjmp from ruby!");
+        if (str)
+          JS_SetPendingException(context->js, STRING_TO_JSVAL(str));
+        return JS_FALSE;
+      }
+  }
+}
+

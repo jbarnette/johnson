@@ -90,6 +90,28 @@
     } \
   } while (0)
 
+#define JPROTECT2(func, data) \
+  ({ \
+    int _state; \
+    VALUE _old_errinfo = ruby_errinfo; \
+    VALUE _result = rb_protect((func), (data), &_state); \
+    if (_state) \
+    { \
+      REMOVE_JROOTS; \
+      if (_jroot_ruby) \
+        rb_jump_tag(_state); \
+      else \
+        return report_ruby_error_in_js(_jroot_context, _state, _old_errinfo); \
+    } \
+    _result; \
+  })
+
+#define JPROTECT(code) \
+  ({ \
+    VALUE _callback(VALUE UNUSED(_void)) { return (code); } \
+    JPROTECT2(_callback, Qnil); \
+  })
+
 #define JRETURN \
   do \
   { \

@@ -51,9 +51,6 @@ static JSClass JSLandCallableProxyClass = {
   call
 };
 
-#define TAG_RAISE 0x6
-#define TAG_THROW 0x7
-
 static VALUE call_ruby_from_js_invoke(VALUE args)
 {
   VALUE self = rb_ary_pop(args);
@@ -76,33 +73,10 @@ JSBool call_ruby_from_js_va(OurContext* context, VALUE* result, VALUE self, ID i
   int state;
   *result = rb_protect(call_ruby_from_js_invoke, args, &state);
 
-  switch (state)
-  {
-    case 0:
-      return JS_TRUE;
+  if (state)
+    return report_ruby_error_in_js(context, state, old_errinfo);
 
-    case TAG_RAISE:
-      {
-        VALUE local_error = ruby_errinfo;
-        jsval js_err;
-        ruby_errinfo = old_errinfo;
-        if (!convert_to_js(context, local_error, &js_err))
-          return JS_FALSE;
-        JS_SetPendingException(context->js, js_err);
-        return JS_FALSE;
-      }
-
-    case TAG_THROW:
-      // FIXME: This should be propagated to JS... as an exception?
-
-    default:
-      {
-        JSString* str = JS_NewStringCopyZ(context->js, "Unexpected longjmp from ruby!");
-        if (str)
-          JS_SetPendingException(context->js, STRING_TO_JSVAL(str));
-        return JS_FALSE;
-      }
-  }
+  return JS_TRUE;
 }
 
 JSBool call_ruby_from_js(OurContext* context, jsval* retval, VALUE self, ID id, int argc, ...)
@@ -330,7 +304,7 @@ static JSBool set(JSContext* js_context, JSObject* obj, jsval id, jsval* value)
   JROOT_PTR(value);
     
   VALUE self = (VALUE)JS_GetInstancePrivate(context->js, obj, JS_GET_CLASS(context->js, obj), NULL);
-  
+
   // Short-circuit for numeric indexes
   
   if (JSVAL_IS_INT(id))
@@ -338,7 +312,7 @@ static JSBool set(JSContext* js_context, JSObject* obj, jsval id, jsval* value)
     if (indexable_p(self))
     {
       VALUE idx = INT2FIX(JSVAL_TO_INT(id));
-      VALUE val = convert_to_ruby(context, *value);
+      VALUE val = JPROTECT(convert_to_ruby(context, *value));
 
       JCHECK(call_ruby_from_js(context, NULL, self, rb_intern("[]="), 2, idx, val));
     }
@@ -346,8 +320,8 @@ static JSBool set(JSContext* js_context, JSObject* obj, jsval id, jsval* value)
     JRETURN;
   }
   
-  VALUE ruby_key = convert_to_ruby(context, id);
-  VALUE ruby_value = convert_to_ruby(context, *value);
+  VALUE ruby_key = JPROTECT(convert_to_ruby(context, id));
+  VALUE ruby_value = JPROTECT(convert_to_ruby(context, *value));
 
   VALUE setter = rb_str_append(rb_str_new3(ruby_key), rb_str_new2("="));
   VALUE setter_id = rb_intern(StringValueCStr(setter));
@@ -393,12 +367,12 @@ static JSBool construct(JSContext* js_context, JSObject* UNUSED(obj), uintN argc
 
   PREPARE_JROOTS(context, 0, 0);
 
-  VALUE klass = convert_to_ruby(context, JS_ARGV_CALLEE(argv));
+  VALUE klass = JPROTECT(convert_to_ruby(context, JS_ARGV_CALLEE(argv)));
   VALUE args = rb_ary_new();
 
   uintN i;
   for (i = 0; i < argc; ++i)
-    rb_ary_push(args, convert_to_ruby(context, argv[i]));
+    rb_ary_push(args, JPROTECT(convert_to_ruby(context, argv[i])));
     
   JCHECK(call_ruby_from_js(context, retval, Johnson_SpiderMonkey_JSLandProxy(),
     rb_intern("send_with_possible_block"), 3, klass, ID2SYM(rb_intern("new")), args));
@@ -476,7 +450,7 @@ static JSBool method_missing(JSContext* js_context, JSObject* obj, uintN argc, j
   
   // FIXME: this is horrible and lazy, to_a comes from enumerable on proxy (argv[1] is a JSArray)
   VALUE args;
-  JCHECK(call_ruby_from_js2(context, &args, convert_to_ruby(context, argv[1]), rb_intern("to_a"), 0));
+  JCHECK(call_ruby_from_js2(context, &args, JPROTECT(convert_to_ruby(context, argv[1])), rb_intern("to_a"), 0));
 
   JCHECK(call_ruby_from_js(context, retval, Johnson_SpiderMonkey_JSLandProxy(),
     rb_intern("send_with_possible_block"), 3, self, ID2SYM(ruby_id), args));
@@ -499,7 +473,7 @@ static JSBool call(JSContext* js_context, JSObject* UNUSED(obj), uintN argc, jsv
 
   uintN i;
   for (i = 0; i < argc; ++i)
-    rb_ary_push(args, convert_to_ruby(context, argv[i]));
+    rb_ary_push(args, JPROTECT(convert_to_ruby(context, argv[i])));
   
   JCHECK(call_ruby_from_js(context, retval, Johnson_SpiderMonkey_JSLandProxy(),
     rb_intern("send_with_possible_block"), 3, self, ID2SYM(rb_intern("call")), args));
@@ -542,7 +516,6 @@ static void finalize(JSContext* js_context, JSObject* obj)
     JS_HashTableRemove(context->rbids, (void *)rb_obj_id(self));
     
     // free up the ruby value for GC
-    rb_funcall(ruby_context, rb_intern("remove_gcthing"), 1, self);
     call_ruby_from_js(context, NULL, ruby_context, rb_intern("remove_gcthing"), 1, self);
   }  
 }
