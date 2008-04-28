@@ -222,7 +222,7 @@ static JSBool get(JSContext* js_context, JSObject* obj, jsval id, jsval* retval)
   OurContext* context;
   Data_Get_Struct(ruby_context, OurContext, context);
 
-  PREPARE_JROOTS(context, "get", 1);
+  PREPARE_JROOTS(context, 1, 0);
   JROOT(id);
     
   // get the Ruby object that backs this proxy
@@ -310,7 +310,7 @@ static JSBool get(JSContext* js_context, JSObject* obj, jsval id, jsval* retval)
 static JSBool get_and_destroy_resolved_property(
   JSContext* js_context, JSObject* obj, jsval id, jsval* retval)
 {
-  PREPARE_JROOTS(OUR_CONTEXT(js_context), "get_and_destroy_resolved_property", 1);
+  PREPARE_JROOTS(OUR_CONTEXT(js_context), 1, 0);
   JROOT(id);
   char* name = JS_GetStringBytes(JSVAL_TO_STRING(id));
   JCHECK(JS_DeleteProperty(js_context, obj, name));
@@ -325,7 +325,7 @@ static JSBool set(JSContext* js_context, JSObject* obj, jsval id, jsval* value)
   OurContext* context;
   Data_Get_Struct(ruby_context, OurContext, context);
 
-  PREPARE_JROOTS(context, "set", 2);
+  PREPARE_JROOTS(context, 2, 0);
   JROOT(id);
   JROOT_PTR(value);
     
@@ -391,7 +391,7 @@ static JSBool construct(JSContext* js_context, JSObject* UNUSED(obj), uintN argc
   OurContext* context;
   Data_Get_Struct(ruby_context, OurContext, context);
 
-  PREPARE_JROOTS(context, "construct", 0);
+  PREPARE_JROOTS(context, 0, 0);
 
   VALUE klass = convert_to_ruby(context, JS_ARGV_CALLEE(argv));
   VALUE args = rb_ary_new();
@@ -412,7 +412,7 @@ static JSBool resolve(JSContext *js_context, JSObject *obj, jsval id, uintN UNUS
   OurContext* context;
   Data_Get_Struct(ruby_context, OurContext, context);
 
-  PREPARE_JROOTS(context, "resolve", 1);
+  PREPARE_JROOTS(context, 1, 0);
   JROOT(id);
   
   char* name = JS_GetStringBytes(JS_ValueToString(js_context, id));
@@ -435,7 +435,7 @@ static JSBool to_string(JSContext* js_context, JSObject* obj, uintN UNUSED(argc)
   OurContext* context;
   Data_Get_Struct(ruby_context, OurContext, context);
 
-  PREPARE_JROOTS(context, "to_string", 0);
+  PREPARE_JROOTS(context, 0, 0);
 
   VALUE self = (VALUE)JS_GetInstancePrivate(context->js, obj, JS_GET_CLASS(context->js, obj), NULL);
 
@@ -450,7 +450,7 @@ static JSBool to_array(JSContext* js_context, JSObject* obj, uintN UNUSED(argc),
   OurContext* context;
   Data_Get_Struct(ruby_context, OurContext, context);
 
-  PREPARE_JROOTS(context, "to_array", 0);
+  PREPARE_JROOTS(context, 0, 0);
 
   VALUE self = (VALUE)JS_GetInstancePrivate(context->js, obj, JS_GET_CLASS(context->js, obj), NULL);
 
@@ -465,7 +465,7 @@ static JSBool method_missing(JSContext* js_context, JSObject* obj, uintN argc, j
   OurContext* context;
   Data_Get_Struct(ruby_context, OurContext, context);
 
-  PREPARE_JROOTS(context, "method_missing", 0);
+  PREPARE_JROOTS(context, 0, 0);
     
   VALUE self = (VALUE)JS_GetInstancePrivate(context->js, obj, JS_GET_CLASS(context->js, obj), NULL);
   
@@ -491,7 +491,7 @@ static JSBool call(JSContext* js_context, JSObject* UNUSED(obj), uintN argc, jsv
   OurContext* context;
   Data_Get_Struct(ruby_context, OurContext, context);
 
-  PREPARE_JROOTS(context, "call", 0);
+  PREPARE_JROOTS(context, 0, 0);
   
   VALUE self = (VALUE)JS_GetInstancePrivate(context->js, JSVAL_TO_OBJECT(JS_ARGV_CALLEE(argv)), &JSLandCallableProxyClass, NULL);
   
@@ -557,7 +557,7 @@ JSBool make_js_land_proxy(OurContext* context, VALUE value, jsval* retval)
   }
   else
   {
-    PREPARE_JROOTS(context, "make_js_land_proxy", 1);
+    PREPARE_JROOTS(context, 1, 0);
 
     JSObject *jsobj;
     

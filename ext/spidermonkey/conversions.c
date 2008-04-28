@@ -10,7 +10,7 @@ static JSBool convert_float_or_bignum_to_js(OurContext* context, VALUE float_or_
 
 static JSBool convert_symbol_to_js(OurContext* context, VALUE symbol, jsval* retval)
 {
-  PREPARE_JROOTS(context, "convert_symbol_to_js", 2);
+  PREPARE_JROOTS(context, 2, 0);
 
   VALUE to_s = rb_funcall(symbol, rb_intern("to_s"), 0);
   jsval name = STRING_TO_JSVAL(JS_NewStringCopyN(context->js, StringValuePtr(to_s), (unsigned) StringValueLen(to_s)));
@@ -113,7 +113,7 @@ JSBool convert_to_js(OurContext* context, VALUE ruby, jsval* retval)
 
 VALUE convert_jsstring_to_ruby(OurContext* context, JSString* str)
 {
-  PREPARE_RUBY_JROOTS(context, "convert_jsstring_to_ruby", 1);
+  PREPARE_RUBY_JROOTS(context, 1, 0);
   JROOT(str);
   char* bytes = JS_GetStringBytes(str);
   assert(bytes);
@@ -123,7 +123,7 @@ VALUE convert_jsstring_to_ruby(OurContext* context, JSString* str)
 
 static VALUE convert_regexp_to_ruby(OurContext* context, jsval regexp)
 {
-  PREPARE_RUBY_JROOTS(context, "convert_regexp_to_ruby", 1);
+  PREPARE_RUBY_JROOTS(context, 1, 0);
   JROOT(regexp);
   JSRegExp* re = (JSRegExp*)JS_GetPrivate(context->js, JSVAL_TO_OBJECT(regexp));
 
@@ -136,7 +136,7 @@ static VALUE convert_regexp_to_ruby(OurContext* context, jsval regexp)
 
 static bool js_value_is_regexp(OurContext* context, jsval maybe_regexp)
 {
-  PREPARE_RUBY_JROOTS(context, "js_value_is_regexp", 1);
+  PREPARE_RUBY_JROOTS(context, 1, 0);
   JROOT(maybe_regexp);
   JSBool result = JS_InstanceOf(context->js, JSVAL_TO_OBJECT(maybe_regexp), &js_RegExpClass, NULL);
   JRETURN_RUBY(result ? true : false);
@@ -146,7 +146,7 @@ static bool js_value_is_symbol(OurContext* context, jsval maybe_symbol)
 {
   jsval nsJohnson, cSymbol;
 
-  PREPARE_RUBY_JROOTS(context, "js_value_is_symbol", 3);
+  PREPARE_RUBY_JROOTS(context, 3, 0);
   JROOT(maybe_symbol);
 
   JCHECK(JS_GetProperty(context->js, context->global, "Johnson", &nsJohnson));
@@ -169,7 +169,7 @@ VALUE convert_to_ruby(OurContext* context, jsval js)
 {
   if (JSVAL_NULL == js) return Qnil;
 
-  PREPARE_RUBY_JROOTS(context, "convert_to_ruby", 1);
+  PREPARE_RUBY_JROOTS(context, 1, 0);
   
   switch (JS_TypeOfValue(context->js, js))
   {

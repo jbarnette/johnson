@@ -6,7 +6,7 @@ static VALUE proxy_class = Qnil;
 
 static VALUE call_js_function_value(OurContext* context, jsval target, jsval function, int argc, VALUE* argv)
 {
-  PREPARE_RUBY_JROOTS(context, "call_js_function_value", argc + 2);
+  PREPARE_RUBY_JROOTS(context, argc + 2, 0);
 
   JROOT(target);
   JROOT(function);
@@ -35,7 +35,7 @@ get(VALUE self, VALUE name)
   RubyLandProxy* proxy;
   Data_Get_Struct(self, RubyLandProxy, proxy);
 
-  PREPARE_RUBY_JROOTS(proxy->context, "get", 1);
+  PREPARE_RUBY_JROOTS(proxy->context, 1, 0);
 
   JROOT(proxy->value);
 
@@ -62,7 +62,7 @@ set(VALUE self, VALUE name, VALUE value)
   RubyLandProxy* proxy;
   Data_Get_Struct(self, RubyLandProxy, proxy);
   
-  PREPARE_RUBY_JROOTS(proxy->context, "set", 2);
+  PREPARE_RUBY_JROOTS(proxy->context, 2, 0);
   JROOT(proxy->value);
 
   jsval js_value;
@@ -99,7 +99,7 @@ respond_to_p(VALUE self, VALUE sym)
   RubyLandProxy* proxy;
   Data_Get_Struct(self, RubyLandProxy, proxy);
 
-  PREPARE_RUBY_JROOTS(proxy->context, "respond_to_p", 2);
+  PREPARE_RUBY_JROOTS(proxy->context, 2, 0);
   
   char* name = rb_id2name(SYM2ID(sym));
   
@@ -132,7 +132,7 @@ native_call(int argc, VALUE* argv, VALUE self)
   RubyLandProxy* proxy;
   Data_Get_Struct(self, RubyLandProxy, proxy);
   
-  PREPARE_RUBY_JROOTS(proxy->context, "native_call", 1);
+  PREPARE_RUBY_JROOTS(proxy->context, 1, 0);
   JROOT(proxy->value);
 
   jsval global;
@@ -147,7 +147,7 @@ each(VALUE self)
   RubyLandProxy* proxy;
   Data_Get_Struct(self, RubyLandProxy, proxy);
   
-  PREPARE_RUBY_JROOTS(proxy->context, "each", 4);
+  PREPARE_RUBY_JROOTS(proxy->context, 4, 1);
   JROOT(proxy->value);
 
   JSObject* value = JSVAL_TO_OBJECT(proxy->value);
@@ -179,8 +179,8 @@ each(VALUE self)
     JSIdArray *ids = JS_Enumerate(proxy->context->js, value);
     JCHECK(ids);
 
-    // FIXME: We leak ids if something goes wrong inside this loop...
-  
+    JCLEANUP(JS_DestroyIdArray(proxy->context->js, ids));
+
     int i;
     for (i = 0; i < ids->length; ++i)
     {
@@ -217,8 +217,6 @@ each(VALUE self)
       JUNROOT(js_value);
       JUNROOT(js_key);
     }
-  
-    JS_DestroyIdArray(proxy->context->js, ids);
   }
 
   JRETURN_RUBY(self);
@@ -230,7 +228,7 @@ length(VALUE self)
   RubyLandProxy* proxy;
   Data_Get_Struct(self, RubyLandProxy, proxy);
 
-  PREPARE_RUBY_JROOTS(proxy->context, "length", 2);
+  PREPARE_RUBY_JROOTS(proxy->context, 2, 0);
   
   JROOT(proxy->value);
 
@@ -272,7 +270,7 @@ function_property_p(VALUE self, VALUE name)
   RubyLandProxy* proxy;
   Data_Get_Struct(self, RubyLandProxy, proxy);
 
-  PREPARE_RUBY_JROOTS(proxy->context, "function_property_p", 2);
+  PREPARE_RUBY_JROOTS(proxy->context, 2, 0);
 
   JROOT(proxy->value);
 
@@ -297,7 +295,7 @@ call_function_property(int argc, VALUE* argv, VALUE self)
   if (argc < 1)
     rb_raise(rb_eArgError, "Function name required");
 
-  PREPARE_RUBY_JROOTS(proxy->context, "call_function_property", 2);
+  PREPARE_RUBY_JROOTS(proxy->context, 2, 0);
   JROOT(proxy->value);
 
   jsval function;
@@ -372,7 +370,7 @@ VALUE make_ruby_land_proxy(OurContext* context, jsval value)
     RubyLandProxy* our_proxy; 
     VALUE proxy = Data_Make_Struct(proxy_class, RubyLandProxy, 0, finalize, our_proxy);
 
-    PREPARE_RUBY_JROOTS(context, "make_ruby_land_proxy", 1);
+    PREPARE_RUBY_JROOTS(context, 1, 0);
     JROOT(value);
 
     our_proxy->value = value;
@@ -395,7 +393,7 @@ static VALUE to_s(VALUE self)
   RubyLandProxy* proxy;
   Data_Get_Struct(self, RubyLandProxy, proxy);
 
-  PREPARE_RUBY_JROOTS(proxy->context, "to_s", 1);
+  PREPARE_RUBY_JROOTS(proxy->context, 1, 0);
   JROOT(proxy->value);
   JSString* str = JS_ValueToString(proxy->context->js, proxy->value);
 

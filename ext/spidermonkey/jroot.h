@@ -12,44 +12,55 @@
     _context; \
   })
 
-#define _PREPARE_JROOTS(rb, context, name, maxcount) \
+#define _PREPARE_JROOTS(rb, context, rootcount, cleancount) \
   const bool _jroot_ruby = (rb); \
-  const char* const MAYBE_UNUSED(_jroot_basename) = (name); \
-  int _jroot_avail = (maxcount); \
-  void* _jroot_map[_jroot_avail]; \
+  int _jroot_roots = (rootcount); \
+  void* _jroot_map[_jroot_roots]; \
+  int _jroot_cleans = (cleancount); \
+  void (*_jroot_cleanup[_jroot_cleans])(); \
   OurContext* _jroot_context = (context); \
-  int _jroot_idx = 0
+  int _jroot_cleanidx = 0; \
+  int _jroot_rootidx = 0
 
-#define PREPARE_JROOTS(context, name, maxcount) \
-  _PREPARE_JROOTS(false, context, name, maxcount)
+#define PREPARE_JROOTS(context, rootcount, cleancount) \
+  _PREPARE_JROOTS(false, context, rootcount, cleancount)
 
-#define PREPARE_RUBY_JROOTS(context, name, maxcount) \
-  _PREPARE_JROOTS(true, context, name, maxcount)
+#define PREPARE_RUBY_JROOTS(context, rootcount, cleancount) \
+  _PREPARE_JROOTS(true, context, rootcount, cleancount)
 
 #define _JROOT(ptr, name) \
   do \
   { \
     char _jroot_tmpname[_JROOT_NAMESIZE]; \
-    assert(_jroot_idx < _jroot_avail); \
-    _jroot_map[_jroot_idx] = (ptr); \
-    snprintf(_jroot_tmpname, _JROOT_NAMESIZE, "%s[%d]:%s: %s", __FILE__, __LINE__, _jroot_basename, (name)); \
-    JCHECK(JS_AddNamedRoot(_jroot_context->js, _jroot_map[_jroot_idx], _jroot_tmpname)); \
-    _jroot_idx++; \
+    assert(_jroot_rootidx < _jroot_roots); \
+    _jroot_map[_jroot_rootidx] = (ptr); \
+    snprintf(_jroot_tmpname, _JROOT_NAMESIZE, "%s[%d]:%s: %s", __FILE__, __LINE__, __func__, (name)); \
+    JCHECK(JS_AddNamedRoot(_jroot_context->js, _jroot_map[_jroot_rootidx], _jroot_tmpname)); \
+    _jroot_rootidx++; \
   } while(0)
 
 #define JROOT(var) _JROOT(&(var), #var)
 #define JROOT_PTR(ptr) _JROOT(ptr, #ptr)
+
+#define JCLEANUP(code) \
+  do \
+  { \
+    assert(_jroot_cleanidx < _jroot_cleans); \
+    void _jroot_cleanup_func () { code; }; \
+    _jroot_cleanup[_jroot_cleanidx] = _jroot_cleanup_func; \
+    _jroot_cleanidx++; \
+  } while(0)
 
 #define JUNROOT(var) \
   do \
   { \
     void* _jroot_match = &(var); \
     int _jroot_i; \
-    for (_jroot_i = _jroot_idx - 1; _jroot_i >= 0; _jroot_i--) \
+    for (_jroot_i = _jroot_rootidx - 1; _jroot_i >= 0; _jroot_i--) \
       if (_jroot_map[_jroot_i] == _jroot_match) \
       { \
         JS_RemoveRoot(_jroot_context->js, _jroot_map[_jroot_i]); \
-        if (_jroot_i == _jroot_idx - 1) _jroot_idx--; \
+        if (_jroot_i == _jroot_rootidx - 1) _jroot_rootidx--; \
         _jroot_map[_jroot_i] = NULL; \
       } \
   } while (0)
@@ -58,9 +69,12 @@
   do \
   { \
     int _jroot_i; \
-    for (_jroot_i = _jroot_idx - 1; _jroot_i >= 0; _jroot_i--) \
+    for (_jroot_i = _jroot_rootidx - 1; _jroot_i >= 0; _jroot_i--) \
       if (_jroot_map[_jroot_i]) \
         JS_RemoveRoot(_jroot_context->js, _jroot_map[_jroot_i]); \
+    for (_jroot_i = _jroot_cleanidx - 1; _jroot_i >= 0; _jroot_i--) \
+      if (_jroot_cleanup[_jroot_i]) \
+        (_jroot_cleanup[_jroot_i])(); \
   } while (0)
 
 #define JCHECK(cond) \
