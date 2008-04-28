@@ -6,19 +6,19 @@
 
 #define OUR_CONTEXT(js_context) \
   ({ \
-    OurContext* context; \
-    VALUE ruby_context = (VALUE)JS_GetContextPrivate(js_context); \
-    Data_Get_Struct(ruby_context, OurContext, context); \
-    context; \
+    OurContext* _context; \
+    VALUE _ruby_context = (VALUE)JS_GetContextPrivate(js_context); \
+    Data_Get_Struct(_ruby_context, OurContext, _context); \
+    _context; \
   })
 
 #define _PREPARE_JROOTS(rb, context, name, maxcount) \
-  const bool __jroot_ruby = rb; \
-  const char* const MAYBE_UNUSED(__jroot_basename) = name; \
-  int MAYBE_UNUSED(__jroot_max) = maxcount - 1; \
-  void* __jroot_map[maxcount]; \
-  OurContext* __jroot_context = context; \
-  int __jroot_idx = 0
+  const bool _jroot_ruby = (rb); \
+  const char* const MAYBE_UNUSED(_jroot_basename) = (name); \
+  int _jroot_avail = (maxcount); \
+  void* _jroot_map[_jroot_avail]; \
+  OurContext* _jroot_context = (context); \
+  int _jroot_idx = 0
 
 #define PREPARE_JROOTS(context, name, maxcount) \
   _PREPARE_JROOTS(false, context, name, maxcount)
@@ -29,12 +29,12 @@
 #define _JROOT(ptr, name) \
   do \
   { \
-    char __jroot_tmpname[_JROOT_NAMESIZE]; \
-    assert(__jroot_idx <= __jroot_max); \
-    __jroot_map[__jroot_idx] = ptr; \
-    snprintf(__jroot_tmpname, _JROOT_NAMESIZE, "%s[%d]:%s: %s", __FILE__, __LINE__, __jroot_basename, name); \
-    JCHECK(JS_AddNamedRoot(__jroot_context->js, __jroot_map[__jroot_idx], __jroot_tmpname)); \
-    __jroot_idx++; \
+    char _jroot_tmpname[_JROOT_NAMESIZE]; \
+    assert(_jroot_idx < _jroot_avail); \
+    _jroot_map[_jroot_idx] = (ptr); \
+    snprintf(_jroot_tmpname, _JROOT_NAMESIZE, "%s[%d]:%s: %s", __FILE__, __LINE__, _jroot_basename, (name)); \
+    JCHECK(JS_AddNamedRoot(_jroot_context->js, _jroot_map[_jroot_idx], _jroot_tmpname)); \
+    _jroot_idx++; \
   } while(0)
 
 #define JROOT(var) _JROOT(&(var), #var)
@@ -43,24 +43,24 @@
 #define JUNROOT(var) \
   do \
   { \
-    void* __jroot_match = &(var); \
-    int __jroot_i; \
-    for (__jroot_i = __jroot_idx - 1; __jroot_i >= 0; __jroot_i--) \
-      if (__jroot_map[__jroot_i] == __jroot_match) \
+    void* _jroot_match = &(var); \
+    int _jroot_i; \
+    for (_jroot_i = _jroot_idx - 1; _jroot_i >= 0; _jroot_i--) \
+      if (_jroot_map[_jroot_i] == _jroot_match) \
       { \
-        JS_RemoveRoot(__jroot_context->js, __jroot_map[__jroot_i]); \
-        if (__jroot_i == __jroot_idx - 1) __jroot_idx--; \
-        __jroot_map[__jroot_i] = NULL; \
+        JS_RemoveRoot(_jroot_context->js, _jroot_map[_jroot_i]); \
+        if (_jroot_i == _jroot_idx - 1) _jroot_idx--; \
+        _jroot_map[_jroot_i] = NULL; \
       } \
   } while (0)
 
 #define REMOVE_JROOTS \
   do \
   { \
-    int __jroot_i; \
-    for (__jroot_i = __jroot_idx - 1; __jroot_i >= 0; __jroot_i--) \
-      if (__jroot_map[__jroot_i]) \
-        JS_RemoveRoot(__jroot_context->js, __jroot_map[__jroot_i]); \
+    int _jroot_i; \
+    for (_jroot_i = _jroot_idx - 1; _jroot_i >= 0; _jroot_i--) \
+      if (_jroot_map[_jroot_i]) \
+        JS_RemoveRoot(_jroot_context->js, _jroot_map[_jroot_i]); \
   } while (0)
 
 #define JCHECK(cond) \
@@ -69,8 +69,8 @@
     if (!(cond)) \
     { \
       REMOVE_JROOTS; \
-      if (__jroot_ruby) \
-        raise_js_error_in_ruby(__jroot_context); \
+      if (_jroot_ruby) \
+        raise_js_error_in_ruby(_jroot_context); \
       else \
         return JS_FALSE; \
     } \
@@ -79,7 +79,7 @@
 #define JRETURN \
   do \
   { \
-    assert(!__jroot_ruby); \
+    assert(!_jroot_ruby); \
     REMOVE_JROOTS; \
     return JS_TRUE; \
   } while(0)
@@ -87,24 +87,24 @@
 #define JRETURN_RUBY(value) \
   do \
   { \
-    assert(__jroot_ruby); \
-    typeof(value) __jroot_result = value; \
+    assert(_jroot_ruby); \
+    typeof(value) _jroot_result = (value); \
     REMOVE_JROOTS; \
-    return __jroot_result; \
+    return _jroot_result; \
   } while(0)
 
 #define JERROR(format, args...) \
   do \
   { \
     REMOVE_JROOTS; \
-    char msg[_JROOT_ERRSIZE]; \
-    snprintf(msg, _JROOT_ERRSIZE, format , ## args); \
-    if (__jroot_ruby) \
-      Johnson_Error_raise(msg); \
+    char _jroot_msg[_JROOT_ERRSIZE]; \
+    snprintf(_jroot_msg, _JROOT_ERRSIZE, (format) , ## args); \
+    if (_jroot_ruby) \
+      Johnson_Error_raise(_jroot_msg); \
     else \
     { \
-      JSString* str = JS_NewStringCopyZ(__jroot_context->js, msg); \
-      if (str) JS_SetPendingException(__jroot_context->js, STRING_TO_JSVAL(str)); \
+      JSString* _jroot_err_str = JS_NewStringCopyZ(_jroot_context->js, _jroot_msg); \
+      if (_jroot_err_str) JS_SetPendingException(_jroot_context->js, STRING_TO_JSVAL(_jroot_err_str)); \
       return JS_FALSE; \
     } \
   } while(0)
