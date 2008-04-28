@@ -603,7 +603,6 @@ print = function(txt) { Ruby.puts(txt); };
             file["delete"]();
           } else if ( self.method == "GET" ) {
             var file = Ruby.File.read(url.path);
-            print(file);
             connection = {
               code: "200",
               message: "Ok",
