@@ -8,8 +8,6 @@ browser/env.js
 browser/xmlsax.js
 browser/xmlw3cdom.js
 cross-compile.txt
-ext/spidermonkey/.conversions.h.swp
-ext/spidermonkey/.ruby_proxy.c.swp
 ext/spidermonkey/context.c
 ext/spidermonkey/context.h
 ext/spidermonkey/conversions.c
