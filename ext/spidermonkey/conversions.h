@@ -4,6 +4,9 @@
 #include "spidermonkey.h"
 #include "context.h"
 
+DECLARE_RUBY_WRAPPER(convert_to_ruby, OurContext* context; jsval js_value)
+#define CONVERT_TO_RUBY(context, js) CALL_RUBY_WRAPPER(convert_to_ruby, context, js)
+
 JSBool convert_to_js(OurContext* context, VALUE ruby, jsval* retval);
 VALUE convert_to_ruby(OurContext* context, jsval js);
 VALUE convert_jsstring_to_ruby(OurContext* context, JSString* str);

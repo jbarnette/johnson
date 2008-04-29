@@ -17,7 +17,8 @@
   int _jroot_roots = (rootcount); \
   void* _jroot_map[_jroot_roots]; \
   int _jroot_cleans = (cleancount); \
-  void (*_jroot_cleanup[_jroot_cleans])(); \
+  void (*_jroot_cleanup[_jroot_cleans])(OurContext*, void*); \
+  void* _jroot_cleanup_data[_jroot_cleans]; \
   OurContext* _jroot_context = (context); \
   int _jroot_cleanidx = 0; \
   int _jroot_rootidx = 0
@@ -42,12 +43,12 @@
 #define JROOT(var) _JROOT(&(var), #var)
 #define JROOT_PTR(ptr) _JROOT(ptr, #ptr)
 
-#define JCLEANUP(code) \
+#define JCLEANUP(func, data) \
   do \
   { \
     assert(_jroot_cleanidx < _jroot_cleans); \
-    void _jroot_cleanup_func () { code; }; \
-    _jroot_cleanup[_jroot_cleanidx] = _jroot_cleanup_func; \
+    _jroot_cleanup[_jroot_cleanidx] = (func); \
+    _jroot_cleanup_data[_jroot_cleanidx] = (data); \
     _jroot_cleanidx++; \
   } while(0)
 
@@ -74,7 +75,7 @@
         JS_RemoveRoot(_jroot_context->js, _jroot_map[_jroot_i]); \
     for (_jroot_i = _jroot_cleanidx - 1; _jroot_i >= 0; _jroot_i--) \
       if (_jroot_cleanup[_jroot_i]) \
-        (_jroot_cleanup[_jroot_i])(); \
+        (_jroot_cleanup[_jroot_i])(_jroot_context, _jroot_cleanup_data[_jroot_i]); \
   } while (0)
 
 #define JCHECK(cond) \
@@ -90,7 +91,7 @@
     } \
   } while (0)
 
-#define JPROTECT2(func, data) \
+#define JPROTECT(func, data) \
   ({ \
     int _state; \
     VALUE _old_errinfo = ruby_errinfo; \
@@ -104,12 +105,6 @@
         return report_ruby_error_in_js(_jroot_context, _state, _old_errinfo); \
     } \
     _result; \
-  })
-
-#define JPROTECT(code) \
-  ({ \
-    VALUE _callback(VALUE UNUSED(_void)) { return (code); } \
-    JPROTECT2(_callback, Qnil); \
   })
 
 #define JRETURN \
@@ -144,6 +139,28 @@
       return JS_FALSE; \
     } \
   } while(0)
+
+
+
+
+#define ARGLIST1(a)             _data->a
+#define ARGLIST2(a, b)          _data->a, _data->b
+#define ARGLIST3(a, b, c)       _data->a, _data->b, _data->c
+#define ARGLIST4(a, b, c, d)    _data->a, _data->b, _data->c, _data->d
+#define ARGLIST5(a, b, c, d, e) _data->a, _data->b, _data->c, _data->d, _data->e
+
+#define DECLARE_RUBY_WRAPPER(name, args) \
+  typedef struct { args; } name ## _args; \
+  VALUE name ## _invoke(VALUE magic);
+#define DEFINE_RUBY_WRAPPER(name, func, arglist) \
+  VALUE name ## _invoke(VALUE magic) \
+  { \
+    name ## _args * _data = (name ## _args *)(FIX2INT(magic) << 2); \
+    return func(arglist); \
+  }
+#define RUBY_WRAPPER_ARG(name, args...) ({ name ## _args _x = { args }; INT2FIX((int)(&_x) >> 2); })
+#define RUBY_WRAPPER(name) name ## _invoke
+#define CALL_RUBY_WRAPPER(name, args...) JPROTECT(RUBY_WRAPPER(name), RUBY_WRAPPER_ARG(name, args))
 
 
 #endif

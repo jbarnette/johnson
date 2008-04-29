@@ -3,6 +3,14 @@
 #include "ruby_land_proxy.h"
 #include "error.h"
 
+DEFINE_RUBY_WRAPPER(convert_to_ruby, convert_to_ruby, ARGLIST2(context, js_value))
+
+DECLARE_RUBY_WRAPPER(rb_funcall_0, VALUE obj; ID sym; int argc)
+DEFINE_RUBY_WRAPPER(rb_funcall_0, rb_funcall, ARGLIST3(obj, sym, argc))
+
+DECLARE_RUBY_WRAPPER(rb_funcall_2, VALUE obj; ID sym; int argc; VALUE a; VALUE b)
+DEFINE_RUBY_WRAPPER(rb_funcall_2, rb_funcall, ARGLIST5(obj, sym, argc, a, b))
+
 static JSBool convert_float_or_bignum_to_js(OurContext* context, VALUE float_or_bignum, jsval* retval)
 {
   return JS_NewDoubleValue(context->js, NUM2DBL(float_or_bignum), retval);
@@ -12,7 +20,7 @@ static JSBool convert_symbol_to_js(OurContext* context, VALUE symbol, jsval* ret
 {
   PREPARE_JROOTS(context, 2, 0);
 
-  VALUE to_s = JPROTECT(rb_funcall(symbol, rb_intern("to_s"), 0));
+  VALUE to_s = CALL_RUBY_WRAPPER(rb_funcall_0, symbol, rb_intern("to_s"), 0);
   jsval name = STRING_TO_JSVAL(JS_NewStringCopyN(context->js, StringValuePtr(to_s), (unsigned) StringValueLen(to_s)));
 
   JROOT(name);
@@ -117,7 +125,7 @@ VALUE convert_jsstring_to_ruby(OurContext* context, JSString* str)
   JROOT(str);
   char* bytes = JS_GetStringBytes(str);
   JCHECK(bytes);
-  JRETURN_RUBY(JPROTECT(rb_str_new(bytes, (signed)JS_GetStringLength(str))));
+  JRETURN_RUBY(rb_str_new(bytes, (signed)JS_GetStringLength(str)));
 }
 
 static VALUE convert_regexp_to_ruby(OurContext* context, jsval regexp)
@@ -126,9 +134,9 @@ static VALUE convert_regexp_to_ruby(OurContext* context, jsval regexp)
   JROOT(regexp);
   JSRegExp* re = (JSRegExp*)JS_GetPrivate(context->js, JSVAL_TO_OBJECT(regexp));
 
-  JRETURN_RUBY(JPROTECT(rb_funcall(rb_cRegexp, rb_intern("new"), 2,
+  JRETURN_RUBY(CALL_RUBY_WRAPPER(rb_funcall_2, rb_cRegexp, rb_intern("new"), 2,
     convert_jsstring_to_ruby(context, re->source),
-    INT2NUM(re->flags))));
+    INT2NUM(re->flags)));
 }
 
 static bool js_value_is_regexp(OurContext* context, jsval maybe_regexp)

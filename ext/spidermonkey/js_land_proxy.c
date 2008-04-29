@@ -312,7 +312,7 @@ static JSBool set(JSContext* js_context, JSObject* obj, jsval id, jsval* value)
     if (indexable_p(self))
     {
       VALUE idx = INT2FIX(JSVAL_TO_INT(id));
-      VALUE val = JPROTECT(convert_to_ruby(context, *value));
+      VALUE val = CONVERT_TO_RUBY(context, *value);
 
       JCHECK(call_ruby_from_js(context, NULL, self, rb_intern("[]="), 2, idx, val));
     }
@@ -320,8 +320,8 @@ static JSBool set(JSContext* js_context, JSObject* obj, jsval id, jsval* value)
     JRETURN;
   }
   
-  VALUE ruby_key = JPROTECT(convert_to_ruby(context, id));
-  VALUE ruby_value = JPROTECT(convert_to_ruby(context, *value));
+  VALUE ruby_key = CONVERT_TO_RUBY(context, id);
+  VALUE ruby_value = CONVERT_TO_RUBY(context, *value);
 
   VALUE setter = rb_str_append(rb_str_new3(ruby_key), rb_str_new2("="));
   VALUE setter_id = rb_intern(StringValueCStr(setter));
@@ -367,12 +367,12 @@ static JSBool construct(JSContext* js_context, JSObject* UNUSED(obj), uintN argc
 
   PREPARE_JROOTS(context, 0, 0);
 
-  VALUE klass = JPROTECT(convert_to_ruby(context, JS_ARGV_CALLEE(argv)));
+  VALUE klass = CONVERT_TO_RUBY(context, JS_ARGV_CALLEE(argv));
   VALUE args = rb_ary_new();
 
   uintN i;
   for (i = 0; i < argc; ++i)
-    rb_ary_push(args, JPROTECT(convert_to_ruby(context, argv[i])));
+    rb_ary_push(args, CONVERT_TO_RUBY(context, argv[i]));
     
   JCHECK(call_ruby_from_js(context, retval, Johnson_SpiderMonkey_JSLandProxy(),
     rb_intern("send_with_possible_block"), 3, klass, ID2SYM(rb_intern("new")), args));
@@ -450,7 +450,7 @@ static JSBool method_missing(JSContext* js_context, JSObject* obj, uintN argc, j
   
   // FIXME: this is horrible and lazy, to_a comes from enumerable on proxy (argv[1] is a JSArray)
   VALUE args;
-  JCHECK(call_ruby_from_js2(context, &args, JPROTECT(convert_to_ruby(context, argv[1])), rb_intern("to_a"), 0));
+  JCHECK(call_ruby_from_js2(context, &args, CONVERT_TO_RUBY(context, argv[1]), rb_intern("to_a"), 0));
 
   JCHECK(call_ruby_from_js(context, retval, Johnson_SpiderMonkey_JSLandProxy(),
     rb_intern("send_with_possible_block"), 3, self, ID2SYM(ruby_id), args));
@@ -473,7 +473,7 @@ static JSBool call(JSContext* js_context, JSObject* UNUSED(obj), uintN argc, jsv
 
   uintN i;
   for (i = 0; i < argc; ++i)
-    rb_ary_push(args, JPROTECT(convert_to_ruby(context, argv[i])));
+    rb_ary_push(args, CONVERT_TO_RUBY(context, argv[i]));
   
   JCHECK(call_ruby_from_js(context, retval, Johnson_SpiderMonkey_JSLandProxy(),
     rb_intern("send_with_possible_block"), 3, self, ID2SYM(rb_intern("call")), args));

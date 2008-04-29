@@ -2,6 +2,12 @@
 #include "conversions.h"
 #include "error.h"
 
+DECLARE_RUBY_WRAPPER(rb_call_super, int argc; const VALUE* argv)
+DEFINE_RUBY_WRAPPER(rb_call_super, rb_call_super, ARGLIST2(argc, argv))
+
+DECLARE_RUBY_WRAPPER(rb_yield, VALUE v)
+DEFINE_RUBY_WRAPPER(rb_yield, rb_yield, ARGLIST1(v))
+
 static VALUE proxy_class = Qnil;
 
 static VALUE call_js_function_value(OurContext* context, jsval target, jsval function, int argc, VALUE* argv)
@@ -26,7 +32,7 @@ static VALUE call_js_function_value(OurContext* context, jsval target, jsval fun
   JCHECK(JS_CallFunctionValue(context->js,
     JSVAL_TO_OBJECT(target), function, (unsigned) argc, args, &result));
 
-  JRETURN_RUBY(JPROTECT(convert_to_ruby(context, result)));
+  JRETURN_RUBY(CONVERT_TO_RUBY(context, result));
 }
 
 static VALUE /* [] */
@@ -53,7 +59,7 @@ get(VALUE self, VALUE name)
       break;
   }
 
-  JRETURN_RUBY(JPROTECT(convert_to_ruby(proxy->context, js_value)));
+  JRETURN_RUBY(CONVERT_TO_RUBY(proxy->context, js_value));
 }
 
 static VALUE /* []= */
@@ -117,7 +123,7 @@ respond_to_p(VALUE self, VALUE sym)
 
   JCHECK(JS_HasProperty(proxy->context->js, obj, name, &found));
 
-  JRETURN_RUBY(found ? Qtrue : JPROTECT(rb_call_super(1, &sym)));
+  JRETURN_RUBY(found ? Qtrue : CALL_RUBY_WRAPPER(rb_call_super, 1, &sym));
 }
 
 /* private */ static VALUE /* native_call(global, *args) */
@@ -139,6 +145,12 @@ native_call(int argc, VALUE* argv, VALUE self)
   JCHECK(convert_to_js(proxy->context, argv[0], &global));
 
   JRETURN_RUBY(call_js_function_value(proxy->context, global, proxy->value, argc - 1, &(argv[1])));
+}
+
+static void
+destroy_id_array(OurContext* context, void* data)
+{
+  JS_DestroyIdArray(context->js, (JSIdArray*)data);
 }
 
 static VALUE /* each(&block) */ 
@@ -164,16 +176,16 @@ each(VALUE self)
     {
       jsval element;
       JCHECK(JS_GetElement(proxy->context->js, value, (signed) i, &element));
-      JPROTECT(rb_yield(convert_to_ruby(proxy->context, element)));
+      CALL_RUBY_WRAPPER(rb_yield, convert_to_ruby(proxy->context, element));
     }
   }
   else
   {
     // not an array? behave like each on Hash; yield [key, value]
-    JSIdArray *ids = JS_Enumerate(proxy->context->js, value);
+    JSIdArray* ids = JS_Enumerate(proxy->context->js, value);
     JCHECK(ids);
 
-    JCLEANUP(JS_DestroyIdArray(proxy->context->js, ids));
+    JCLEANUP(destroy_id_array, ids);
 
     int i;
     for (i = 0; i < ids->length; ++i)
@@ -197,10 +209,10 @@ each(VALUE self)
       }
       JROOT(js_value);
 
-      VALUE key = JPROTECT(convert_to_ruby(proxy->context, js_key));
-      VALUE value = JPROTECT(convert_to_ruby(proxy->context, js_value));
+      VALUE key = CONVERT_TO_RUBY(proxy->context, js_key);
+      VALUE value = CONVERT_TO_RUBY(proxy->context, js_value);
 
-      JPROTECT(rb_yield(rb_ary_new3(2, key, value)));
+      CALL_RUBY_WRAPPER(rb_yield, rb_ary_new3(2, key, value));
 
       JUNROOT(js_value);
       JUNROOT(js_key);
@@ -232,7 +244,7 @@ length(VALUE self)
   }
   else
   {
-    JSIdArray *ids = JS_Enumerate(proxy->context->js, value);
+    JSIdArray* ids = JS_Enumerate(proxy->context->js, value);
     JCHECK(ids);
     VALUE length = INT2FIX(ids->length);
     
