@@ -8,8 +8,6 @@ browser/env.js
 browser/xmlsax.js
 browser/xmlw3cdom.js
 cross-compile.txt
-ext/spidermonkey/.conversions.h.swp
-ext/spidermonkey/.ruby_proxy.c.swp
 ext/spidermonkey/context.c
 ext/spidermonkey/context.h
 ext/spidermonkey/conversions.c
@@ -59,7 +57,6 @@ lib/johnson/visitors.rb
 lib/johnson/visitors/dot_visitor.rb
 lib/johnson/visitors/ecma_visitor.rb
 lib/johnson/visitors/sexp_visitor.rb
-tags
 test/helper.rb
 test/johnson/context_test.rb
 test/johnson/conversions/array_test.rb

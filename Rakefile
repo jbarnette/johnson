@@ -29,8 +29,17 @@ Hoe.new("johnson", Johnson::VERSION) do |p|
   p.spec_extras = { :extensions => ["ext/spidermonkey/extconf.rb"] }
 end
 
+namespace :test do
+  Rake::TestTask.new("todo") do |t|
+    t.test_files = FileList['todo/**/*_test.rb']
+    t.verbose = true
+  end
+end
+
 # make sure the C bits are up-to-date when testing
 Rake::Task[:test].prerequisites << :extensions
+Rake::Task["test:todo"].prerequisites << :extensions
+
 Rake::Task[:check_manifest].prerequisites << GENERATED_NODE
 
 task :build => :extensions
@@ -41,20 +50,22 @@ Rake::Task[:gem].prerequisites << :extensions
 desc "Our johnson requires extensions."
 task :extensions => ["lib/johnson/spidermonkey.#{kind}"]
 
-task :spidermonkey => :submodules do
+task :spidermonkey => "vendor/spidermonkey/jsapi.h" do
   if ENV['CROSS']
     Dir.chdir("vendor/spidermonkey") { sh "make -f Makefile.ref OS_CONFIG=#{ENV['CROSS']}" }
   else
     Dir.chdir("vendor/spidermonkey") { sh "make -f Makefile.ref" }
   end
 end
+
 task :spidermonkey => "vendor/spidermonkey/config/#{ENV['CROSS']}.mk" if ENV['CROSS']
 
 file "vendor/spidermonkey/config/MINGW32.mk" => "MINGW32.mk" do |t|
   cp t.prerequisites.first, t.name
 end
 
-task :submodules do
+file "vendor/spidermonkey/jsapi.h" do
+  # if this file's missing, pull in the submodule
   sh "git submodule init && git submodule update"
 end
 

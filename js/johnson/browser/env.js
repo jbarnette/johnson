@@ -7,8 +7,6 @@
 // The window Object
 var window = this;
 
-Johnson.require("xmlw3cdom");
-Johnson.require("xmlsax");
 Ruby.require("uri");
 
 print = function(txt) { Ruby.puts(txt); };
@@ -31,14 +29,17 @@ print = function(txt) { Ruby.puts(txt); };
   
   window.__defineSetter__("location", function(url){
     var xhr = new XMLHttpRequest();
+    xhr.async = false;
     xhr.open("GET", url);
     xhr.onreadystatechange = function(){
       curLocation = curLocation.merge(url);
       window.document = xhr.responseXML;
 
-      var event = document.createEvent();
-      event.initEvent("load");
-      window.dispatchEvent( event );
+      if(window.document) {
+        var event = document.createEvent();
+        event.initEvent("load");
+        window.dispatchEvent( event );
+      }
     };
     xhr.send();
   });
@@ -52,7 +53,7 @@ print = function(txt) { Ruby.puts(txt); };
         return curLocation.toString();
       },
       toString: function(){
-        return this.to_s();
+        return this.href.toString();
       }
     };
   });
@@ -585,7 +586,7 @@ print = function(txt) { Ruby.puts(txt); };
     getResponseHeader: function(header){ },
     send: function(data){
       var self = this;
-      
+
       function makeRequest(){
         var url = curLocation.merge(self.url);
         var connection;
@@ -606,7 +607,7 @@ print = function(txt) { Ruby.puts(txt); };
             connection = {
               code: "200",
               message: "Ok",
-              body: file.read()
+              body: file,
             }
             handleResponse();
           } else {
@@ -651,6 +652,7 @@ print = function(txt) { Ruby.puts(txt); };
       }
 
       if (this.async)
+        // FIXME: This is segfaulting
         new Ruby.Thread(function() { makeRequest(); });
       else
         makeRequest();
