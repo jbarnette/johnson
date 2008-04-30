@@ -6,17 +6,17 @@
 
 #define OUR_CONTEXT(js_context) \
   ({ \
-    OurContext* _context; \
-    VALUE _ruby_context = (VALUE)JS_GetContextPrivate(js_context); \
+    const OurContext* _context; \
+    const VALUE _ruby_context = (VALUE)JS_GetContextPrivate(js_context); \
     Data_Get_Struct(_ruby_context, OurContext, _context); \
     _context; \
   })
 
 #define _PREPARE_JROOTS(rb, context, rootcount, cleancount) \
   const bool _jroot_ruby = (rb); \
-  int _jroot_roots = (rootcount); \
+  const int _jroot_roots = (rootcount); \
   void* _jroot_map[_jroot_roots]; \
-  int _jroot_cleans = (cleancount); \
+  const int _jroot_cleans = (cleancount); \
   void (*_jroot_cleanup[_jroot_cleans])(OurContext*, void*); \
   void* _jroot_cleanup_data[_jroot_cleans]; \
   OurContext* _jroot_context = (context); \
@@ -32,11 +32,12 @@
 #define _JROOT(ptr, name) \
   do \
   { \
-    char _jroot_tmpname[_JROOT_NAMESIZE]; \
+    static char _jroot_rootname[_JROOT_NAMESIZE] = ""; \
     assert(_jroot_rootidx < _jroot_roots); \
     _jroot_map[_jroot_rootidx] = (ptr); \
-    snprintf(_jroot_tmpname, _JROOT_NAMESIZE, "%s[%d]:%s: %s", __FILE__, __LINE__, __func__, (name)); \
-    JCHECK(JS_AddNamedRoot(_jroot_context->js, _jroot_map[_jroot_rootidx], _jroot_tmpname)); \
+    if (*_jroot_rootname == '\0') \
+      snprintf(_jroot_rootname, _JROOT_NAMESIZE, "%s[%d]:%s: %s", __FILE__, __LINE__, __func__, (name)); \
+    JCHECK(JS_AddNamedRoot(_jroot_context->js, _jroot_map[_jroot_rootidx], _jroot_rootname)); \
     _jroot_rootidx++; \
   } while(0)
 
@@ -55,7 +56,7 @@
 #define JUNROOT(var) \
   do \
   { \
-    void* _jroot_match = &(var); \
+    void* const _jroot_match = &(var); \
     int _jroot_i; \
     for (_jroot_i = _jroot_rootidx - 1; _jroot_i >= 0; _jroot_i--) \
       if (_jroot_map[_jroot_i] == _jroot_match) \
@@ -94,8 +95,8 @@
 #define JPROTECT(func, data) \
   ({ \
     int _state; \
-    VALUE _old_errinfo = ruby_errinfo; \
-    VALUE _result = rb_protect((func), (data), &_state); \
+    const VALUE _old_errinfo = ruby_errinfo; \
+    const VALUE _result = rb_protect((func), (data), &_state); \
     if (_state) \
     { \
       REMOVE_JROOTS; \
