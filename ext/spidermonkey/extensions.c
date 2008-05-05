@@ -14,7 +14,7 @@ define_property(JSContext *js_context, JSObject* UNUSED(obj), uintN argc, jsval 
 
 VALUE init_spidermonkey_extensions(OurContext* context, VALUE self)
 {
-  PREPARE_RUBY_JROOTS(context, 1, 0);
+  PREPARE_RUBY_JROOTS(context, 1);
   
   jsval Object;
   JCHECK(JS_GetProperty(context->js, context->global, "Object", &Object));
