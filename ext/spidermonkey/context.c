@@ -5,16 +5,26 @@
 #include "extensions.h"
 #include "idhash.h"
 
-static VALUE /* Context#global */
-global(VALUE self)
+/*
+ * call-seq:
+ *   global
+ *
+ * Returns the global object used for this context.
+ */
+static VALUE global(VALUE self)
 {
   OurContext* context;
   Data_Get_Struct(self, OurContext, context);
   return convert_to_ruby(context, OBJECT_TO_JSVAL(context->global));
 }
 
-static VALUE /* Context#evaluate(script, filename=nil, linenum=nil) */
-evaluate(int argc, VALUE* argv, VALUE self)
+/*
+ * call-seq:
+ *   evaluate(script, filename=nil, linenum=nil)
+ *
+ * Evaluate +script+ with +filename+ using +linenum+
+ */
+static VALUE evaluate(int argc, VALUE* argv, VALUE self)
 {
   VALUE script, filename, linenum;
 
@@ -195,6 +205,12 @@ static VALUE allocate(VALUE klass)
 
 void init_Johnson_SpiderMonkey_Context(VALUE spidermonkey)
 {
+  /* HACK:  These comments are *only* to make RDoc happy.
+  VALUE johnson = rb_define_module("Johnson");
+  VALUE spidermonkey = rb_define_module_under(johnson, "SpiderMonkey");
+  */
+
+  /* This is the private context used for SpiderMonkey. */
   VALUE context = rb_define_class_under(spidermonkey, "Context", rb_cObject);
 
   rb_define_alloc_func(context, allocate);
