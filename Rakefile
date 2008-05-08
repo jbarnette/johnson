@@ -26,7 +26,7 @@ Hoe.new("johnson", Johnson::VERSION) do |p|
     
   p.test_globs = ["test/**/*_test.rb"]
     
-  p.spec_extras = { :extensions => ["ext/spidermonkey/extconf.rb"] }
+  p.spec_extras = { :extensions => ["Rakefile"] }
 end
 
 namespace :test do
@@ -43,6 +43,7 @@ Rake::Task["test:todo"].prerequisites << :extensions
 Rake::Task[:check_manifest].prerequisites << GENERATED_NODE
 
 task :build => :extensions
+task :extension => :build
 
 # gem depends on the native extension actually building
 Rake::Task[:gem].prerequisites << :extensions

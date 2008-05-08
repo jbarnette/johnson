@@ -4,9 +4,6 @@ Manifest.txt
 README.txt
 Rakefile
 bin/johnson
-browser/env.js
-browser/xmlsax.js
-browser/xmlw3cdom.js
 cross-compile.txt
 ext/spidermonkey/context.c
 ext/spidermonkey/context.h
@@ -31,6 +28,10 @@ ext/spidermonkey/ruby_land_proxy.c
 ext/spidermonkey/ruby_land_proxy.h
 ext/spidermonkey/spidermonkey.c
 ext/spidermonkey/spidermonkey.h
+js/johnson/browser.js
+js/johnson/browser/env.js
+js/johnson/browser/xmlsax.js
+js/johnson/browser/xmlw3cdom.js
 js/johnson/prelude.js
 js/johnson/template.js
 lib/johnson.rb
@@ -58,6 +59,7 @@ lib/johnson/visitors/dot_visitor.rb
 lib/johnson/visitors/ecma_visitor.rb
 lib/johnson/visitors/sexp_visitor.rb
 test/helper.rb
+test/johnson/browser_test.rb
 test/johnson/context_test.rb
 test/johnson/conversions/array_test.rb
 test/johnson/conversions/boolean_test.rb
