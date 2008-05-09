@@ -121,7 +121,13 @@ static JSBool branch_callback(JSContext* js, JSScript* UNUSED(script))
   return JS_TRUE;
 }
 
-/* private */ static VALUE /* Context#initialize_native(options={}) */
+/*
+ * call-seq:
+ *   native_initialize(options={})
+ *
+ * Initializes the native spidermonkey values.
+ */
+static VALUE
 initialize_native(VALUE self, VALUE UNUSED(options))
 {
   OurContext* context;

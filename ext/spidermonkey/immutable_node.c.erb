@@ -27,6 +27,12 @@ static VALUE allocate(VALUE klass)
   return self;
 }
 
+/*
+ * call-seq:
+ *   parse_io(stream, filename=nil, line_number=0)
+ *
+ * Parses an IO object, returning a native spidermonkey parse tree.
+ */
 static VALUE parse_io(int argc, VALUE *argv, VALUE klass) {
   VALUE self = allocate(klass);
   VALUE stream, filename, linenum;
@@ -81,24 +87,39 @@ static VALUE parse_io(int argc, VALUE *argv, VALUE klass) {
   return self;
 }
 
-static VALUE /* line */
-line(VALUE self) {
+/*
+ * call-seq:
+ *   line
+ *
+ * Returns the line number of the node.
+ */
+static VALUE line(VALUE self) {
   ImmutableNodeContext * ctx;
 
   Data_Get_Struct(self, ImmutableNodeContext, ctx);
   return INT2NUM(ctx->node->pn_pos.begin.lineno);
 }
 
-static VALUE /* index */
-begin_index(VALUE self) {
+/*
+ * call-seq:
+ *   index
+ *
+ * Returns the column number of the node.
+ */
+static VALUE begin_index(VALUE self) {
   ImmutableNodeContext * ctx;
 
   Data_Get_Struct(self, ImmutableNodeContext, ctx);
   return INT2NUM(ctx->node->pn_pos.begin.index);
 }
 
-static VALUE /* pn_arity */
-pn_arity(VALUE self) {
+/*
+ * call-seq:
+ *   pn_arity
+ *
+ * Returns the arity of the node as a symbol.
+ */
+static VALUE pn_arity(VALUE self) {
   ImmutableNodeContext * ctx;
 
   Data_Get_Struct(self, ImmutableNodeContext, ctx);
@@ -121,8 +142,13 @@ pn_arity(VALUE self) {
   return Qnil;
 }
 
-static VALUE /* pn_type */
-pn_type(VALUE self) {
+/*
+ * call-seq:
+ *   pn_type
+ *
+ * Returns the type of the node as a symbol.
+ */
+static VALUE pn_type(VALUE self) {
   ImmutableNodeContext * ctx;
 
   Data_Get_Struct(self, ImmutableNodeContext, ctx);
@@ -134,8 +160,13 @@ pn_type(VALUE self) {
   return INT2NUM(ctx->node->pn_type);
 }
 
-static VALUE /* pn_expr */
-data_pn_expr(VALUE self) {
+/*
+ * call-seq:
+ *   pn_expr
+ *
+ * Returns the parse node expression as an ImmutableNode.
+ */
+static VALUE data_pn_expr(VALUE self) {
   ImmutableNodeContext * ctx;
 
   Data_Get_Struct(self, ImmutableNodeContext, ctx);
@@ -149,8 +180,13 @@ data_pn_expr(VALUE self) {
   return Qnil;
 }
 
-static VALUE /* pn_kid */
-data_pn_kid(VALUE self) {
+/*
+ * call-seq:
+ *   pn_kid
+ *
+ * Returns the child ImmutableNode.
+ */
+static VALUE data_pn_kid(VALUE self) {
   ImmutableNodeContext * ctx;
 
   Data_Get_Struct(self, ImmutableNodeContext, ctx);
@@ -164,8 +200,13 @@ data_pn_kid(VALUE self) {
   return Qnil;
 }
 
-static VALUE /* pn_kid1 */
-data_pn_kid1(VALUE self) {
+/*
+ * call-seq:
+ *   pn_kid1
+ *
+ * Returns the first child ImmutableNode.
+ */
+static VALUE data_pn_kid1(VALUE self) {
   ImmutableNodeContext * ctx;
 
   Data_Get_Struct(self, ImmutableNodeContext, ctx);
@@ -179,8 +220,13 @@ data_pn_kid1(VALUE self) {
   return Qnil;
 }
 
-static VALUE /* pn_kid2 */
-data_pn_kid2(VALUE self) {
+/*
+ * call-seq:
+ *   pn_kid2
+ *
+ * Returns the second child ImmutableNode.
+ */
+static VALUE data_pn_kid2(VALUE self) {
   ImmutableNodeContext * ctx;
 
   Data_Get_Struct(self, ImmutableNodeContext, ctx);
@@ -194,8 +240,13 @@ data_pn_kid2(VALUE self) {
   return Qnil;
 }
 
-static VALUE /* pn_kid3 */
-data_pn_kid3(VALUE self) {
+/*
+ * call-seq:
+ *   pn_kid3
+ *
+ * Returns the third child ImmutableNode.
+ */
+static VALUE data_pn_kid3(VALUE self) {
   ImmutableNodeContext * ctx;
 
   Data_Get_Struct(self, ImmutableNodeContext, ctx);
@@ -209,8 +260,13 @@ data_pn_kid3(VALUE self) {
   return Qnil;
 }
 
-static VALUE /* pn_dval */
-data_pn_dval(VALUE self) {
+/*
+ * call-seq:
+ *   pn_dval
+ *
+ * Returns the numeric value of the node.
+ */
+static VALUE data_pn_dval(VALUE self) {
   ImmutableNodeContext * ctx;
 
   Data_Get_Struct(self, ImmutableNodeContext, ctx);
@@ -221,8 +277,13 @@ data_pn_dval(VALUE self) {
   }
 }
 
-static VALUE /* pn_op */
-data_pn_op(VALUE self) {
+/*
+ * call-seq:
+ *   pn_op
+ *
+ * Returns the op code for the node as a symbol.
+ */
+static VALUE data_pn_op(VALUE self) {
   ImmutableNodeContext * ctx;
 
   Data_Get_Struct(self, ImmutableNodeContext, ctx);
@@ -234,8 +295,13 @@ data_pn_op(VALUE self) {
   return INT2NUM(ctx->node->pn_op);
 }
 
-static VALUE /* pn_left */
-data_pn_left(VALUE self) {
+/*
+ * call-seq:
+ *   pn_left
+ *
+ * Returns the left side ImmutableNode.
+ */
+static VALUE data_pn_left(VALUE self) {
   ImmutableNodeContext * ctx;
 
   Data_Get_Struct(self, ImmutableNodeContext, ctx);
@@ -250,8 +316,13 @@ data_pn_left(VALUE self) {
   return Qnil;
 }
 
-static VALUE /* pn_extra */
-data_pn_extra(VALUE self) {
+/*
+ * call-seq:
+ *   pn_extra
+ *
+ * Returns extra informaton about the node as an Integer.
+ */
+static VALUE data_pn_extra(VALUE self) {
   ImmutableNodeContext * ctx;
 
   Data_Get_Struct(self, ImmutableNodeContext, ctx);
@@ -259,16 +330,26 @@ data_pn_extra(VALUE self) {
   return INT2NUM(ctx->node->pn_extra);
 }
 
-static VALUE /* name */
-name(VALUE self) {
+/*
+ * call-seq:
+ *   name
+ *
+ * Returns the name of the node.
+ */
+static VALUE name(VALUE self) {
   ImmutableNodeContext * ctx;
 
   Data_Get_Struct(self, ImmutableNodeContext, ctx);
   return rb_str_new2(JS_GetStringBytes(ATOM_TO_STRING(ctx->node->pn_atom)));
 }
 
-static VALUE /* regexp */
-regexp(VALUE self) {
+/*
+ * call-seq:
+ *   regexp
+ *
+ * Returns the regexp value as a String.
+ */
+static VALUE regexp(VALUE self) {
   ImmutableNodeContext * ctx;
   jsval result;
 
@@ -277,8 +358,13 @@ regexp(VALUE self) {
   return rb_str_new2(JS_GetStringBytes(JSVAL_TO_STRING(result)));
 }
 
-static VALUE /* function_name */
-function_name(VALUE self) {
+/*
+ * call-seq:
+ *   function_name
+ *
+ * Returns the function name as a String.
+ */
+static VALUE function_name(VALUE self) {
   ImmutableNodeContext * ctx;
   JSFunction * f;
   JSObject * object;
@@ -294,8 +380,13 @@ function_name(VALUE self) {
   }
 }
 
-static VALUE /* function_args */
-function_args(VALUE self) {
+/*
+ * call-seq:
+ *   function_args
+ *
+ * Returns the function argument names as an Array of String.
+ */
+static VALUE function_args(VALUE self) {
   ImmutableNodeContext * ctx;
   JSFunction * f;
   JSObject * object;
@@ -319,8 +410,13 @@ function_args(VALUE self) {
   return func_args;
 }
 
-static VALUE /* function_body */
-function_body(VALUE self) {
+/*
+ * call-seq:
+ *   function_body
+ *
+ * Returns the function body as an ImmutableNode.
+ */
+static VALUE function_body(VALUE self) {
   ImmutableNodeContext * ctx;
   JSFunction * f;
   JSObject * object;
@@ -339,8 +435,13 @@ function_body(VALUE self) {
   return Qnil;
 }
 
-static VALUE /* pn_right */
-data_pn_right(VALUE self)
+/*
+ * call-seq:
+ *   pn_right
+ *
+ * Returns right side as an ImmutableNode.
+ */
+static VALUE data_pn_right(VALUE self)
 {
   ImmutableNodeContext * ctx;
 
@@ -356,8 +457,13 @@ data_pn_right(VALUE self)
   return Qnil;
 }
 
-static VALUE /* children */
-children(VALUE self) {
+/*
+ * call-seq:
+ *   children
+ *
+ * Returns children as an Array of ImmutableNode.
+ */
+static VALUE children(VALUE self) {
   ImmutableNodeContext * ctx;
   JSParseNode * p;
   VALUE children;
@@ -378,6 +484,12 @@ children(VALUE self) {
 
 void init_Johnson_SpiderMonkey_Immutable_Node(VALUE spidermonkey)
 {
+  /* HACK:  These comments are *only* to make RDoc happy.
+  VALUE johnson = rb_define_module("Johnson");
+  VALUE spidermonkey = rb_define_module_under(johnson, "SpiderMonkey");
+  */
+
+  /* ImmutableNode class. */
   cNode = rb_define_class_under(spidermonkey, "ImmutableNode", rb_cObject);
 
   rb_define_alloc_func(cNode, allocate);
