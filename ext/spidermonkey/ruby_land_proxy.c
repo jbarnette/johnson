@@ -35,7 +35,13 @@ static VALUE call_js_function_value(OurContext* context, jsval target, jsval fun
   JRETURN_RUBY(CONVERT_TO_RUBY(context, result));
 }
 
-static VALUE /* [] */
+/*
+ * call-seq:
+ *   [](name)
+ *
+ * Returns the property with +name+.
+ */
+static VALUE
 get(VALUE self, VALUE name)
 {
   RubyLandProxy* proxy;
@@ -62,7 +68,13 @@ get(VALUE self, VALUE name)
   JRETURN_RUBY(CONVERT_TO_RUBY(proxy->context, js_value));
 }
 
-static VALUE /* []= */
+/*
+ * call-seq:
+ *   []=(name,value)
+ *
+ * Sets the property with +name+ to +value+.
+ */
+static VALUE
 set(VALUE self, VALUE name, VALUE value)
 {
   RubyLandProxy* proxy;
@@ -91,7 +103,13 @@ set(VALUE self, VALUE name, VALUE value)
   JRETURN_RUBY(value);
 }
 
-static VALUE /* function? */
+/*
+ * call-seq:
+ *   function?
+ *
+ * Returns <code>true</code> if this is a function.
+ */
+static VALUE
 function_p(VALUE self)
 {
   RubyLandProxy* proxy;
@@ -99,7 +117,13 @@ function_p(VALUE self)
   return JS_TypeOfValue(proxy->context->js, proxy->value) == JSTYPE_FUNCTION;
 }
 
-static VALUE /* respond_to?(sym) */
+/*
+ * call-seq:
+ *   respond_to?(symbol)
+ *
+ * Returns <code>true</code> if _obj_ responds to given method.
+ */
+static VALUE
 respond_to_p(VALUE self, VALUE sym)
 {
   RubyLandProxy* proxy;
@@ -126,7 +150,13 @@ respond_to_p(VALUE self, VALUE sym)
   JRETURN_RUBY(found ? Qtrue : CALL_RUBY_WRAPPER(rb_call_super, 1, &sym));
 }
 
-/* private */ static VALUE /* native_call(global, *args) */
+/*
+ * call-seq:
+ *   native_call(global, *args)
+ *
+ * Call as a function with given +global+ using *args.
+ */
+static VALUE
 native_call(int argc, VALUE* argv, VALUE self)
 {
   if (!function_p(self))
@@ -153,7 +183,13 @@ destroy_id_array(OurContext* context, void* data)
   JS_DestroyIdArray(context->js, (JSIdArray*)data);
 }
 
-static VALUE /* each(&block) */ 
+/*
+ * call-seq:
+ *   each { |obj| block }
+ *
+ * Calls <em>block</em> with each item in the collection.
+ */
+static VALUE
 each(VALUE self)
 {
   RubyLandProxy* proxy;
@@ -222,6 +258,12 @@ each(VALUE self)
   JRETURN_RUBY(self);
 }
 
+/*
+ * call-seq:
+ *   length
+ *
+ * Returns the length of the collection.
+ */
 static VALUE
 length(VALUE self)
 {
@@ -254,7 +296,13 @@ length(VALUE self)
   }
 }
 
-/* private */ static VALUE /* context */
+/*
+ * call-seq:
+ *   context
+ *
+ * Returns context.
+ */
+static VALUE
 context(VALUE self)
 {
   RubyLandProxy* proxy;
@@ -262,7 +310,13 @@ context(VALUE self)
   return (VALUE)JS_GetContextPrivate(proxy->context->js);
 }
 
-/* private */ static VALUE /* function_property?(name) */
+/*
+ * call-seq:
+ *   function_property?(name)
+ *
+ * Returns <code>true</code> if +name+ is a function property.
+ */
+static VALUE
 function_property_p(VALUE self, VALUE name)
 {
   Check_Type(name, T_STRING);
@@ -286,7 +340,13 @@ function_property_p(VALUE self, VALUE name)
   JRETURN_RUBY(type == JSTYPE_FUNCTION ? Qtrue : Qfalse);
 }
 
-/* private */ static VALUE
+/*
+ * call-seq:
+ *   call_function_property(name, arguments)
+ *
+ * Calls function +name+ with +arguments+.
+ */
+static VALUE
 call_function_property(int argc, VALUE* argv, VALUE self)
 {
   RubyLandProxy* proxy;
@@ -312,6 +372,24 @@ call_function_property(int argc, VALUE* argv, VALUE self)
     JERROR("Specified property \"%s\" isn't a function.", StringValueCStr(argv[0]));
 
   JRETURN_RUBY(call_js_function_value(proxy->context, proxy->value, function, argc - 1, &(argv[1])));
+}
+
+/*
+ * call-seq:
+ *   to_s
+ *
+ * Converts object to a string.
+ */
+static VALUE to_s(VALUE self)
+{
+  RubyLandProxy* proxy;
+  Data_Get_Struct(self, RubyLandProxy, proxy);
+
+  PREPARE_RUBY_JROOTS(proxy->context, 1);
+  JROOT(proxy->value);
+  JSString* str = JS_ValueToString(proxy->context->js, proxy->value);
+
+  JRETURN_RUBY(convert_jsstring_to_ruby(proxy->context, str));
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -388,20 +466,14 @@ VALUE make_ruby_land_proxy(OurContext* context, jsval value)
   }
 }
 
-static VALUE to_s(VALUE self)
-{
-  RubyLandProxy* proxy;
-  Data_Get_Struct(self, RubyLandProxy, proxy);
-
-  PREPARE_RUBY_JROOTS(proxy->context, 1);
-  JROOT(proxy->value);
-  JSString* str = JS_ValueToString(proxy->context->js, proxy->value);
-
-  JRETURN_RUBY(convert_jsstring_to_ruby(proxy->context, str));
-}
-
 void init_Johnson_SpiderMonkey_Proxy(VALUE spidermonkey)
 {
+  /* HACK:  These comments are *only* to make RDoc happy.
+  VALUE johnson = rb_define_module("Johnson");
+  VALUE spidermonkey = rb_define_module_under(johnson, "SpiderMonkey");
+  */
+
+  /* RubyLandProxy class. */
   proxy_class = rb_define_class_under(spidermonkey, "RubyLandProxy", rb_cObject);
 
   rb_define_method(proxy_class, "[]", get, 1);
