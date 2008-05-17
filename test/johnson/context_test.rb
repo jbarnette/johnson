@@ -13,5 +13,9 @@ module Johnson
     def test_evaluate_returns_nil_for_nil_expression
       assert_nil(@context.evaluate(nil))
     end
+
+    def test_js_eval
+      assert_equal(1, @context.evaluate('eval("1");'))
+    end
   end
 end
