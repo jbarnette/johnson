@@ -10,6 +10,20 @@ DEFINE_RUBY_WRAPPER(rb_yield, rb_yield, ARGLIST1(v))
 
 static VALUE proxy_class = Qnil;
 
+static jsval get_jsval_for_proxy(RubyLandProxy* proxy)
+{
+  // FIXME: this is totally lame
+  char global_key[10];
+  sprintf(global_key, "%x", (int)proxy->context->global);
+  
+  if (0 == strcmp(global_key, proxy->key))
+    return OBJECT_TO_JSVAL(proxy->context->global);
+  
+  jsval proxy_value;
+  assert(JS_GetProperty(proxy->context->js, proxy->context->gcthings, proxy->key, &proxy_value));
+  return proxy_value;
+}
+
 static VALUE call_js_function_value(OurContext* context, jsval target, jsval function, int argc, VALUE* argv)
 {
   PREPARE_RUBY_JROOTS(context, argc + 2);
@@ -48,20 +62,21 @@ get(VALUE self, VALUE name)
   Data_Get_Struct(self, RubyLandProxy, proxy);
 
   PREPARE_RUBY_JROOTS(proxy->context, 1);
-
-  JROOT(proxy->value);
+  
+  jsval proxy_value = get_jsval_for_proxy(proxy);
+  JROOT(proxy_value);
 
   jsval js_value;  
 
   switch(TYPE(name)) {
     case T_FIXNUM:
       JCHECK(JS_GetElement(proxy->context->js,
-          JSVAL_TO_OBJECT(proxy->value), NUM2INT(name), &js_value));
+          JSVAL_TO_OBJECT(proxy_value), NUM2INT(name), &js_value));
       break;
     default:
       Check_Type(name, T_STRING);
       JCHECK(JS_GetProperty(proxy->context->js,
-          JSVAL_TO_OBJECT(proxy->value), StringValueCStr(name), &js_value));
+          JSVAL_TO_OBJECT(proxy_value), StringValueCStr(name), &js_value));
       break;
   }
 
@@ -81,7 +96,10 @@ set(VALUE self, VALUE name, VALUE value)
   Data_Get_Struct(self, RubyLandProxy, proxy);
   
   PREPARE_RUBY_JROOTS(proxy->context, 2);
-  JROOT(proxy->value);
+  
+  jsval proxy_value = get_jsval_for_proxy(proxy);
+  
+  JROOT(proxy_value);
 
   jsval js_value;
   JCHECK(convert_to_js(proxy->context, value, &js_value));
@@ -91,12 +109,12 @@ set(VALUE self, VALUE name, VALUE value)
   switch(TYPE(name)) {
     case T_FIXNUM:
       JCHECK(JS_SetElement(proxy->context->js,
-              JSVAL_TO_OBJECT(proxy->value), NUM2INT(name), &js_value));
+              JSVAL_TO_OBJECT(proxy_value), NUM2INT(name), &js_value));
       break;
     default:
       Check_Type(name, T_STRING);
       JCHECK(JS_SetProperty(proxy->context->js,
-            JSVAL_TO_OBJECT(proxy->value), StringValueCStr(name), &js_value));
+            JSVAL_TO_OBJECT(proxy_value), StringValueCStr(name), &js_value));
       break;
   }
 
@@ -114,7 +132,7 @@ function_p(VALUE self)
 {
   RubyLandProxy* proxy;
   Data_Get_Struct(self, RubyLandProxy, proxy);
-  return JS_TypeOfValue(proxy->context->js, proxy->value) == JSTYPE_FUNCTION;
+  return JS_TypeOfValue(proxy->context->js, get_jsval_for_proxy(proxy)) == JSTYPE_FUNCTION;
 }
 
 /*
@@ -137,12 +155,13 @@ respond_to_p(VALUE self, VALUE sym)
   if (name[strlen(name) - 1] == '=')
     JRETURN_RUBY(Qtrue);
   
-  JROOT(proxy->value);
+  jsval proxy_value = get_jsval_for_proxy(proxy);
+  JROOT(proxy_value);
 
   JSObject *obj;
   JSBool found;
   
-  JCHECK(JS_ValueToObject(proxy->context->js, proxy->value, &obj));
+  JCHECK(JS_ValueToObject(proxy->context->js, proxy_value, &obj));
   JROOT(obj);
 
   JCHECK(JS_HasProperty(proxy->context->js, obj, name, &found));
@@ -169,12 +188,14 @@ native_call(int argc, VALUE* argv, VALUE self)
   Data_Get_Struct(self, RubyLandProxy, proxy);
   
   PREPARE_RUBY_JROOTS(proxy->context, 1);
-  JROOT(proxy->value);
+  
+  jsval proxy_value = get_jsval_for_proxy(proxy);
+  JROOT(proxy_value);
 
   jsval global;
   JCHECK(convert_to_js(proxy->context, argv[0], &global));
 
-  JRETURN_RUBY(call_js_function_value(proxy->context, global, proxy->value, argc - 1, &(argv[1])));
+  JRETURN_RUBY(call_js_function_value(proxy->context, global, proxy_value, argc - 1, &(argv[1])));
 }
 
 static void
@@ -196,9 +217,11 @@ each(VALUE self)
   Data_Get_Struct(self, RubyLandProxy, proxy);
   
   PREPARE_RUBY_JROOTS(proxy->context, 5);
-  JROOT(proxy->value);
+  
+  jsval proxy_value = get_jsval_for_proxy(proxy);
+  JROOT(proxy_value);
 
-  JSObject* value = JSVAL_TO_OBJECT(proxy->value);
+  JSObject* value = JSVAL_TO_OBJECT(proxy_value);
   JROOT(value);
   
   // arrays behave like you'd expect, indexes in order
@@ -272,9 +295,10 @@ length(VALUE self)
 
   PREPARE_RUBY_JROOTS(proxy->context, 2);
   
-  JROOT(proxy->value);
+  jsval proxy_value = get_jsval_for_proxy(proxy);
+  JROOT(proxy_value);
 
-  JSObject* value = JSVAL_TO_OBJECT(proxy->value);
+  JSObject* value = JSVAL_TO_OBJECT(proxy_value);
   JROOT(value);
   
   if (JS_IsArrayObject(proxy->context->js, value))
@@ -326,12 +350,13 @@ function_property_p(VALUE self, VALUE name)
 
   PREPARE_RUBY_JROOTS(proxy->context, 2);
 
-  JROOT(proxy->value);
+  jsval proxy_value = get_jsval_for_proxy(proxy);
+  JROOT(proxy_value);
 
   jsval js_value;  
 
   JCHECK(JS_GetProperty(proxy->context->js,
-      JSVAL_TO_OBJECT(proxy->value), StringValueCStr(name), &js_value));
+      JSVAL_TO_OBJECT(proxy_value), StringValueCStr(name), &js_value));
 
   JROOT(js_value);
 
@@ -356,12 +381,14 @@ call_function_property(int argc, VALUE* argv, VALUE self)
     rb_raise(rb_eArgError, "Function name required");
 
   PREPARE_RUBY_JROOTS(proxy->context, 2);
-  JROOT(proxy->value);
+  
+  jsval proxy_value = get_jsval_for_proxy(proxy);
+  JROOT(proxy_value);
 
   jsval function;
   
   JCHECK(JS_GetProperty(proxy->context->js,
-    JSVAL_TO_OBJECT(proxy->value), StringValueCStr(argv[0]), &function));
+    JSVAL_TO_OBJECT(proxy_value), StringValueCStr(argv[0]), &function));
 
   JROOT(function);
 
@@ -371,7 +398,7 @@ call_function_property(int argc, VALUE* argv, VALUE self)
   if (funtype != JSTYPE_FUNCTION)
     JERROR("Specified property \"%s\" isn't a function.", StringValueCStr(argv[0]));
 
-  JRETURN_RUBY(call_js_function_value(proxy->context, proxy->value, function, argc - 1, &(argv[1])));
+  JRETURN_RUBY(call_js_function_value(proxy->context, proxy_value, function, argc - 1, &(argv[1])));
 }
 
 /*
@@ -386,9 +413,11 @@ static VALUE to_s(VALUE self)
   Data_Get_Struct(self, RubyLandProxy, proxy);
 
   PREPARE_RUBY_JROOTS(proxy->context, 1);
-  JROOT(proxy->value);
-  JSString* str = JS_ValueToString(proxy->context->js, proxy->value);
-
+  
+  jsval proxy_value = get_jsval_for_proxy(proxy);
+  JROOT(proxy_value);
+  
+  JSString* str = JS_ValueToString(proxy->context->js, proxy_value);
   JRETURN_RUBY(convert_jsstring_to_ruby(proxy->context, str));
 }
 
@@ -398,21 +427,21 @@ static VALUE to_s(VALUE self)
 
 static void finalize(RubyLandProxy* proxy)
 {
+  jsval proxy_value = get_jsval_for_proxy(proxy);
+  
   // could get finalized after the context has been freed
   if (proxy->context && proxy->context->jsids)
   {
     // remove this proxy from the OID map
-    JS_HashTableRemove(proxy->context->jsids, (void *)proxy->value);
+    JS_HashTableRemove(proxy->context->jsids, (void *)proxy_value);
   
     // remove our GC handle on the JS value
-    char key[10];
-    sprintf(key, "%x", (int)proxy->value);
-    JS_DeleteProperty(proxy->context->js, proxy->context->gcthings, key);
+    JS_DeleteProperty(proxy->context->js, proxy->context->gcthings, proxy->key);
     
     proxy->context = 0;
   }
   
-  proxy->value = 0;
+  proxy->key = 0;
   free(proxy);
 }
 
@@ -428,7 +457,7 @@ JSBool unwrap_ruby_land_proxy(OurContext* UNUSED(context), VALUE wrapped, jsval*
   RubyLandProxy* proxy;
   Data_Get_Struct(wrapped, RubyLandProxy, proxy);
   
-  *retval = proxy->value; 
+  *retval = get_jsval_for_proxy(proxy);
   return JS_TRUE;
 }
 
@@ -443,7 +472,7 @@ VALUE make_ruby_land_proxy(OurContext* context, jsval value)
       rb_intern("ObjectSpace")), rb_intern("_id2ref"), 1, id);
   }
   else
-  {
+  {    
     // otherwise make one and cache it
     RubyLandProxy* our_proxy; 
     VALUE proxy = Data_Make_Struct(proxy_class, RubyLandProxy, 0, finalize, our_proxy);
@@ -451,17 +480,17 @@ VALUE make_ruby_land_proxy(OurContext* context, jsval value)
     PREPARE_RUBY_JROOTS(context, 1);
     JROOT(value);
 
-    our_proxy->value = value;
+    // root the value for JS GC and lookups
+    our_proxy->key = malloc(sizeof(char[10]));
+    sprintf(our_proxy->key, "%x", (int)value);
+    
+    JCHECK(JS_SetProperty(context->js, context->gcthings, our_proxy->key, &value));
+
     our_proxy->context = context;
 
     // put the proxy OID in the id map
     JCHECK(JS_HashTableAdd(context->jsids, (void *)value, (void *)rb_obj_id(proxy)));
     
-    // root the value for JS GC
-    char key[10];
-    sprintf(key, "%x", (int)value);
-    JCHECK(JS_SetProperty(context->js, context->gcthings, key, &value));
-
     JRETURN_RUBY(proxy);
   }
 }

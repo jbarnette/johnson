@@ -5,7 +5,7 @@
 #include "context.h"
 
 typedef struct {
-  jsval value;
+  char* key;
   OurContext* context;
 } RubyLandProxy;
 
