@@ -5,8 +5,8 @@ module Johnson
   class ContextTest < Johnson::TestCase
     def setup
       @context = Johnson::Context.new
-      db = Johnson::SpiderMonkey::Debugger.new(Logger.new(STDOUT))
-      @context.delegate.debugger = db
+      #db = Johnson::SpiderMonkey::Debugger.new(Logger.new(STDOUT))
+      #@context.delegate.debugger = db
     end
 
     def test_default_delegate_is_spidermonkey
