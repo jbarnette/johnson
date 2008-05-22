@@ -1,10 +1,16 @@
 require File.expand_path(File.join(File.dirname(__FILE__), "/../test/helper"))
 
+require 'logger'
 module Johnson
   module Conversions
     class ThreadTest < Johnson::TestCase
       def setup
         @context = Johnson::Context.new
+        ## Uncomment this, and each test will pass individually.
+        ## Change STDOUT to nil, and it fails.  Are our tests failing because
+        ## of IO issues?
+        #db = Johnson::SpiderMonkey::Debugger.new(Logger.new(STDOUT))
+        #@context.delegate.debugger = db
       end
 
       def test_new_js_thread
