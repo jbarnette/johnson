@@ -137,17 +137,9 @@ set_debugger(VALUE self, VALUE debugger)
   Data_Get_Struct(self, OurContext, context);
   Data_Get_Struct(debugger, JSDebugHooks, debug_hooks);
 
-  JS_SetInterrupt(context->runtime, debug_hooks->interruptHandler, debugger);
-  JS_SetNewScriptHook(context->runtime, debug_hooks->newScriptHook, debugger);
-  JS_SetDestroyScriptHook(context->runtime, debug_hooks->destroyScriptHook, debugger);
-  JS_SetDebuggerHandler(context->runtime, debug_hooks->debuggerHandler, debugger);
-  JS_SetSourceHandler(context->runtime, debug_hooks->sourceHandler, debugger);
-  JS_SetExecuteHook(context->runtime, debug_hooks->executeHook, debugger);
-  JS_SetCallHook(context->runtime, debug_hooks->callHook, debugger);
-  JS_SetThrowHook(context->runtime, debug_hooks->throwHook, debugger);
-  JS_SetDebugErrorHook(context->runtime, debug_hooks->debugErrorHook, debugger);
+  JS_SetContextDebugHooks(context->js, debug_hooks);
 
-  return Qtrue;
+  return debugger;
 }
 
 /*
