@@ -1,63 +1,97 @@
 #include "debugger.h"
 
-static JSTrapStatus interrupt_handler(JSContext *cx, JSScript *script,
+static JSTrapStatus interrupt_handler(JSContext *js, JSScript *script,
                                       jsbytecode *pc, jsval *rval, void *rb)
 {
+  VALUE context = (VALUE)JS_GetContextPrivate(js);
+  VALUE self = (VALUE)rb;
+  rb_funcall(self, rb_intern("interrupt_handler"), 1, context);
+  return JSTRAP_CONTINUE;
 }
 
-static void new_script_hook(JSContext *cx,
+static void new_script_hook(JSContext *js,
                             const char *filename,
                             uintN lineno,
                             JSScript *script,
                             JSFunction *fun,
                             void *rb)
 {
+  VALUE context = (VALUE)JS_GetContextPrivate(js);
+  VALUE self = (VALUE)rb;
+  rb_funcall(self, rb_intern("new_script_hook"), 1, context);
 }
 
-static void destroy_script_hook(JSContext *cx,
+static void destroy_script_hook(JSContext *js,
                                 JSScript *script,
                                 void *rb)
 {
+  VALUE context = (VALUE)JS_GetContextPrivate(js);
+  VALUE self = (VALUE)rb;
+  rb_funcall(self, rb_intern("destroy_script_hook"), 1, context);
 }
 
-static JSTrapStatus debugger_handler(JSContext *cx, JSScript *script,
+static JSTrapStatus debugger_handler(JSContext *js, JSScript *script,
                                      jsbytecode *pc, jsval *rval, void *rb)
 {
+  VALUE context = (VALUE)JS_GetContextPrivate(js);
+  VALUE self = (VALUE)rb;
+  rb_funcall(self, rb_intern("debugger_handler"), 1, context);
+  return JSTRAP_CONTINUE;
 }
 
 static void source_handler(const char *filename, uintN lineno,
                            jschar *str, size_t length,
                            void **listenerTSData, void *rb)
 {
+  VALUE self = (VALUE)rb;
+  rb_funcall(self, rb_intern("source_handler"), 0);
 }
 
-static void * execute_hook(JSContext *cx, JSStackFrame *fp, JSBool before,
+static void * execute_hook(JSContext *js, JSStackFrame *fp, JSBool before,
                            JSBool *ok, void *rb)
 {
+  VALUE context = (VALUE)JS_GetContextPrivate(js);
+  VALUE self = (VALUE)rb;
+  rb_funcall(self, rb_intern("execute_hook"), 1, context);
+  return rb;
 }
 
-static void * call_hook(JSContext *cx, JSStackFrame *fp, JSBool before,
+static void * call_hook(JSContext *js, JSStackFrame *fp, JSBool before,
                         JSBool *ok, void *rb)
 {
+  VALUE context = (VALUE)JS_GetContextPrivate(js);
+  VALUE self = (VALUE)rb;
+  rb_funcall(self, rb_intern("call_hook"), 1, context);
+  return rb;
 }
 
-static void object_hook(JSContext *cx, JSObject *obj, JSBool isNew, void *rb)
+static void object_hook(JSContext *js, JSObject *obj, JSBool isNew, void *rb)
 {
+  VALUE self = (VALUE)rb;
+  rb_funcall(self, rb_intern("object_hook"), 0);
 }
 
-static JSTrapStatus throw_hook(JSContext *cx, JSScript *script,
+static JSTrapStatus throw_hook(JSContext *js, JSScript *script,
                                jsbytecode *pc, jsval *rval, void *rb)
 {
+  VALUE context = (VALUE)JS_GetContextPrivate(js);
+  VALUE self = (VALUE)rb;
+  rb_funcall(self, rb_intern("throw_hook"), 1, context);
+  return JSTRAP_CONTINUE;
 }
 
-static JSBool debug_error_hook(JSContext *cx, const char *message,
+static JSBool debug_error_hook(JSContext *js, const char *message,
                                 JSErrorReport *report, void *rb)
 {
+  VALUE context = (VALUE)JS_GetContextPrivate(js);
+  VALUE self = (VALUE)rb;
+  rb_funcall(self, rb_intern("debug_error_hook"), 1, context);
+  return JS_TRUE;
 }
 
 static void deallocate(JSDebugHooks * hooks)
 {
-  free(hooks);
+  //free(hooks);
 }
 
 static VALUE allocate(VALUE klass)

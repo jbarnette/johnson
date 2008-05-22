@@ -4,7 +4,7 @@
 #include "error.h"
 #include "extensions.h"
 #include "idhash.h"
-#include "jscntxt.h"
+#include "jsdbgapi.h"
 
 /*
  * call-seq:
@@ -133,13 +133,21 @@ set_debugger(VALUE self, VALUE debugger)
 {
   OurContext* context;
   JSDebugHooks* debug_hooks;
-  bool gthings_rooted_p = false;
 
   Data_Get_Struct(self, OurContext, context);
   Data_Get_Struct(debugger, JSDebugHooks, debug_hooks);
-  context->js->debugHooks = debug_hooks;
 
-  return debugger;
+  JS_SetInterrupt(context->runtime, debug_hooks->interruptHandler, debugger);
+  JS_SetNewScriptHook(context->runtime, debug_hooks->newScriptHook, debugger);
+  JS_SetDestroyScriptHook(context->runtime, debug_hooks->destroyScriptHook, debugger);
+  JS_SetDebuggerHandler(context->runtime, debug_hooks->debuggerHandler, debugger);
+  JS_SetSourceHandler(context->runtime, debug_hooks->sourceHandler, debugger);
+  JS_SetExecuteHook(context->runtime, debug_hooks->executeHook, debugger);
+  JS_SetCallHook(context->runtime, debug_hooks->callHook, debugger);
+  JS_SetThrowHook(context->runtime, debug_hooks->throwHook, debugger);
+  JS_SetDebugErrorHook(context->runtime, debug_hooks->debugErrorHook, debugger);
+
+  return Qtrue;
 }
 
 /*
