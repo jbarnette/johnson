@@ -4,6 +4,7 @@
 #include "error.h"
 #include "extensions.h"
 #include "idhash.h"
+#include "jscntxt.h"
 
 /*
  * call-seq:
@@ -123,6 +124,26 @@ static JSBool branch_callback(JSContext* js, JSScript* UNUSED(script))
 
 /*
  * call-seq:
+ *   debugger=(debugger)
+ *
+ * Sets a debugger object
+ */
+static VALUE
+set_debugger(VALUE self, VALUE debugger)
+{
+  OurContext* context;
+  JSDebugHooks* debug_hooks;
+  bool gthings_rooted_p = false;
+
+  Data_Get_Struct(self, OurContext, context);
+  Data_Get_Struct(debugger, JSDebugHooks, debug_hooks);
+  context->js->debugHooks = debug_hooks;
+
+  return debugger;
+}
+
+/*
+ * call-seq:
  *   native_initialize(options={})
  *
  * Initializes the native spidermonkey values.
@@ -224,6 +245,7 @@ void init_Johnson_SpiderMonkey_Context(VALUE spidermonkey)
 
   rb_define_method(context, "global", global, 0);
   rb_define_method(context, "evaluate", evaluate, -1);
+  rb_define_method(context, "debugger=", set_debugger, 1);
 }
 
 VALUE Johnson_SpiderMonkey_JSLandProxy()

@@ -12,6 +12,7 @@ void Init_spidermonkey()
   init_Johnson_Error(johnson); // FIXME: this belongs outside the extension
   init_Johnson_SpiderMonkey_Context(spidermonkey);
   init_Johnson_SpiderMonkey_Proxy(spidermonkey);
+  init_Johnson_SpiderMonkey_Debugger(spidermonkey);
   init_Johnson_SpiderMonkey_Immutable_Node(spidermonkey);
   
   rb_define_const(spidermonkey, "VERSION",
