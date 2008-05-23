@@ -4,12 +4,15 @@ require 'logger'
 module Johnson
   module Conversions
     class ThreadTest < Johnson::TestCase
+      class MyLogger
+        def debug(string)
+          puts string
+        end
+      end
+
       def setup
         @context = Johnson::Context.new
-        ## Uncomment this, and each test will pass individually.
-        ## Change STDOUT to nil, and it fails.  Are our tests failing because
-        ## of IO issues?
-        #db = Johnson::SpiderMonkey::Debugger.new(Logger.new(STDOUT))
+        #db = Johnson::SpiderMonkey::Debugger.new(MyLogger.new)
         #@context.delegate.debugger = db
       end
 
