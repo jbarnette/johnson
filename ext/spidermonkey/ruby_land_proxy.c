@@ -132,7 +132,7 @@ function_p(VALUE self)
 {
   RubyLandProxy* proxy;
   Data_Get_Struct(self, RubyLandProxy, proxy);
-  return JS_TypeOfValue(proxy->context->js, get_jsval_for_proxy(proxy)) == JSTYPE_FUNCTION;
+  return JS_TypeOfValue(proxy->context->js, get_jsval_for_proxy(proxy)) == JSTYPE_FUNCTION ? Qtrue : Qfalse;
 }
 
 /*

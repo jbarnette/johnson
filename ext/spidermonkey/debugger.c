@@ -11,16 +11,18 @@ static JSTrapStatus interrupt_handler(JSContext *UNUSED(js), JSScript *UNUSED(sc
 }
 
 static void new_script_hook(JSContext *UNUSED(js),
-                            const char *UNUSED(filename),
-                            uintN UNUSED(lineno),
+                            const char *filename,
+                            uintN lineno,
                             JSScript *UNUSED(script),
                             JSFunction *UNUSED(fun),
                             void *rb)
 {
   VALUE self = (VALUE)rb;
+  VALUE rb_filename = rb_str_new2(filename);
+  VALUE rb_linenum  = INT2NUM((int)lineno);
 
-  /* FIXME: Pass this crap to the debugger */
-  rb_funcall(self, rb_intern("new_script_hook"), 0);
+  /* FIXME: Pass the rest of this crap to the debugger? */
+  rb_funcall(self, rb_intern("new_script_hook"), 2, rb_filename, rb_linenum);
 }
 
 static void destroy_script_hook(JSContext *UNUSED(js),
@@ -41,14 +43,15 @@ static JSTrapStatus debugger_handler(JSContext *UNUSED(js), JSScript *UNUSED(scr
 }
 
 static void source_handler(const char *filename, uintN lineno,
-                           jschar *UNUSED(str), size_t UNUSED(length),
+                           jschar *str, size_t length,
                            void **UNUSED(listenerTSData), void *rb)
 {
   VALUE self = (VALUE)rb;
   VALUE rb_filename = rb_str_new2(filename);
   VALUE rb_lineno   = INT2NUM((int)lineno);
+  VALUE rb_str      = rb_str_new(str, length);
 
-  rb_funcall(self, rb_intern("source_handler"), 2, rb_filename, rb_lineno);
+  rb_funcall(self, rb_intern("source_handler"), 3, rb_filename, rb_lineno, rb_str);
 }
 
 static void * execute_hook(JSContext *UNUSED(js), JSStackFrame *UNUSED(fp), JSBool before,
@@ -73,12 +76,14 @@ static void * call_hook(JSContext *UNUSED(js), JSStackFrame *UNUSED(fp), JSBool 
   return rb;
 }
 
-static void object_hook(JSContext *UNUSED(js), JSObject *UNUSED(obj), JSBool UNUSED(isNew), void *rb)
+static void object_hook(JSContext *js, JSObject *obj, JSBool isNew, void *rb)
 {
   VALUE self = (VALUE)rb;
 
-  /* FIXME: Pass this stuff to the debugger. */
-  rb_funcall(self, rb_intern("object_hook"), 0);
+  VALUE rb_obj = convert_to_ruby(OUR_CONTEXT(js), OBJECT_TO_JSVAL(obj));
+  VALUE rb_is_new = isNew ? Qtrue : Qfalse;
+
+  rb_funcall(self, rb_intern("object_hook"), 2, rb_obj, rb_is_new);
 }
 
 static JSTrapStatus throw_hook(JSContext *UNUSED(js), JSScript *UNUSED(script),

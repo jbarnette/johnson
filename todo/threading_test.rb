@@ -12,8 +12,8 @@ module Johnson
 
       def setup
         @context = Johnson::Context.new
-        #db = Johnson::SpiderMonkey::Debugger.new(MyLogger.new)
-        #@context.delegate.debugger = db
+        db = Johnson::SpiderMonkey::Debugger.new(MyLogger.new)
+        @context.delegate.debugger = db
       end
 
       def test_new_js_thread

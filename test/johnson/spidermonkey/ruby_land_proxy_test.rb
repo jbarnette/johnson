@@ -45,6 +45,16 @@ module Johnson
         assert_kind_of(Johnson::SpiderMonkey::RubyLandProxy, f)
         assert(f.function?)
       end
+
+      def test_function?
+        f = @context.evaluate("function() {}")
+        assert_kind_of(Johnson::SpiderMonkey::RubyLandProxy, f)
+        assert(f.function?)
+
+        f = @context.evaluate("new Object()")
+        assert_kind_of(Johnson::SpiderMonkey::RubyLandProxy, f)
+        assert(!f.function?)
+      end
       
       def test_calling_non_functions_complains
         assert_raise(Johnson::Error) { @context.evaluate("new Object()").call }

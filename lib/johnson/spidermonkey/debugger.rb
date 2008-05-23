@@ -12,8 +12,8 @@ module Johnson #:nodoc:
         logger.debug("interrupt_handler")
       end
 
-      def new_script_hook
-        logger.debug("new_script_hook")
+      def new_script_hook(filename, linenum)
+        logger.debug("new_script_hook: #{filename} #{linenum}")
       end
 
       def destroy_script_hook
@@ -24,8 +24,8 @@ module Johnson #:nodoc:
         logger.debug("debugger_handler")
       end
 
-      def source_handler(filename, line_number)
-        logger.debug("source_handler: #{filename}(#{line_number})")
+      def source_handler(filename, line_number, str)
+        logger.debug("source_handler: #{filename}(#{line_number}): #{str}")
       end
 
       def execute_hook(before)
@@ -36,8 +36,9 @@ module Johnson #:nodoc:
         logger.debug("call_hook: #{before}")
       end
 
-      def object_hook
-        logger.debug("object_hook")
+      def object_hook(object, is_new)
+        # FIXME object.to_s breaks for eval... wtf?
+        logger.debug("object_hook: #{object.class} #{is_new}")
       end
 
       def throw_hook
