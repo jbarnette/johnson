@@ -1,13 +1,15 @@
 #include "debugger.h"
 #include "context.h"
 #include "conversions.h"
+#include "immutable_node.h"
 
 static JSTrapStatus interrupt_handler(JSContext *UNUSED(js), JSScript *UNUSED(script),
-                                      jsbytecode *UNUSED(pc), jsval *UNUSED(rval), void *rb)
+                                      jsbytecode *pc, jsval *UNUSED(rval), void *rb)
 {
   VALUE self = (VALUE)rb;
+  VALUE rb_bytecode = jsop_to_symbol((uint8)*pc);
   /* FIXME: Pass this stuff to the debugger. */
-  return NUM2INT(rb_funcall(self, rb_intern("interrupt_handler"), 0));
+  return NUM2INT(rb_funcall(self, rb_intern("interrupt_handler"), 1, rb_bytecode));
 }
 
 static void new_script_hook(JSContext *UNUSED(js),
@@ -34,11 +36,12 @@ static void destroy_script_hook(JSContext *UNUSED(js),
 }
 
 static JSTrapStatus debugger_handler(JSContext *UNUSED(js), JSScript *UNUSED(script),
-                                     jsbytecode *UNUSED(pc), jsval *UNUSED(rval), void *rb)
+                                     jsbytecode *pc, jsval *UNUSED(rval), void *rb)
 {
   VALUE self = (VALUE)rb;
+  VALUE rb_bytecode = jsop_to_symbol((uint8)*pc);
   /* FIXME: Pass this crap to the debugger? */
-  return NUM2INT(rb_funcall(self, rb_intern("debugger_handler"), 0));
+  return NUM2INT(rb_funcall(self, rb_intern("debugger_handler"), 1, rb_bytecode));
 }
 
 static void source_handler(const char *filename, uintN lineno,
@@ -86,11 +89,12 @@ static void object_hook(JSContext *js, JSObject *obj, JSBool isNew, void *rb)
 }
 
 static JSTrapStatus throw_hook(JSContext *UNUSED(js), JSScript *UNUSED(script),
-                               jsbytecode *UNUSED(pc), jsval *UNUSED(rval), void *rb)
+                               jsbytecode *pc, jsval *UNUSED(rval), void *rb)
 {
   VALUE self = (VALUE)rb;
+  VALUE rb_bytecode = jsop_to_symbol((uint8)*pc);
   /* FIXME: Pass this stuff to the debugger? */
-  return NUM2INT(rb_funcall(self, rb_intern("throw_hook"), 0));
+  return NUM2INT(rb_funcall(self, rb_intern("throw_hook"), 1, rb_bytecode));
 }
 
 static JSBool debug_error_hook(JSContext *UNUSED(js), const char *message,

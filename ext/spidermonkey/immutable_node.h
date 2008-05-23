@@ -16,6 +16,7 @@ typedef struct {
   JSRuntime * runtime;
 } ImmutableNodeContext;
 
+VALUE jsop_to_symbol(uint8 jsop);
 void init_Johnson_SpiderMonkey_Immutable_Node(VALUE spidermonkey);
 
 #endif
