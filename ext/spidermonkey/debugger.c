@@ -7,8 +7,7 @@ static JSTrapStatus interrupt_handler(JSContext *UNUSED(js), JSScript *UNUSED(sc
 {
   VALUE self = (VALUE)rb;
   /* FIXME: Pass this stuff to the debugger. */
-  rb_funcall(self, rb_intern("interrupt_handler"), 0);
-  return JSTRAP_CONTINUE;
+  return NUM2INT(rb_funcall(self, rb_intern("interrupt_handler"), 0));
 }
 
 static void new_script_hook(JSContext *UNUSED(js),
@@ -39,8 +38,7 @@ static JSTrapStatus debugger_handler(JSContext *UNUSED(js), JSScript *UNUSED(scr
 {
   VALUE self = (VALUE)rb;
   /* FIXME: Pass this crap to the debugger? */
-  rb_funcall(self, rb_intern("debugger_handler"), 0);
-  return JSTRAP_CONTINUE;
+  return NUM2INT(rb_funcall(self, rb_intern("debugger_handler"), 0));
 }
 
 static void source_handler(const char *filename, uintN lineno,
@@ -92,8 +90,7 @@ static JSTrapStatus throw_hook(JSContext *UNUSED(js), JSScript *UNUSED(script),
 {
   VALUE self = (VALUE)rb;
   /* FIXME: Pass this stuff to the debugger? */
-  rb_funcall(self, rb_intern("throw_hook"), 0);
-  return JSTRAP_CONTINUE;
+  return NUM2INT(rb_funcall(self, rb_intern("throw_hook"), 0));
 }
 
 static JSBool debug_error_hook(JSContext *UNUSED(js), const char *message,

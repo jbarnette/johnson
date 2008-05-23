@@ -1,6 +1,11 @@
 module Johnson #:nodoc:
   module SpiderMonkey #:nodoc:
     class Debugger # native
+      JSTRAP_ERROR    = 0
+      JSTRAP_CONTINUE = 1
+      JSTRAP_RETURN   = 2
+      JSTRAP_THROW    = 3
+      JSTRAP_LIMIT    = 4
       attr_accessor :logger
       def initialize(logger)
         @logger = logger
@@ -8,6 +13,7 @@ module Johnson #:nodoc:
 
       def interrupt_handler
         logger.debug("interrupt_handler")
+        JSTRAP_CONTINUE
       end
 
       def new_script_hook(filename, linenum)
@@ -20,6 +26,7 @@ module Johnson #:nodoc:
 
       def debugger_handler
         logger.debug("debugger_handler")
+        JSTRAP_CONTINUE
       end
 
       def source_handler(filename, line_number, str)
@@ -43,8 +50,10 @@ module Johnson #:nodoc:
         logger.debug("object_hook: #{object.class} #{is_new}")
       end
 
+      # This hook can change the control
       def throw_hook
         logger.debug("throw_hook")
+        JSTRAP_CONTINUE
       end
 
       def debug_error_hook(message)
