@@ -12,6 +12,12 @@ require "johnson"
 
 module Johnson
   class TestCase < Test::Unit::TestCase
+    class TestLogger
+      def debug(string)
+        puts string
+      end
+    end
+
     undef :default_test
     
     def assert_js(expression, options={})

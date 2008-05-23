@@ -1,5 +1,3 @@
-require 'dl/struct'
-
 module Johnson #:nodoc:
   module SpiderMonkey #:nodoc:
     class Debugger # native
@@ -28,12 +26,16 @@ module Johnson #:nodoc:
         logger.debug("source_handler: #{filename}(#{line_number}): #{str}")
       end
 
-      def execute_hook(before)
-        logger.debug("execute_hook: #{before}")
+      # +call_hook+ is called before and after script execution.  +before+
+      # is +true+ if before, +false+ otherwise.
+      def execute_hook(before, ok)
+        logger.debug("execute_hook: #{before} #{ok}")
       end
 
-      def call_hook(before)
-        logger.debug("call_hook: #{before}")
+      # +call_hook+ is called before and after a function call.  +before+
+      # is +true+ if before, +false+ otherwise.
+      def call_hook(before, ok)
+        logger.debug("call_hook: #{before} #{ok}")
       end
 
       def object_hook(object, is_new)

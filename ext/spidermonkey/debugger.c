@@ -1,5 +1,6 @@
 #include "debugger.h"
 #include "context.h"
+#include "conversions.h"
 
 static JSTrapStatus interrupt_handler(JSContext *UNUSED(js), JSScript *UNUSED(script),
                                       jsbytecode *UNUSED(pc), jsval *UNUSED(rval), void *rb)
@@ -49,30 +50,30 @@ static void source_handler(const char *filename, uintN lineno,
   VALUE self = (VALUE)rb;
   VALUE rb_filename = rb_str_new2(filename);
   VALUE rb_lineno   = INT2NUM((int)lineno);
-  VALUE rb_str      = rb_str_new(str, length);
+  VALUE rb_str      = rb_str_new((char *)str, (int)length);
 
   rb_funcall(self, rb_intern("source_handler"), 3, rb_filename, rb_lineno, rb_str);
 }
 
 static void * execute_hook(JSContext *UNUSED(js), JSStackFrame *UNUSED(fp), JSBool before,
-                           JSBool *UNUSED(ok), void *rb)
+                           JSBool *ok, void *rb)
 {
   VALUE self = (VALUE)rb;
   VALUE rb_before = JS_TRUE == before ? Qtrue : Qfalse;
+  VALUE rb_ok     = ok ? Qtrue : Qfalse;
 
-  /* FIXME: Should OK be passed? */
-  rb_funcall(self, rb_intern("execute_hook"), 1, rb_before);
+  rb_funcall(self, rb_intern("execute_hook"), 2, rb_before, rb_ok);
   return rb;
 }
 
 static void * call_hook(JSContext *UNUSED(js), JSStackFrame *UNUSED(fp), JSBool before,
-                           JSBool *UNUSED(ok), void *rb)
+                           JSBool *ok, void *rb)
 {
   VALUE self = (VALUE)rb;
-  VALUE rb_before = JS_TRUE == before ? Qtrue : Qfalse;
+  VALUE rb_before = before ? Qtrue : Qfalse;
+  VALUE rb_ok     = ok ? Qtrue : Qfalse;
 
-  /* FIXME: Should OK be passed? */
-  rb_funcall(self, rb_intern("call_hook"), 1, rb_before);
+  rb_funcall(self, rb_intern("call_hook"), 2, rb_before, rb_ok);
   return rb;
 }
 
