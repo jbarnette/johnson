@@ -441,7 +441,6 @@ static void finalize(RubyLandProxy* proxy)
     proxy->context = 0;
   }
   
-  proxy->key = 0;
   free(proxy);
 }
 
@@ -481,7 +480,6 @@ VALUE make_ruby_land_proxy(OurContext* context, jsval value)
     JROOT(value);
 
     // root the value for JS GC and lookups
-    our_proxy->key = malloc(sizeof(char[10]));
     sprintf(our_proxy->key, "%x", (int)value);
     
     JCHECK(JS_SetProperty(context->js, context->gcthings, our_proxy->key, &value));

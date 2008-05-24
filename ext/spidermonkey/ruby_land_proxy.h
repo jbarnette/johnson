@@ -5,7 +5,7 @@
 #include "context.h"
 
 typedef struct {
-  char* key;
+  char key[10];
   OurContext* context;
 } RubyLandProxy;
 
