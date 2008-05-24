@@ -2,6 +2,7 @@
 #include "context.h"
 #include "error.h"
 #include "ruby_land_proxy.h"
+#include "debugger.h"
 #include "immutable_node.h"
 
 void Init_spidermonkey()

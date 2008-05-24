@@ -60,7 +60,7 @@ static VALUE parse_io(int argc, VALUE *argv, VALUE klass) {
       NULL,
       chars,
       length,
-      NULL, filenamez, linenumi));
+      NULL, filenamez, (unsigned)linenumi));
 
   context->node = js_ParseScript(context->js, 
       JS_NewObject(context->js, NULL, NULL, NULL),
@@ -322,7 +322,7 @@ static VALUE data_pn_extra(VALUE self) {
 
   Data_Get_Struct(self, ImmutableNodeContext, ctx);
 
-  return INT2NUM(ctx->node->pn_extra);
+  return UINT2NUM(ctx->node->pn_extra);
 }
 
 /*
@@ -477,14 +477,14 @@ static VALUE children(VALUE self) {
   return children;
 }
 
-VALUE jsop_to_symbol(uint8 jsop)
+VALUE jsop_to_symbol(JSUint32 jsop)
 {
   switch(jsop) {
     <% jsops.each do |jsop| %>
     case <%= jsop %>: return ID2SYM(rb_intern("<%= jsop.downcase %>"));
     <% end %>
   }
-  return INT2NUM(jsop);
+  return UINT2NUM(jsop);
 }
 
 void init_Johnson_SpiderMonkey_Immutable_Node(VALUE spidermonkey)

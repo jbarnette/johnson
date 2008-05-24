@@ -38,7 +38,7 @@ static VALUE evaluate(int argc, VALUE* argv, VALUE self)
   context->ex = 0;
   memset(context->msg, 0, MAX_EXCEPTION_MESSAGE_SIZE);
 
-  char* filenamez = RTEST(filename) ? StringValueCStr(filename) : "none";
+  const char* filenamez = RTEST(filename) ? StringValueCStr(filename) : "none";
   int linenumi = RTEST(linenum) ? NUM2INT(linenum) : 1;
 
   jsval js;

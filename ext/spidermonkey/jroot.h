@@ -8,7 +8,7 @@
 
 #define OUR_CONTEXT(js_context) \
   ({ \
-    const OurContext* _context; \
+    OurContext* _context; \
     const VALUE _ruby_context = (VALUE)JS_GetContextPrivate(js_context); \
     Data_Get_Struct(_ruby_context, OurContext, _context); \
     _context; \
@@ -19,7 +19,7 @@
   const int _jroot_cleans = (cleancount); \
   void (*_jroot_cleanup[_jroot_cleans])(OurContext*, void*); \
   void* _jroot_cleanup_data[_jroot_cleans]; \
-  OurContext* _jroot_context = (context); \
+  OurContext* const _jroot_context = (context); \
   int _jroot_cleanidx = 0;
 
 #define PREPARE_JROOTS(context, cleancount) \

@@ -7,7 +7,7 @@ static JSTrapStatus interrupt_handler(JSContext *js, JSScript *UNUSED(script),
                                       jsbytecode *pc, jsval *rval, void *rb)
 {
   VALUE self = (VALUE)rb;
-  VALUE rb_bytecode = jsop_to_symbol((uint8)*pc);
+  VALUE rb_bytecode = jsop_to_symbol(*pc);
   VALUE rb_rval = convert_to_ruby(OUR_CONTEXT(js), *rval);
   return NUM2INT(rb_funcall(self, rb_intern("interrupt_handler"), 2, rb_bytecode, rb_rval));
 }
@@ -21,7 +21,7 @@ static void new_script_hook(JSContext *UNUSED(js),
 {
   VALUE self = (VALUE)rb;
   VALUE rb_filename = rb_str_new2(filename);
-  VALUE rb_linenum  = INT2NUM((int)lineno);
+  VALUE rb_linenum  = UINT2NUM(lineno);
 
   /* FIXME: Pass the rest of this crap to the debugger? */
   rb_funcall(self, rb_intern("new_script_hook"), 2, rb_filename, rb_linenum);
@@ -39,7 +39,7 @@ static JSTrapStatus debugger_handler(JSContext *js, JSScript *UNUSED(script),
                                      jsbytecode *pc, jsval *rval, void *rb)
 {
   VALUE self = (VALUE)rb;
-  VALUE rb_bytecode = jsop_to_symbol((uint8)*pc);
+  VALUE rb_bytecode = jsop_to_symbol(*pc);
   VALUE rb_rval = convert_to_ruby(OUR_CONTEXT(js), *rval);
   return NUM2INT(rb_funcall(self, rb_intern("debugger_handler"), 2, rb_bytecode, rb_rval));
 }
@@ -50,8 +50,8 @@ static void source_handler(const char *filename, uintN lineno,
 {
   VALUE self = (VALUE)rb;
   VALUE rb_filename = rb_str_new2(filename);
-  VALUE rb_lineno   = INT2NUM((int)lineno);
-  VALUE rb_str      = rb_str_new((char *)str, (int)length);
+  VALUE rb_lineno   = UINT2NUM(lineno);
+  VALUE rb_str      = rb_str_new((char *)str, (signed)(length * sizeof(jschar)));
 
   rb_funcall(self, rb_intern("source_handler"), 3, rb_filename, rb_lineno, rb_str);
 }
@@ -92,7 +92,7 @@ static JSTrapStatus throw_hook(JSContext *js, JSScript *UNUSED(script),
                                jsbytecode *pc, jsval *rval, void *rb)
 {
   VALUE self = (VALUE)rb;
-  VALUE rb_bytecode = jsop_to_symbol((uint8)*pc);
+  VALUE rb_bytecode = jsop_to_symbol(*pc);
   VALUE rb_rval = convert_to_ruby(OUR_CONTEXT(js), *rval);
   return NUM2INT(rb_funcall(self, rb_intern("throw_hook"), 2, rb_bytecode, rb_rval));
 }
