@@ -78,6 +78,17 @@
     } \
   } while (0)
 
+#define JCHECK_RUBY(cond) \
+  do \
+  { \
+    assert(_jroot_ruby); \
+    if (!(cond)) \
+    { \
+      REMOVE_JROOTS; \
+      raise_js_error_in_ruby(_jroot_context); \
+    } \
+  } while (0)
+
 #define JCHECK(cond) \
   do \
   { \
