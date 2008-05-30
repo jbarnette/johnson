@@ -28,6 +28,8 @@ ext/spidermonkey/js_land_proxy.c
 ext/spidermonkey/js_land_proxy.h
 ext/spidermonkey/ruby_land_proxy.c
 ext/spidermonkey/ruby_land_proxy.h
+ext/spidermonkey/runtime.c
+ext/spidermonkey/runtime.h
 ext/spidermonkey/spidermonkey.c
 ext/spidermonkey/spidermonkey.h
 js/johnson/browser.js
@@ -55,6 +57,7 @@ lib/johnson/spidermonkey/immutable_node.rb
 lib/johnson/spidermonkey/js_land_proxy.rb
 lib/johnson/spidermonkey/mutable_tree_visitor.rb
 lib/johnson/spidermonkey/ruby_land_proxy.rb
+lib/johnson/spidermonkey/runtime.rb
 lib/johnson/version.rb
 lib/johnson/visitable.rb
 lib/johnson/visitors.rb
@@ -108,6 +111,7 @@ test/johnson/spidermonkey/context_test.rb
 test/johnson/spidermonkey/immutable_node_test.rb
 test/johnson/spidermonkey/js_land_proxy_test.rb
 test/johnson/spidermonkey/ruby_land_proxy_test.rb
+test/johnson/spidermonkey/runtime_test.rb
 test/johnson/version_test.rb
 test/johnson/visitors/dot_visitor_test.rb
 test/johnson_test.rb

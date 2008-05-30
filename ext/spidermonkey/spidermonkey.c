@@ -15,6 +15,7 @@ void Init_spidermonkey()
   init_Johnson_SpiderMonkey_Proxy(spidermonkey);
   init_Johnson_SpiderMonkey_Debugger(spidermonkey);
   init_Johnson_SpiderMonkey_Immutable_Node(spidermonkey);
+  init_Johnson_SpiderMonkey_Runtime(spidermonkey);
   
   rb_define_const(spidermonkey, "VERSION",
     rb_obj_freeze(rb_str_new2(JS_GetImplementationVersion())));
