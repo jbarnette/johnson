@@ -51,6 +51,15 @@ Rake::Task[:gem].prerequisites << :extensions
 desc "Our johnson requires extensions."
 task :extensions => ["lib/johnson/spidermonkey.#{kind}"]
 
+namespace :extensions do
+  task :clean do
+    Dir.chdir("ext/spidermonkey") do
+      sh "rm -f Makefile"
+      sh "rm -f *.{o,so,bundle,log}"
+    end
+  end
+end
+
 task :spidermonkey => "vendor/spidermonkey/jsapi.h" do
   if ENV['CROSS']
     Dir.chdir("vendor/spidermonkey") { sh "make -f Makefile.ref OS_CONFIG=#{ENV['CROSS']}" }
