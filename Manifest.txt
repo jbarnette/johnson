@@ -9,6 +9,8 @@ ext/spidermonkey/context.c
 ext/spidermonkey/context.h
 ext/spidermonkey/conversions.c
 ext/spidermonkey/conversions.h
+ext/spidermonkey/debugger.c
+ext/spidermonkey/debugger.h
 ext/spidermonkey/error.c
 ext/spidermonkey/error.h
 ext/spidermonkey/extconf.rb
@@ -48,6 +50,7 @@ lib/johnson/nodes/ternary_node.rb
 lib/johnson/parser.rb
 lib/johnson/parser/syntax_error.rb
 lib/johnson/spidermonkey/context.rb
+lib/johnson/spidermonkey/debugger.rb
 lib/johnson/spidermonkey/immutable_node.rb
 lib/johnson/spidermonkey/js_land_proxy.rb
 lib/johnson/spidermonkey/mutable_tree_visitor.rb
