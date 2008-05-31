@@ -616,18 +616,16 @@ print = function(txt) { Ruby.puts(txt); };
             handleResponse();
           }
         } else { 
-          connection = Ruby.Net.HTTP.start(url.host, url.port, function(http) {
-            var out_headers = new Ruby.Hash;
-            for (var header in self.headers)
-              out_headers[header] = self.headers[header];
+          var http = Ruby.Net.HTTP.new(url.host, url.port);
+          var request = new Ruby.Net.HTTP.Get(url.path);
+          for (var header in self.headers)
+            request.add_field(header, self.headers[header]);
 
-            http.send_request( self.method, url.path, nil, out_headers );            
-          });
-          
-          connection.instance_variable_get("@header").each(function(k, v) {
+          var connection = http.request(request);
+          connection.each_header(function(k,v) {
             self.responseHeaders[k] = v;
           });
-                    
+
           handleResponse();
         }
         

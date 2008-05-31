@@ -241,8 +241,9 @@ NORETURN(void) raise_js_error_in_ruby(JohnsonRuntime* runtime)
   }
 
   VALUE ruby_context = (VALUE)JS_GetContextPrivate(context);
+  VALUE ruby_runtime = (VALUE)JS_GetRuntimePrivate(runtime->js);
   if (johnson_context->ex)
-    rb_funcall(ruby_context, rb_intern("handle_js_exception"),
+    rb_funcall(ruby_runtime, rb_intern("handle_js_exception"),
       1, convert_to_ruby(runtime, johnson_context->ex));
 
   if (!johnson_context->msg)

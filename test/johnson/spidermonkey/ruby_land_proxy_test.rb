@@ -202,6 +202,24 @@ module Johnson
         asplode = lambda { raise err }
         assert_js_equal(err, "x = null; try { foo(); } catch(ex) { x = ex; }; x", :foo => asplode)
       end
+
+      # FIXME: If you uncomment this test, we get this error:
+      #
+      # JS API usage error: the address passed to JS_AddNamedRoot currently holds an
+      # invalid jsval.  This is usually caused by a missing call to JS_RemoveRoot.
+      # The root's name is "ruby_land_proxy.c[210]:native_call: proxy_value".
+      # Assertion failure: root_points_to_gcArenaList, at jsgc.c:2618
+      # 
+      # WTF?
+      #
+      # -Aaron
+      #
+      #def test_throwing_in_js_goes_to_ruby
+      #  func = @runtime.evaluate('function () { throw "foo"; }')
+      #  assert_raise(Johnson::Error) {
+      #    func.call
+      #  }
+      #end
     end
   end
 end
