@@ -9,8 +9,8 @@ end
 
 require "readline"
 
-CONTEXT = cx = Johnson::Runtime.new
-CONTEXT[:alert] = lambda { |m| puts m }
+RUNTIME = js = Johnson::Runtime.new
+RUNTIME[:alert] = lambda { |m| puts m }
 
 EXIT_VERBS = [nil] + %w(exit quit)
 
@@ -46,7 +46,7 @@ rescue Exception => e
 end
 
 def eval_in_js(expression)
-  rescued { puts "=> " + CONTEXT.evaluate(expression, "(console)").inspect }
+  rescued { puts "=> " + RUNTIME.evaluate(expression, "(console)").inspect }
 end
 
 def eval_in_ruby(expression, bind_to)
@@ -55,15 +55,15 @@ end
 
 options = Johnson::CLI::Options.parse!(ARGV)
 options.load_paths.each { |d| $LOAD_PATH << d }
-options.files_to_preload.each { |f| CONTEXT.load(f) }
+options.files_to_preload.each { |f| RUNTIME.load(f) }
 
 unless options.files_to_evaluate.empty?
-  options.files_to_evaluate.each { |f| CONTEXT.load(f) }
+  options.files_to_evaluate.each { |f| RUNTIME.load(f) }
   exit
 end
 
 unless options.expressions.empty?
-  options.expressions.each { |e| CONTEXT.evaluate(e, '-e') }
+  options.expressions.each { |e| RUNTIME.evaluate(e, '-e') }
   exit
 end
 
