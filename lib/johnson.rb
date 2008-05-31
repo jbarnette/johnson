@@ -24,7 +24,7 @@ require "johnson/spidermonkey/debugger"
 require "johnson/spidermonkey/immutable_node"
 
 # the 'public' interface
-require "johnson/context"
+require "johnson/runtime"
 require "johnson/parser"
 
 $LOAD_PATH.push(File.expand_path("#{File.dirname(__FILE__)}/../js"))
@@ -33,10 +33,10 @@ module Johnson
   PRELUDE = IO.read(File.dirname(__FILE__) + "/../js/johnson/prelude.js")
   
   def self.evaluate(expression, vars={})
-    context = Johnson::Context.new
-    vars.each { |key, value| context[key] = value }
+    runtime = Johnson::Runtime.new
+    vars.each { |key, value| runtime[key] = value }
     
-    context.evaluate(expression)
+    runtime.evaluate(expression)
   end
   
   def self.parse(js, *args)

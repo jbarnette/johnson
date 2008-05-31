@@ -4,13 +4,24 @@ module Johnson
   module Conversions
     class ThreadTest < Johnson::TestCase
       def setup
-        @context = Johnson::Context.new
+        @runtime = Johnson::Runtime.new
       end
 
       def test_manipulate_thread
         thread = Thread.new { }
-        @context['thread'] = thread
+        @runtime['thread'] = thread
         assert_js_equal(false, "thread.send('alive?')")
+      end
+
+      def test_new_js_thread
+        @runtime.evaluate('function testing() { Ruby.sleep(10); }')
+        @runtime.evaluate('new Ruby.Thread(function() { testing(); })')
+      end
+
+      def test_js_thread_read_file
+        @runtime['filename'] = File.expand_path(__FILE__)
+        @runtime.evaluate('function testing() { Ruby.File.read(filename); }')
+        @runtime.evaluate('new Ruby.Thread(function() { testing(); })')
       end
     end
   end

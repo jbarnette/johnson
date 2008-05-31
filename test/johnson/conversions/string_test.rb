@@ -4,26 +4,26 @@ module Johnson
   module Conversions
     class StringTest < Johnson::TestCase
       def setup
-        @context = Johnson::Context.new
+        @runtime = Johnson::Runtime.new
       end
       
       def test_ruby_string_in_js
-        @context[:v] = "foo"
+        @runtime[:v] = "foo"
         assert_js("'foo' == v")
       end
 
       def test_js_string_in_ruby
-        assert_equal("foo", @context.evaluate("'foo'"))
+        assert_equal("foo", @runtime.evaluate("'foo'"))
       end
 
       def test_roundtrip
-        @context[:v] = v = "hola"
-        assert_equal(v, @context.evaluate("v"))
+        @runtime[:v] = v = "hola"
+        assert_equal(v, @runtime.evaluate("v"))
       end
       
       def test_strings_are_copies
-        @context[:v] = v = "hola"
-        assert_not_same(v, @context.evaluate("v"))
+        @runtime[:v] = v = "hola"
+        assert_not_same(v, @runtime.evaluate("v"))
       end
     end
   end

@@ -4,24 +4,24 @@ module Johnson
   module Conversions
     class RegexpTest < Johnson::TestCase
       def setup
-        @context = Johnson::Context.new
+        @runtime = Johnson::Runtime.new
       end
 
       def test_regex_converts
-        @context[:x] = /aaron/
-        @context[:y] = /john/i
-        assert @context.evaluate('"aaron".match(x)')
-        assert !@context.evaluate('"Aaron".match(x)')
-        assert @context.evaluate('"john".match(y)')
-        assert @context.evaluate('"John".match(y)')
+        @runtime[:x] = /aaron/
+        @runtime[:y] = /john/i
+        assert @runtime.evaluate('"aaron".match(x)')
+        assert !@runtime.evaluate('"Aaron".match(x)')
+        assert @runtime.evaluate('"john".match(y)')
+        assert @runtime.evaluate('"John".match(y)')
       end
 
       def test_regex_roundtrips
-        @context[:x] = /aaron/
-        assert_equal(/aaron/, @context.evaluate('x'))
+        @runtime[:x] = /aaron/
+        assert_equal(/aaron/, @runtime.evaluate('x'))
 
-        @context[:x] = /aaron/m
-        assert_equal(/aaron/m, @context.evaluate('x'))
+        @runtime[:x] = /aaron/m
+        assert_equal(/aaron/m, @runtime.evaluate('x'))
       end
     end
   end

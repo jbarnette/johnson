@@ -9,7 +9,7 @@ class JohnsonTest < Test::Unit::TestCase
     assert_equal(4, Johnson.evaluate("2 + foo", :foo => 2))
   end
   
-  def test_evaluate_uses_a_new_context_each_time
+  def test_evaluate_uses_a_new_runtime_each_time
     assert_equal(4, Johnson.evaluate("foo", :foo => 4))
     assert_raise(Johnson::Error) { Johnson.evaluate("foo") }
   end

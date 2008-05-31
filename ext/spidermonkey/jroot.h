@@ -8,18 +8,28 @@
 
 #define OUR_CONTEXT(js_context) \
   ({ \
-    OurContext* _context; \
+    JohnsonContext* _context; \
     const VALUE _ruby_context = (VALUE)JS_GetContextPrivate(js_context); \
-    Data_Get_Struct(_ruby_context, OurContext, _context); \
+    Data_Get_Struct(_ruby_context, JohnsonContext, _context); \
     _context; \
   })
+
+#define OUR_RUNTIME(js_context) \
+  ({ \
+    JohnsonRuntime* _johnson_runtime; \
+    JSRuntime * _js_runtime = JS_GetRuntime(js_context);\
+    const VALUE _ruby_runtime = (VALUE)JS_GetRuntimePrivate(_js_runtime); \
+    Data_Get_Struct(_ruby_runtime, JohnsonRuntime, _johnson_runtime); \
+    _johnson_runtime; \
+   })
+    
 
 #define _PREPARE_JROOTS(rb, context, cleancount) \
   const bool _jroot_ruby = (rb); \
   const int _jroot_cleans = (cleancount); \
-  void (*_jroot_cleanup[_jroot_cleans])(OurContext*, void*); \
+  void (*_jroot_cleanup[_jroot_cleans])(JSContext*, void*); \
   void* _jroot_cleanup_data[_jroot_cleans]; \
-  OurContext* const _jroot_context = (context); \
+  JSContext* const _jroot_context = (context); \
   int _jroot_cleanidx = 0;
 
 #define PREPARE_JROOTS(context, cleancount) \
@@ -44,7 +54,7 @@
     void* const _root = (ptr); \
     if (*_name == '\0') \
       snprintf(_name, _JROOT_NAMESIZE, "%s[%d]:%s: %s", __FILE__, __LINE__, __func__, (name)); \
-    JCHECK(JS_AddNamedRoot(_jroot_context->js, _root, _name)); \
+    JCHECK(JS_AddNamedRoot(_jroot_context, _root, _name)); \
     JCLEANUP(_JROOT_ROOT, _root); \
   } while(0)
 
@@ -59,7 +69,7 @@
     for (_jroot_i = _jroot_cleanidx - 1; _jroot_i >= 0; _jroot_i--) \
       if (_jroot_cleanup[_jroot_i] == _JROOT_ROOT && _jroot_cleanup_data[_jroot_i] == _jroot_match) \
       { \
-        JS_RemoveRoot(_jroot_context->js, _jroot_cleanup_data[_jroot_i]); \
+        JS_RemoveRoot(_jroot_context, _jroot_cleanup_data[_jroot_i]); \
         if (_jroot_i == _jroot_cleanidx - 1) _jroot_cleanidx--; \
         _jroot_cleanup[_jroot_i] = NULL; \
       } \
@@ -72,7 +82,7 @@
     for (_jroot_i = _jroot_cleanidx - 1; _jroot_i >= 0; _jroot_i--) \
     { \
       if (_jroot_cleanup[_jroot_i] == _JROOT_ROOT) \
-        JS_RemoveRoot(_jroot_context->js, _jroot_cleanup_data[_jroot_i]); \
+        JS_RemoveRoot(_jroot_context, _jroot_cleanup_data[_jroot_i]); \
       else if (_jroot_cleanup[_jroot_i]) \
         (_jroot_cleanup[_jroot_i])(_jroot_context, _jroot_cleanup_data[_jroot_i]); \
     } \
@@ -85,7 +95,7 @@
     if (!(cond)) \
     { \
       REMOVE_JROOTS; \
-      raise_js_error_in_ruby(_jroot_context); \
+      raise_js_error_in_ruby(OUR_RUNTIME(_jroot_context)); \
     } \
   } while (0)
 
@@ -96,7 +106,7 @@
     { \
       REMOVE_JROOTS; \
       if (_jroot_ruby) \
-        raise_js_error_in_ruby(_jroot_context); \
+        raise_js_error_in_ruby(OUR_RUNTIME(_jroot_context)); \
       else \
         return JS_FALSE; \
     } \
@@ -113,7 +123,7 @@
       if (_jroot_ruby) \
         rb_jump_tag(_state); \
       else \
-        return report_ruby_error_in_js(_jroot_context, _state, _old_errinfo); \
+        return report_ruby_error_in_js(OUR_RUNTIME(_jroot_context), _state, _old_errinfo); \
     } \
     _result; \
   })
@@ -145,8 +155,8 @@
       Johnson_Error_raise(_jroot_msg); \
     else \
     { \
-      JSString* _jroot_err_str = JS_NewStringCopyZ(_jroot_context->js, _jroot_msg); \
-      if (_jroot_err_str) JS_SetPendingException(_jroot_context->js, STRING_TO_JSVAL(_jroot_err_str)); \
+      JSString* _jroot_err_str = JS_NewStringCopyZ(_jroot_context, _jroot_msg); \
+      if (_jroot_err_str) JS_SetPendingException(_jroot_context, STRING_TO_JSVAL(_jroot_err_str)); \
       return JS_FALSE; \
     } \
   } while(0)

@@ -3,11 +3,11 @@ require File.expand_path(File.join(File.dirname(__FILE__), "/../helper"))
 module Johnson
   class PreludeTest < Johnson::TestCase
     def setup
-      @context = Johnson::Context.new
+      @runtime = Johnson::Runtime.new
     end
     
     def test_symbols_are_interned
-      assert(@context.evaluate("Johnson.symbolize('foo') === Johnson.symbolize('foo')"))
+      assert(@runtime.evaluate("Johnson.symbolize('foo') === Johnson.symbolize('foo')"))
     end
     
     def test_strings_had_a_to_symbol_method
@@ -15,7 +15,7 @@ module Johnson
     end
     
     def test_string_to_symbol_is_not_enumerable
-      assert(!@context.evaluate(<<-END))
+      assert(!@runtime.evaluate(<<-END))
         var flag = false;
         for (x in "foo") { if (x == 'toSymbol') flag = true }
         flag
@@ -23,18 +23,18 @@ module Johnson
     end
     
     def test_symbol_to_string
-      assert_equal("monkey", @context.evaluate("Johnson.symbolize('monkey').toString()"))
+      assert_equal("monkey", @runtime.evaluate("Johnson.symbolize('monkey').toString()"))
     end
 
     def test_symbol_inspect
-      assert_equal(":monkey", @context.evaluate("Johnson.symbolize('monkey').inspect()"))
+      assert_equal(":monkey", @runtime.evaluate("Johnson.symbolize('monkey').inspect()"))
     end
     
     def test_all_of_ruby_is_available
-      assert_raise(Johnson::Error) { @context.evaluate("Ruby.Set.new()") }
+      assert_raise(Johnson::Error) { @runtime.evaluate("Ruby.Set.new()") }
       
-      @context.evaluate("Ruby.require('set')")
-      assert_kind_of(Set, @context.evaluate("Ruby.Set.new()"))
+      @runtime.evaluate("Ruby.require('set')")
+      assert_kind_of(Set, @runtime.evaluate("Ruby.Set.new()"))
     end
     
     def test_require_an_existing_js_file_without_extension
@@ -43,7 +43,7 @@ module Johnson
     
     def test_require_returns_false_the_second_time_around
       assert_js("Johnson.require('johnson/template')")
-      assert(!@context.evaluate("Johnson.require('johnson/template')"))
+      assert(!@runtime.evaluate("Johnson.require('johnson/template')"))
     end
     
     def test_missing_requires_throw_LoadError

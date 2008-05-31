@@ -7,17 +7,11 @@
 
 typedef struct {
   JSContext *js;
-  JSObject *global;
-  JSRuntime *runtime;
-  
-  JSHashTable *jsids; // jsid -> rbid
-  JSHashTable *rbids; // rbid -> jsid
-  JSObject *gcthings;
   
   jsval ex; // an exception value
   char msg[MAX_EXCEPTION_MESSAGE_SIZE]; // the 'backup' message
   
-} OurContext;
+} JohnsonContext;
 
 void init_Johnson_SpiderMonkey_Context(VALUE spidermonkey);
 VALUE Johnson_SpiderMonkey_JSLandProxy();

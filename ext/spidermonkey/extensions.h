@@ -5,6 +5,8 @@
 #include "context.h"
 #include "conversions.h"
 
-VALUE init_spidermonkey_extensions(OurContext* context, VALUE self);
+// A context is passed here because there might not be a current context
+// for the runtime when the function is called.
+VALUE init_spidermonkey_extensions(JohnsonContext* context, VALUE self);
 
 #endif

@@ -4,19 +4,19 @@ module Johnson
   module Conversions
     class SymbolTest < Johnson::TestCase
       def setup
-        @context = Johnson::Context.new
+        @runtime = Johnson::Runtime.new
       end
 
       def test_symbols_are_interned
-        @context[:v] = :symbol
-        @context[:x] = :symbol
+        @runtime[:v] = :symbol
+        @runtime[:x] = :symbol
 
-        assert(@context.evaluate("v !== null && v === x"))
+        assert(@runtime.evaluate("v !== null && v === x"))
       end
 
       def test_ruby_symbol_roundtrips
-        @context[:v] = :foo
-        assert_equal(:foo, @context.evaluate("v"))
+        @runtime[:v] = :foo
+        assert_equal(:foo, @runtime.evaluate("v"))
       end
     end
   end

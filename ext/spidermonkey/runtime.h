@@ -4,9 +4,12 @@
 #include "spidermonkey.h"
 
 typedef struct {
-  JSHashTable* contexts;
   JSObject* global;
   JSRuntime* js;
+
+  JSHashTable *jsids; // jsid -> rbid
+  JSHashTable *rbids; // rbid -> jsid
+  JSObject *gcthings;
 } JohnsonRuntime;
 
 JSContext* johnson_get_current_context(JohnsonRuntime* runtime);

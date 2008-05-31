@@ -4,20 +4,20 @@ module Johnson
   module Conversions
     class NilTest < Johnson::TestCase
       def setup
-        @context = Johnson::Context.new
+        @runtime = Johnson::Runtime.new
       end
       
       def test_ruby_nil_is_js_null
-        @context[:v] = nil
-        assert_equal(true, @context.evaluate("v == null"))
+        @runtime[:v] = nil
+        assert_equal(true, @runtime.evaluate("v == null"))
       end
 
       def test_js_null_is_ruby_nil
-        assert_nil(@context.evaluate("null"))
+        assert_nil(@runtime.evaluate("null"))
       end
 
       def test_js_undefined_is_ruby_nil
-        assert_nil(@context.evaluate("undefined"))
+        assert_nil(@runtime.evaluate("undefined"))
       end
     end
   end

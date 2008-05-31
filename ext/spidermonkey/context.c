@@ -6,94 +6,6 @@
 #include "idhash.h"
 #include "jsdbgapi.h"
 
-/*
- * call-seq:
- *   global
- *
- * Returns the global object used for this context.
- */
-static VALUE global(VALUE self)
-{
-  OurContext* context;
-  Data_Get_Struct(self, OurContext, context);
-  return convert_to_ruby(context, OBJECT_TO_JSVAL(context->global));
-}
-
-/*
- * call-seq:
- *   evaluate(script, filename=nil, linenum=nil)
- *
- * Evaluate +script+ with +filename+ using +linenum+
- */
-static VALUE evaluate(int argc, VALUE* argv, VALUE self)
-{
-  VALUE script, filename, linenum;
-
-  OurContext* context;
-  Data_Get_Struct(self, OurContext, context);
-
-  rb_scan_args( argc, argv, "12", &script, &filename, &linenum );
-
-  // clean things up first
-  context->ex = 0;
-  memset(context->msg, 0, MAX_EXCEPTION_MESSAGE_SIZE);
-
-  const char* filenamez = RTEST(filename) ? StringValueCStr(filename) : "none";
-  int linenumi = RTEST(linenum) ? NUM2INT(linenum) : 1;
-
-  jsval js;
-
-  // FIXME: should be able to pass in the 'file' name
-  JSBool ok = JS_EvaluateScript(context->js, context->global,
-    StringValuePtr(script), (unsigned)StringValueLen(script), filenamez, (unsigned)linenumi, &js);
-
-  if (!ok)
-  {
-    if (JS_IsExceptionPending(context->js))
-    {
-      // If there's an exception pending here, it's a syntax error.
-      JS_GetPendingException(context->js, &context->ex);
-      JS_ClearPendingException(context->js);
-    }
-
-    if (context->ex)
-    {
-      return rb_funcall(self, rb_intern("handle_js_exception"),
-        1, convert_to_ruby(context, context->ex));
-      
-      // VALUE message, file, line, stack;
-      // 
-      // jsval js_message;
-      // assert(JS_GetProperty(context->js, JSVAL_TO_OBJECT(context->ex), "message", &js_message));
-      // message = convert_to_ruby(context, js_message);
-      // 
-      // jsval js_file;
-      // assert(JS_GetProperty(context->js, JSVAL_TO_OBJECT(context->ex), "fileName", &js_file));
-      // file = convert_to_ruby(context, js_file);
-      // 
-      // jsval js_line;
-      // assert(JS_GetProperty(context->js, JSVAL_TO_OBJECT(context->ex), "lineNumber", &js_line));
-      // line = convert_to_ruby(context, js_line);
-      // 
-      // jsval js_stack;
-      // assert(JS_GetProperty(context->js, JSVAL_TO_OBJECT(context->ex), "stack", &js_stack));
-      // stack = convert_to_ruby(context, js_stack);
-      // 
-      // return rb_funcall(self, rb_intern("handle_js_exception"),
-      //   4, message, file, line, stack);
-    }
-    
-    char* msg = context->msg;
-
-    // toString() whatever the exception object is (if we have one)
-    if (context->ex) msg = JS_GetStringBytes(JS_ValueToString(context->js, context->ex));
-
-    return Johnson_Error_raise(msg);
-  }
-
-  return convert_to_ruby(context, js);
-}
-
 // callback for JS_SetErrorReporter
 static void report_js_error(JSContext* js, const char* message, JSErrorReport* UNUSED(report))
 {
@@ -101,8 +13,8 @@ static void report_js_error(JSContext* js, const char* message, JSErrorReport* U
   VALUE self = (VALUE)JS_GetContextPrivate(js);
 
   // then we find our bridge
-  OurContext* context;
-  Data_Get_Struct(self, OurContext, context);
+  JohnsonContext* context;
+  Data_Get_Struct(self, JohnsonContext, context);
 
   // NOTE: SpiderMonkey REALLY doesn't like being interrupted. If we
   // jump over to Ruby and raise here, segfaults and such ensue.
@@ -124,80 +36,52 @@ static JSBool branch_callback(JSContext* js, JSScript* UNUSED(script))
 
 /*
  * call-seq:
- *   debugger=(debugger)
- *
- * Sets a debugger object
- */
-static VALUE
-set_debugger(VALUE self, VALUE debugger)
-{
-  OurContext* context;
-  JSDebugHooks* debug_hooks;
-
-  Data_Get_Struct(self, OurContext, context);
-  Data_Get_Struct(debugger, JSDebugHooks, debug_hooks);
-
-  JS_SetContextDebugHooks(context->js, debug_hooks);
-
-  return debugger;
-}
-
-/*
- * call-seq:
  *   native_initialize(options={})
  *
  * Initializes the native spidermonkey values.
  */
 static VALUE
-initialize_native(VALUE self, VALUE UNUSED(options))
+initialize_native(VALUE self, VALUE rb_runtime, VALUE UNUSED(options))
 {
-  OurContext* context;
-  bool gthings_rooted_p = false;
+  JohnsonContext* context;
+  JohnsonRuntime* runtime;
 
-  Data_Get_Struct(self, OurContext, context);
+  Data_Get_Struct(self, JohnsonContext, context);
+  Data_Get_Struct(rb_runtime, JohnsonRuntime, runtime);
 
-  if ((context->runtime = JS_NewRuntime(0x100000))
-    && (context->js = JS_NewContext(context->runtime, 8192))
-    && (context->jsids = create_id_hash())
-    && (context->rbids = create_id_hash())
-    && (context->gcthings = JS_NewObject(context->js, NULL, 0, 0))
-    && (gthings_rooted_p = JS_AddNamedRoot(context->js, &(context->gcthings), "context->gcthings"))
-    && (context->global = create_global_object(context))
-    && (JS_AddNamedRoot(context->js, &(context->global), "context->global")))
+  if ((context->js = JS_NewContext(runtime->js, 8192)))
   {
+    // See if the runtime already has a shared global object.
+    JSObject* global = runtime->global;
+
+    // If it does, use it. If not,
+    if (!global)
+      // create one of our global objects.
+      global = johnson_create_global_object(context->js);
+
+    // Manually set the context's global object.
+    JS_SetGlobalObject(context->js, global);
     JS_SetErrorReporter(context->js, report_js_error);
     JS_SetBranchCallback(context->js, branch_callback);
     JS_SetContextPrivate(context->js, (void *)self);
 
     JS_SetOptions(context->js, JS_GetOptions(context->js)
 #ifdef JSOPTION_DONT_REPORT_UNCAUGHT
-      | JSOPTION_DONT_REPORT_UNCAUGHT
+        | JSOPTION_DONT_REPORT_UNCAUGHT
 #endif
 #ifdef JSOPTION_VAROBJFIX
-      | JSOPTION_VAROBJFIX
+        | JSOPTION_VAROBJFIX
 #endif
 #ifdef JSOPTION_XML
-      | JSOPTION_XML
+        | JSOPTION_XML
 #endif
-    );
+        );
 
+    // Success.
     return init_spidermonkey_extensions(context, self);
   }
 
-  if (gthings_rooted_p)
-    JS_RemoveRoot(context->js, &(context->gcthings));
-
-  if (context->rbids)
-    JS_HashTableDestroy(context->rbids);
-
-  if (context->jsids)
-    JS_HashTableDestroy(context->jsids);
-
-  if (context->js)
-    JS_DestroyContext(context->js);
-
-  if (context->runtime)
-    JS_DestroyRuntime(context->runtime);
+  if (context->js) JS_DestroyContext(context->js);
 
   rb_raise(rb_eRuntimeError, "Failed to initialize SpiderMonkey context");
 }
@@ -206,27 +90,16 @@ initialize_native(VALUE self, VALUE UNUSED(options))
 //// INFRASTRUCTURE BELOW HERE ////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////
 
-static void deallocate(OurContext* context)
+static void deallocate(JohnsonContext* context)
 {
   JS_SetContextPrivate(context->js, 0);
-
-  JS_RemoveRoot(context->js, &(context->global));
-  JS_RemoveRoot(context->js, &(context->gcthings));
-  JS_HashTableDestroy(context->rbids);
-  JS_HashTableDestroy(context->jsids);
-
-  context->jsids = 0;
-  context->rbids = 0;
-
   JS_DestroyContext(context->js);
-  JS_DestroyRuntime(context->runtime);
-
   free(context);
 }
 
 static VALUE allocate(VALUE klass)
 {
-  OurContext* context = calloc(1, sizeof(OurContext));
+  JohnsonContext* context = calloc(1, sizeof(JohnsonContext));
   return Data_Wrap_Struct(klass, 0, deallocate, context);
 }
 
@@ -241,11 +114,7 @@ void init_Johnson_SpiderMonkey_Context(VALUE spidermonkey)
   VALUE context = rb_define_class_under(spidermonkey, "Context", rb_cObject);
 
   rb_define_alloc_func(context, allocate);
-  rb_define_private_method(context, "initialize_native", initialize_native, 1);
-
-  rb_define_method(context, "global", global, 0);
-  rb_define_method(context, "evaluate", evaluate, -1);
-  rb_define_method(context, "debugger=", set_debugger, 1);
+  rb_define_private_method(context, "initialize_native", initialize_native, 2);
 }
 
 VALUE Johnson_SpiderMonkey_JSLandProxy()

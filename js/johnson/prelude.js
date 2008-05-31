@@ -62,7 +62,7 @@ Johnson.require = function(file) {
     
     if(Ruby.File.send("file?", path)) {
       Johnson.required[file] = true;
-      Johnson.currentContext.load(path);
+      Johnson.runtime.load(path);
       
       return true;
     }

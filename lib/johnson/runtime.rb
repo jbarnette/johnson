@@ -1,11 +1,11 @@
 module Johnson
-  class Context
+  class Runtime
     attr_reader :delegate
     
-    def initialize(delegate=Johnson::SpiderMonkey::Context)
+    def initialize(delegate=Johnson::SpiderMonkey::Runtime)
       @delegate = delegate.is_a?(Class) ? delegate.new : delegate
       evaluate(Johnson::PRELUDE, "Johnson::PRELUDE", 1)
-      global.Johnson.currentContext = self
+      global.Johnson.runtime = self
     end
     
     def [](key)

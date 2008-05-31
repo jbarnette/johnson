@@ -4,22 +4,22 @@ module Johnson
   module Conversions
     class CallableTest < Johnson::TestCase
       def setup
-        @context = Johnson::Context.new
+        @runtime = Johnson::Runtime.new
       end
       
       def test_proc_works_in_jsland
-        @context[:squared] = Proc.new { |x| x * x }
+        @runtime[:squared] = Proc.new { |x| x * x }
         assert_js_equal(4, "squared(2)")
       end
       
       def test_procs_roundtrip
-        @context[:k] = k = lambda { |x| x }
-        assert_same(k, @context.evaluate("k"))
+        @runtime[:k] = k = lambda { |x| x }
+        assert_same(k, @runtime.evaluate("k"))
       end
       
       def test_proc_js_function_proxy_gets_reused
-        @context[:k] = k = lambda { |x| x }
-        @context[:kk] = k
+        @runtime[:k] = k = lambda { |x| x }
+        @runtime[:kk] = k
         assert_js("k === kk")
       end
       
@@ -30,7 +30,7 @@ module Johnson
       end
       
       def test_anything_with_a_call_method_can_be_called_as_a_method
-        @context[:c] = CallableThing.new
+        @runtime[:c] = CallableThing.new
         assert_js_equal("foo", "c()")
       end
     end

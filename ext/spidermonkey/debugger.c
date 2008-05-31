@@ -8,7 +8,7 @@ static JSTrapStatus interrupt_handler(JSContext *js, JSScript *UNUSED(script),
 {
   VALUE self = (VALUE)rb;
   VALUE rb_bytecode = jsop_to_symbol(*pc);
-  VALUE rb_rval = convert_to_ruby(OUR_CONTEXT(js), *rval);
+  VALUE rb_rval = convert_to_ruby(OUR_RUNTIME(js), *rval);
   return NUM2INT(rb_funcall(self, rb_intern("interrupt_handler"), 2, rb_bytecode, rb_rval));
 }
 
@@ -40,7 +40,7 @@ static JSTrapStatus debugger_handler(JSContext *js, JSScript *UNUSED(script),
 {
   VALUE self = (VALUE)rb;
   VALUE rb_bytecode = jsop_to_symbol(*pc);
-  VALUE rb_rval = convert_to_ruby(OUR_CONTEXT(js), *rval);
+  VALUE rb_rval = convert_to_ruby(OUR_RUNTIME(js), *rval);
   return NUM2INT(rb_funcall(self, rb_intern("debugger_handler"), 2, rb_bytecode, rb_rval));
 }
 
@@ -82,7 +82,7 @@ static void object_hook(JSContext *js, JSObject *obj, JSBool isNew, void *rb)
 {
   VALUE self = (VALUE)rb;
 
-  VALUE rb_obj = convert_to_ruby(OUR_CONTEXT(js), OBJECT_TO_JSVAL(obj));
+  VALUE rb_obj = convert_to_ruby(OUR_RUNTIME(js), OBJECT_TO_JSVAL(obj));
   VALUE rb_is_new = isNew ? Qtrue : Qfalse;
 
   rb_funcall(self, rb_intern("object_hook"), 2, rb_obj, rb_is_new);
@@ -93,7 +93,7 @@ static JSTrapStatus throw_hook(JSContext *js, JSScript *UNUSED(script),
 {
   VALUE self = (VALUE)rb;
   VALUE rb_bytecode = jsop_to_symbol(*pc);
-  VALUE rb_rval = convert_to_ruby(OUR_CONTEXT(js), *rval);
+  VALUE rb_rval = convert_to_ruby(OUR_RUNTIME(js), *rval);
   return NUM2INT(rb_funcall(self, rb_intern("throw_hook"), 2, rb_bytecode, rb_rval));
 }
 

@@ -21,14 +21,14 @@ module Johnson
     undef :default_test
     
     def assert_js(expression, options={})
-      context = options[:context] || @context
-      assert(context.evaluate(expression), "Expected JS expression [#{expression}] to be true.")
+      runtime = options[:runtime] || @runtime
+      assert(runtime.evaluate(expression), "Expected JS expression [#{expression}] to be true.")
     end
     
     def assert_js_equal(expected, expression, options={})
-      context = options.delete(:context) || @context
-      options.each { |k, v| context[k.to_s] = v }
-      assert_equal(expected, context.evaluate(expression))
+      runtime = options.delete(:runtime) || @runtime
+      options.each { |k, v| runtime[k.to_s] = v }
+      assert_equal(expected, runtime.evaluate(expression))
     end
   end
 

@@ -12,12 +12,13 @@ define_property(JSContext *js_context, JSObject* UNUSED(obj), uintN argc, jsval 
   return JS_DefineProperty(js_context, JSVAL_TO_OBJECT(argv[0]), name, argc > 2 ? argv[2] : JSVAL_VOID, NULL, NULL, flags);
 }
 
-VALUE init_spidermonkey_extensions(OurContext* context, VALUE self)
+VALUE init_spidermonkey_extensions(JohnsonContext* context, VALUE self)
 {
-  PREPARE_RUBY_JROOTS(context, 1);
+  PREPARE_RUBY_JROOTS(context->js, 1);
   
   jsval Object;
-  JCHECK(JS_GetProperty(context->js, context->global, "Object", &Object));
+  JSObject * global = JS_GetGlobalObject(context->js);
+  JCHECK(JS_GetProperty(context->js, global, "Object", &Object));
   JROOT(Object);
 
   JCHECK(JS_DefineFunction(context->js, JSVAL_TO_OBJECT(Object),

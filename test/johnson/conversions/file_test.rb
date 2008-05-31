@@ -4,14 +4,14 @@ module Johnson
   module Conversions
     class FileTest < Johnson::TestCase
       def setup
-        @context = Johnson::Context.new
+        @runtime = Johnson::Runtime.new
       end
 
       def test_read_file
         File.open(__FILE__, 'rb') { |f|
-          @context[:foo] = f
-          assert_equal(f, @context.evaluate("foo"))
-          assert_equal(File.read(__FILE__), @context.evaluate("foo.read()"))
+          @runtime[:foo] = f
+          assert_equal(f, @runtime.evaluate("foo"))
+          assert_equal(File.read(__FILE__), @runtime.evaluate("foo.read()"))
         }
       end
     end

@@ -4,7 +4,6 @@ require 'stringio'
 class ParserTest < Test::Unit::TestCase
   include Johnson::Nodes
   def setup
-    @context = Johnson::Context.new
     @parser = Johnson::Parser
   end
 

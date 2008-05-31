@@ -8,7 +8,9 @@ module Johnson
       end
       
       def test_can_create_more_than_one_without_barfing
-        Johnson::SpiderMonkey::Runtime.new
+        assert_nothing_raised {
+          Johnson::SpiderMonkey::Runtime.new
+        }
       end
     end
   end

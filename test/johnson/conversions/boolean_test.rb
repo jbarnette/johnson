@@ -4,17 +4,17 @@ module Johnson
   module Conversions
     class BooleanTest < Johnson::TestCase
       def setup
-        @context = Johnson::Context.new
+        @runtime = Johnson::Runtime.new
       end
       
       def test_truthiness
-        @context[:v] = true
-        assert_same(true, @context.evaluate("v === true"))
+        @runtime[:v] = true
+        assert_same(true, @runtime.evaluate("v === true"))
       end
 
       def test_dirty_lies
-        @context[:v] = false
-        assert_same(false, @context.evaluate("v === true"))
+        @runtime[:v] = false
+        assert_same(false, @runtime.evaluate("v === true"))
       end
     end
   end

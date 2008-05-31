@@ -4,15 +4,15 @@ module Johnson
   module Conversions
     class StructTest < Johnson::TestCase
       def setup
-        @context = Johnson::Context.new
+        @runtime = Johnson::Runtime.new
       end
 
       def test_use_struct
         f = Struct.new(:phil_collins).new
         f.phil_collins = 'awesome'
-        @context[:foo] = f
-        assert_equal(f, @context.evaluate('foo'))
-        assert_equal('awesome', @context.evaluate('foo.phil_collins'))
+        @runtime[:foo] = f
+        assert_equal(f, @runtime.evaluate('foo'))
+        assert_equal('awesome', @runtime.evaluate('foo.phil_collins'))
       end
     end
   end

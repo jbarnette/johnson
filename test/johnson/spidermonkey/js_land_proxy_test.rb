@@ -58,7 +58,7 @@ module Johnson
       end
 
       def setup
-        @context = Johnson::Context.new(Johnson::SpiderMonkey::Context)
+        @runtime = Johnson::Runtime.new(Johnson::SpiderMonkey::Runtime)
       end
 
       def test_find_constants
@@ -66,14 +66,14 @@ module Johnson
       end
 
       def test_proxies_get_reused
-        @context["foo"] = @context["bar"] = Foo.new
+        @runtime["foo"] = @runtime["bar"] = Foo.new
         assert_js_equal(true, "foo === bar")
       end
 
       def test_attributes_get_added_to_ruby
-        foo = @context["foo"] = Foo.new
+        foo = @runtime["foo"] = Foo.new
         assert !foo.respond_to?(:johnson)
-        @context.evaluate("foo.johnson = 'explode';")
+        @runtime.evaluate("foo.johnson = 'explode';")
         assert foo.respond_to?(:johnson)
         assert_equal('explode', foo.johnson)
         assert_js_equal('explode', 'foo.johnson')
@@ -81,9 +81,9 @@ module Johnson
       end
 
       def test_assign_function_as_attribute
-        foo = @context["foo"] = Foo.new
+        foo = @runtime["foo"] = Foo.new
         assert !foo.respond_to?(:johnson)
-        f = @context.evaluate("foo.johnson = function() { return 'explode'; }")
+        f = @runtime.evaluate("foo.johnson = function() { return 'explode'; }")
         assert foo.respond_to?(:johnson)
         assert_equal('explode', foo.johnson)
         assert_js_equal('explode', 'foo.johnson()')
@@ -92,115 +92,115 @@ module Johnson
       end
 
       def test_assign_function_as_attribute_with_this
-        foo = @context["foo"] = Foo.new
-        @context.evaluate("foo.ex_squared = function(x) { return this.x2(x); }")
+        foo = @runtime["foo"] = Foo.new
+        @runtime.evaluate("foo.ex_squared = function(x) { return this.x2(x); }")
         assert_equal(4, foo.ex_squared(2))
-        @context.evaluate("foo.ex_squared = 20;")
+        @runtime.evaluate("foo.ex_squared = 20;")
         assert_equal(20, foo.ex_squared)
       end
 
       def test_use_ruby_global_object
-        func = @context.evaluate("function(x) { return this.x2(x); }")
+        func = @runtime.evaluate("function(x) { return this.x2(x); }")
         foo  = Foo.new
         assert_equal(4, func.call_using(foo, 2))
       end
       
       def test_proxies_roundtrip
-        @context["foo"] = foo = Foo.new
-        assert_same(foo, @context.evaluate("foo"))
+        @runtime["foo"] = foo = Foo.new
+        assert_same(foo, @runtime.evaluate("foo"))
       end
       
       def test_proxies_classes
-        @context["Foo"] = Foo
-        assert_same(Foo, @context.evaluate("Foo"))
+        @runtime["Foo"] = Foo
+        assert_same(Foo, @runtime.evaluate("Foo"))
       end
       
       def test_proxies_modules
-        @context["AModule"] = AModule
-        assert_same(AModule, @context.evaluate("AModule"))
+        @runtime["AModule"] = AModule
+        assert_same(AModule, @runtime.evaluate("AModule"))
       end
       
       def test_proxies_hashes
-        @context["beatles"] = { "george" => "guitar" }
-        assert_equal("guitar", @context.evaluate("beatles['george']"))
+        @runtime["beatles"] = { "george" => "guitar" }
+        assert_equal("guitar", @runtime.evaluate("beatles['george']"))
       end
       
       def test_getter_calls_0_arity_method
-        @context["foo"] = Foo.new
+        @runtime["foo"] = Foo.new
         assert_js_equal(10, "foo.bar")
       end
       
       def test_getter_calls_indexer
-        @context["foo"] = indexable = Indexable.new
+        @runtime["foo"] = indexable = Indexable.new
         indexable["bar"] = 10
         
         assert_js_equal(10, "foo.bar")
       end
       
       def test_getter_returns_nil_for_unknown_properties
-        @context["foo"] = Foo.new
+        @runtime["foo"] = Foo.new
         assert_js_equal(nil, "foo.quux")
       end
 
       def test_setter_calls_key=
-        @context["foo"] = foo = Foo.new
+        @runtime["foo"] = foo = Foo.new
         assert_js_equal(42, "foo.bar = 42")
         assert_equal(42, foo.bar)
       end
       
       def test_setter_calls_indexer
-        @context["foo"] = indexable = Indexable.new
+        @runtime["foo"] = indexable = Indexable.new
         assert_js_equal(42, "foo.monkey = 42")
         assert_equal(42, indexable["monkey"])
       end
       
       def test_calls_attr_reader
-        @context["foo"] = Foo.new
+        @runtime["foo"] = Foo.new
         assert_js_equal(10, "foo.bar")
       end
       
       def test_calls_1_arity_method
-        @context["foo"] = Foo.new
+        @runtime["foo"] = Foo.new
         assert_js_equal(10, "foo.x2(5)")
       end
       
       def test_calls_n_arity_method
-        @context["foo"] = Foo.new
+        @runtime["foo"] = Foo.new
         assert_js_equal(10, "foo.add(4, 2, 2, 1, 1)")
       end
       
       def test_calls_class_method
-        @context["Foo"] = Foo
+        @runtime["Foo"] = Foo
         assert_js_equal(Foo.bar, "Foo.bar()")
       end
       
       def test_accesses_consts
-        @context["Foo"] = Foo
-        assert_same(Foo::Inner, @context.evaluate("Foo.Inner"))
+        @runtime["Foo"] = Foo
+        assert_same(Foo::Inner, @runtime.evaluate("Foo.Inner"))
       end
             
       def test_can_create_new_instances_in_js
-        @context["AClass"] = AClass
-        foo = @context.evaluate("AClass.new()")
+        @runtime["AClass"] = AClass
+        foo = @runtime.evaluate("AClass.new()")
         assert_kind_of(AClass, foo)
       end
       
       def test_class_proxies_provide_a_ctor
-        @context["AClass"] = AClass
-        foo = @context.evaluate("new AClass()")
+        @runtime["AClass"] = AClass
+        foo = @runtime.evaluate("new AClass()")
         assert_kind_of(AClass, foo)
         
-        bar = @context.evaluate("new AClass(1, 2, 3)")
+        bar = @runtime.evaluate("new AClass(1, 2, 3)")
         assert_equal([1, 2, 3], bar.args)
       end
       
       def test_dwims_blocks
-        @context["foo"] = Foo.new
+        @runtime["foo"] = Foo.new
         assert_js_equal(4, "foo.xform(2, function(x) { return x * 2 })")
       end
       
       def test_dwims_blocks_for_0_arity_methods
-        @context[:arr] = [1, 2, 3]
+        @runtime[:arr] = [1, 2, 3]
         assert_js_equal([2, 4, 6], "arr.collect(function(x) { return x * 2 })")
       end
       
@@ -221,15 +221,15 @@ module Johnson
       end
 
       def test_raises_string_to_ruby
-        assert_raise(Johnson::Error) { @context.evaluate("throw 'my string';") }
+        assert_raise(Johnson::Error) { @runtime.evaluate("throw 'my string';") }
       end
 
       def test_raises_object_to_ruby
-        assert_raise(Johnson::Error) { @context.evaluate("throw { bad: true };") }
+        assert_raise(Johnson::Error) { @runtime.evaluate("throw { bad: true };") }
       end
 
       def test_raises_exception_to_ruby
-        assert_raise(Johnson::Error) { @context.evaluate("undefinedValue();") }
+        assert_raise(Johnson::Error) { @runtime.evaluate("undefinedValue();") }
       end
     end
   end
