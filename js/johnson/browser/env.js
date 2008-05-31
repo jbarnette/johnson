@@ -29,7 +29,6 @@ print = function(txt) { Ruby.puts(txt); };
   
   window.__defineSetter__("location", function(url){
     var xhr = new XMLHttpRequest();
-    xhr.async = false;
     xhr.open("GET", url);
     xhr.onreadystatechange = function(){
       curLocation = curLocation.merge(url);
@@ -652,7 +651,6 @@ print = function(txt) { Ruby.puts(txt); };
       }
 
       if (this.async)
-        // FIXME: This is segfaulting
         new Ruby.Thread(function() { makeRequest(); });
       else
         makeRequest();

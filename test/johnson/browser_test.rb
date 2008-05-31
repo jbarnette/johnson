@@ -9,9 +9,18 @@ module Johnson
 
     def test_set_location_returns_location
       filename = "file://#{File.expand_path(__FILE__)}"
-      @runtime.evaluate("window.location = '#{filename}'")
+
+      may_thread {
+        @runtime.evaluate("window.location = '#{filename}'")
+      }
+
       uri = URI.parse(filename)
       assert_equal(uri.to_s, @runtime.evaluate('window.location').to_s)
+    end
+
+    def may_thread(&block)
+      block.call
+      (Thread.list - [Thread.main]).each { |t| t.join }
     end
   end
 end
