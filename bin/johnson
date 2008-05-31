@@ -9,7 +9,7 @@ end
 
 require "readline"
 
-CONTEXT = cx = Johnson::Context.new
+CONTEXT = cx = Johnson::Runtime.new
 CONTEXT[:alert] = lambda { |m| puts m }
 
 EXIT_VERBS = [nil] + %w(exit quit)
