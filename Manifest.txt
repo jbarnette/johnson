@@ -40,7 +40,6 @@ js/johnson/prelude.js
 js/johnson/template.js
 lib/johnson.rb
 lib/johnson/cli/options.rb
-lib/johnson/context.rb
 lib/johnson/nodes.rb
 lib/johnson/nodes/binary_node.rb
 lib/johnson/nodes/for.rb
@@ -51,6 +50,7 @@ lib/johnson/nodes/node.rb
 lib/johnson/nodes/ternary_node.rb
 lib/johnson/parser.rb
 lib/johnson/parser/syntax_error.rb
+lib/johnson/runtime.rb
 lib/johnson/spidermonkey/context.rb
 lib/johnson/spidermonkey/debugger.rb
 lib/johnson/spidermonkey/immutable_node.rb
@@ -65,9 +65,9 @@ lib/johnson/visitors/dot_visitor.rb
 lib/johnson/visitors/ecma_visitor.rb
 lib/johnson/visitors/sexp_visitor.rb
 lib/rails/init.rb
+test/assets/index.html
 test/helper.rb
 test/johnson/browser_test.rb
-test/johnson/context_test.rb
 test/johnson/conversions/array_test.rb
 test/johnson/conversions/boolean_test.rb
 test/johnson/conversions/callable_test.rb
@@ -107,6 +107,7 @@ test/johnson/nodes/void_test.rb
 test/johnson/nodes/while_test.rb
 test/johnson/nodes/with_test.rb
 test/johnson/prelude_test.rb
+test/johnson/runtime_test.rb
 test/johnson/spidermonkey/context_test.rb
 test/johnson/spidermonkey/immutable_node_test.rb
 test/johnson/spidermonkey/js_land_proxy_test.rb
@@ -116,7 +117,7 @@ test/johnson/version_test.rb
 test/johnson/visitors/dot_visitor_test.rb
 test/johnson_test.rb
 test/parser_test.rb
-todo/threading_test.rb
+todo/.keep
 vendor/spidermonkey/.cvsignore
 vendor/spidermonkey/Makefile.in
 vendor/spidermonkey/Makefile.ref
