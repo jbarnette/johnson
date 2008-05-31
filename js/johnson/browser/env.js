@@ -552,12 +552,12 @@ print = function(txt) { Ruby.puts(txt); };
   
   function makeNode(node){
     if ( node ) {
-      if ( !obj_nodes.containsKey( node ) )
-        obj_nodes.put( node, node.getNodeType() == 
-          Packages.org.w3c.dom.Node.ELEMENT_NODE ?
-            new DOMElement( node ) : new DOMNode( node ) );
+      if ( !obj_nodes['key?']( node ) )
+        obj_nodes[node] = node.getNodeType() == 
+          W3CDOMNode.ELEMENT_NODE ?
+            new DOMElement( node ) : new DOMNode( node );
       
-      return obj_nodes.get(node);
+      return obj_nodes[node];
     } else
       return null;
   }
