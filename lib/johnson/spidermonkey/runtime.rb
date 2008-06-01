@@ -19,23 +19,25 @@ module Johnson #:nodoc:
         global[key] = value
       end
 
-      protected
-      
-      def handle_js_exception(jsex)
-        raise jsex if Exception === jsex
-        raise Johnson::Error.new(jsex.to_s) unless Johnson::SpiderMonkey::RubyLandProxy === jsex
-        
-        # FIXME: sanitize stack traces
-        stack = jsex.stack rescue nil
-        
-        ex = Johnson::Error.new(jsex)
-        if stack
-          ex.set_backtrace(stack.split("\n") + caller)
-        else
-          ex.set_backtrace(caller)
+      class << self
+        def raise_js_exception(jsex)
+          raise jsex if Exception === jsex
+          raise Johnson::Error.new(jsex.to_s) unless Johnson::SpiderMonkey::RubyLandProxy === jsex
+
+          stack = jsex.stack rescue nil
+
+          message = jsex['message'] || jsex.to_s
+          at = "(#{jsex['fileName']}):#{jsex['lineNumber']}"
+          ex = Johnson::Error.new("#{message} at #{at}")
+          if stack
+            js_caller = stack.split("\n").find_all { |x| x != '@:0' }
+            ex.set_backtrace(js_caller + caller)
+          else
+            ex.set_backtrace(caller)
+          end
+
+          raise ex
         end
-        
-        raise ex
       end
     end
   end

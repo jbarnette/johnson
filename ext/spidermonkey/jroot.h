@@ -152,7 +152,7 @@
     char _jroot_msg[_JROOT_ERRSIZE]; \
     snprintf(_jroot_msg, _JROOT_ERRSIZE, (format) , ## args); \
     if (_jroot_ruby) \
-      Johnson_Error_raise(_jroot_msg); \
+      rb_raise(rb_eRuntimeError,  _jroot_msg); \
     else \
     { \
       JSString* _jroot_err_str = JS_NewStringCopyZ(_jroot_context, _jroot_msg); \

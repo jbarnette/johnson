@@ -3,6 +3,14 @@
 
 #include "spidermonkey.h"
 
+#define RAISE_JS_ERROR(rb_runtime, ex) \
+  do {\
+    JohnsonRuntime * _rt = NULL;\
+    Data_Get_Struct(rb_runtime, JohnsonRuntime, _rt);\
+    rb_funcall(CLASS_OF(rb_runtime), rb_intern("raise_js_exception"), 1,\
+      convert_to_ruby(_rt, ex)); \
+  } while(0)
+
 typedef struct {
   JSObject* global;
   JSRuntime* js;

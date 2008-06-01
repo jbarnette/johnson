@@ -68,7 +68,7 @@ Johnson.require = function(file) {
     }
   }
   
-  throw LoadError;
+  throw Ruby.LoadError;
 }
 
 null; // no need to marshal a result

@@ -1,7 +1,6 @@
 #include "conversions.h"
 #include "js_land_proxy.h"
 #include "ruby_land_proxy.h"
-#include "error.h"
 
 DEFINE_RUBY_WRAPPER(convert_to_ruby, convert_to_ruby, ARGLIST2(runtime, js_value))
 
@@ -116,7 +115,7 @@ JSBool convert_to_js(JohnsonRuntime* runtime, VALUE ruby, jsval* retval)
       return make_js_land_proxy(runtime, ruby, retval);
     
     default:
-      Johnson_Error_raise("unknown ruby type in switch");
+      rb_raise(rb_eRuntimeError, "unknown ruby type in switch");
   }
   
   *retval = JSVAL_NULL;
@@ -240,16 +239,17 @@ NORETURN(void) raise_js_error_in_ruby(JohnsonRuntime* runtime)
     JS_RemoveRoot(context, &(johnson_context->ex));
   }
 
-  VALUE ruby_context = (VALUE)JS_GetContextPrivate(context);
   VALUE ruby_runtime = (VALUE)JS_GetRuntimePrivate(runtime->js);
   if (johnson_context->ex)
-    rb_funcall(ruby_runtime, rb_intern("handle_js_exception"),
-      1, convert_to_ruby(runtime, johnson_context->ex));
+    RAISE_JS_ERROR(ruby_runtime, johnson_context->ex);
 
+  // FIXME: I don't think this is needed, it should
+  // be done on the Ruby side.
   if (!johnson_context->msg)
-    Johnson_Error_raise("Unknown JavaScript Error");
+    rb_raise(rb_eRuntimeError, "Unknown JavaScriptError");
 
-  Johnson_Error_raise(johnson_context->msg);
+  // FIXME: I don't think this can ever happen....
+  rb_raise(rb_eRuntimeError, johnson_context->msg);
 }
 
 #define TAG_RAISE 0x6
