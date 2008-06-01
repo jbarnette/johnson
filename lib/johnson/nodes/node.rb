@@ -57,6 +57,11 @@ module Johnson
       def to_dot
         DotVisitor.new { |d| d.accept(self) }
       end
+
+      def each(&block)
+        EnumeratingVisitor.new(block).accept(self)
+        self
+      end
     end
     SINGLE_NODES.each { |se| const_set(se.to_sym, Class.new(Node)) }
   end
