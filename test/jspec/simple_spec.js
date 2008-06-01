@@ -7,7 +7,12 @@ jspec.describe("awesomeness", function() {
     window.location = fileLocation;
     Johnson.waitForThreads();
     expect(window.location).to("==", uriLocation);
-    expect(document).to("be_instanceof", DOMDocument);
-    expect(document.childNodes).to("be_instanceof", Array);
+    expect(document).to("have_constructor", DOMDocument);
+    document.body;
+    document.body;
+    document.body;
+    // expect(document.body).to("have_constructor", DOMNode);
   });
 });
+
+;

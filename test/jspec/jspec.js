@@ -2,7 +2,7 @@ console = {
   indentation: 0,
   indent: function() {
     for(i=0;i<this.indentation - 1;i++) Ruby.print("  ");
-    if(this.indentation > 0) Ruby.print("- ")
+    if(this.indentation > 0) Ruby.print("- ");
   },
   group: function(msg) {
     this.info(msg);
@@ -172,6 +172,21 @@ jspec.matchers["be_instanceof"] = {
   failure_message: function(self, target, not) {
     return "Expected " + jspec.print_object(self) + (not ? "not " : "") + 
       "to be an instance of " + jspec.print_object(target) + ", but was " + 
+      jspec.print_object(target.constructor);
+  }
+}
+
+jspec.matchers["have_constructor"] = {
+  describe: function(self, target, not) {
+    return jspec.print_object(self) + " should " + (not ? "not " : "") + 
+      "have " + jspec.print_object(target) + " as its constructor";
+  },
+  matches: function(self, target) {
+    return self instanceof target;
+  },
+  failure_message: function(self, target, not) {
+    return "Expected " + jspec.print_object(self) + (not ? "not " : "") + 
+      "to have " + jspec.print_object(target) + ", as its constructor but was " + 
       jspec.print_object(target.constructor);
   }
 }

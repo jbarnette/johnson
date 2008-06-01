@@ -156,6 +156,7 @@ print = function(txt) { Ruby.puts(txt); };
       return makeNode( this._dom.createElement(name.toLowerCase()) );
     },
     getElementsByTagName: function(name){
+      Ruby.puts(this._dom);
       return new DOMNodeList( this._dom.getElementsByTagName(
         name.toLowerCase()) );
     },
