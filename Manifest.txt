@@ -11,8 +11,6 @@ ext/spidermonkey/conversions.c
 ext/spidermonkey/conversions.h
 ext/spidermonkey/debugger.c
 ext/spidermonkey/debugger.h
-ext/spidermonkey/error.c
-ext/spidermonkey/error.h
 ext/spidermonkey/extconf.rb
 ext/spidermonkey/extensions.c
 ext/spidermonkey/extensions.h
@@ -40,6 +38,7 @@ js/johnson/prelude.js
 js/johnson/template.js
 lib/johnson.rb
 lib/johnson/cli/options.rb
+lib/johnson/error.rb
 lib/johnson/nodes.rb
 lib/johnson/nodes/binary_node.rb
 lib/johnson/nodes/for.rb
@@ -63,6 +62,7 @@ lib/johnson/visitable.rb
 lib/johnson/visitors.rb
 lib/johnson/visitors/dot_visitor.rb
 lib/johnson/visitors/ecma_visitor.rb
+lib/johnson/visitors/enumerating_visitor.rb
 lib/johnson/visitors/sexp_visitor.rb
 lib/rails/init.rb
 test/assets/index.html
@@ -115,7 +115,11 @@ test/johnson/spidermonkey/ruby_land_proxy_test.rb
 test/johnson/spidermonkey/runtime_test.rb
 test/johnson/version_test.rb
 test/johnson/visitors/dot_visitor_test.rb
+test/johnson/visitors/enumerating_visitor_test.rb
 test/johnson_test.rb
+test/jspec/helper.js
+test/jspec/jspec.js
+test/jspec/simple_spec.js
 test/parser_test.rb
 todo/.keep
 vendor/spidermonkey/.cvsignore
