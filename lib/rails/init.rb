@@ -24,7 +24,7 @@ class EJSHandler < ActionView::TemplateHandler
   end
 
   def render(template)
-    ctx = Johnson::Context.new
+    ctx = Johnson::Runtime.new
     ctx.evaluate('Johnson.require("johnson/template");')
     ctx['template'] = template.source
     ctx['controller'] = @view.controller
