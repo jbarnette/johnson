@@ -34,13 +34,14 @@ namespace :test do
     t.test_files = FileList['todo/**/*_test.rb']
     t.verbose = true
   end
-  Rake::TestTask.new("jspec") do |t|
+  
+  task :jspec => :extensions do
     $LOAD_PATH << File.expand_path(File.dirname(__FILE__) + "/lib")
     Johnson.send(:remove_const, :VERSION)
-    require 'johnson'
-    Dir['test/jspec/**/*_spec.js'].each do |file|
-      rt = Johnson::Runtime.new
-      rt.load(file)
+    require "johnson"
+
+    Dir["test/jspec/**/*_spec.js"].each do |file|
+      Johnson::Runtime.new.load(file)
     end
   end
 end
@@ -57,7 +58,6 @@ task :extension => :build
 # gem depends on the native extension actually building
 Rake::Task[:gem].prerequisites << :extensions
 
-desc "Our johnson requires extensions."
 task :extensions => ["lib/johnson/spidermonkey.#{kind}"]
 
 namespace :extensions do
