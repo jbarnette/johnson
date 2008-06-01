@@ -27,6 +27,7 @@ module Johnson
         @runtime.evaluate("window.location = '#{filename}'")
       }
       doc = @runtime.evaluate('window.document')
+      assert_not_nil(doc)
     end
 
     def may_thread(&block)
