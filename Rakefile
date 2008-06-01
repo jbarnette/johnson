@@ -34,6 +34,15 @@ namespace :test do
     t.test_files = FileList['todo/**/*_test.rb']
     t.verbose = true
   end
+  Rake::TestTask.new("jspec") do |t|
+    $LOAD_PATH << File.expand_path(File.dirname(__FILE__) + "/lib")
+    Johnson.send(:remove_const, :VERSION)
+    require 'johnson'
+    Dir['test/jspec/**/*_spec.js'].each do |file|
+      rt = Johnson::Runtime.new
+      rt.load(file)
+    end
+  end
 end
 
 # make sure the C bits are up-to-date when testing
