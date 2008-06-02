@@ -160,15 +160,7 @@ print = function(txt) { Ruby.puts(txt); };
         name.toLowerCase()) );
     },
     getElementById: function(id){
-      var elems = this._dom.getElementsByTagName("*");
-      
-      for ( var i = 0; i < elems.length; i++ ) {
-        var elem = elems.item(i);
-        if ( elem.getAttribute("id") == id )
-          return makeNode(elem);
-      }
-      
-      return null;
+      return makeNode( this._dom.getElementById(id) );
     },
     get body(){
       return this.getElementsByTagName("body")[0];
@@ -319,7 +311,7 @@ print = function(txt) { Ruby.puts(txt); };
       return this.tagName.toUpperCase();
     },
     get tagName(){
-      return this._dom.getTagName();
+      return this._dom.getTagName().toUpperCase();
     },
     toString: function(){
       return "<" + this.tagName + (this.id ? "#" + this.id : "" ) + ">";
