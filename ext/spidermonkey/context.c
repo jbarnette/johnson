@@ -72,9 +72,9 @@ initialize_native(VALUE self, VALUE rb_runtime, VALUE UNUSED(options))
 #ifdef JSOPTION_VAROBJFIX
         | JSOPTION_VAROBJFIX
 #endif
-#ifdef JSOPTION_XML
-        | JSOPTION_XML
-#endif
+// #ifdef JSOPTION_XML
+//         | JSOPTION_XML
+// #endif
         );
 
     // Success.

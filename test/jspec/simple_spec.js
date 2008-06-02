@@ -8,10 +8,10 @@ jspec.describe("awesomeness", function() {
     Johnson.waitForThreads();
     expect(window.location).to("==", uriLocation);
     expect(document).to("have_constructor", DOMDocument);
-    document.body;
-    document.body;
-    document.body;
-    // expect(document.body).to("have_constructor", DOMNode);
+    GC.start
+    expect(document.body).to("have_constructor", DOMNode);
+    GC.start
+    expect(document.body).to("have_constructor", DOMNode);    
   });
 });
 

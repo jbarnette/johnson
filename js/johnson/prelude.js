@@ -71,4 +71,10 @@ Johnson.require = function(file) {
   throw LoadError;
 }
 
+this.__defineGetter__("__FILE__", function() { 
+  try { throw new Error; } catch(e) {
+    return e.stack.split("\n")[2].split("@")[1].split(":").slice(0,-1).join(":");
+  }
+})
+
 null; // no need to marshal a result
