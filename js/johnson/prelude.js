@@ -68,7 +68,7 @@ Johnson.require = function(file) {
     }
   }
   
-  throw LoadError;
+  throw Ruby.LoadError;
 }
 
 this.__defineGetter__("__FILE__", function() { 

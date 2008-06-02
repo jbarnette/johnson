@@ -1,6 +1,5 @@
 #include "ruby_land_proxy.h"
 #include "conversions.h"
-#include "error.h"
 
 DECLARE_RUBY_WRAPPER(rb_call_super, int argc; const VALUE* argv)
 DEFINE_RUBY_WRAPPER(rb_call_super, rb_call_super, ARGLIST2(argc, argv))
@@ -193,8 +192,9 @@ respond_to_p(VALUE self, VALUE sym)
 static VALUE
 native_call(int argc, VALUE* argv, VALUE self)
 {
+  // FIXME: This should really call super#native_call.
   if (!function_p(self))
-    Johnson_Error_raise("This Johnson::SpiderMonkey::RubyLandProxy isn't a function.");
+    rb_raise(rb_eRuntimeError, "This Johnson::SpiderMonkey::RubyLandProxy isn't a function.");
 
   if (argc < 1)
     rb_raise(rb_eArgError, "Target object required");

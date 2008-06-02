@@ -1,5 +1,4 @@
 #include "runtime.h"
-#include "error.h"
 #include "global.h"
 #include "idhash.h"
 #include "conversions.h"
@@ -57,40 +56,10 @@ static VALUE evaluate(int argc, VALUE* argv, VALUE self)
       JS_ClearPendingException(context);
     }
 
-    if (johnson_context->ex)
-    {
-      return rb_funcall(self, rb_intern("handle_js_exception"),
-        1, convert_to_ruby(runtime, johnson_context->ex));
-      
-      // VALUE message, file, line, stack;
-      // 
-      // jsval js_message;
-      // assert(JS_GetProperty(context->js, JSVAL_TO_OBJECT(context->ex), "message", &js_message));
-      // message = convert_to_ruby(context, js_message);
-      // 
-      // jsval js_file;
-      // assert(JS_GetProperty(context->js, JSVAL_TO_OBJECT(context->ex), "fileName", &js_file));
-      // file = convert_to_ruby(context, js_file);
-      // 
-      // jsval js_line;
-      // assert(JS_GetProperty(context->js, JSVAL_TO_OBJECT(context->ex), "lineNumber", &js_line));
-      // line = convert_to_ruby(context, js_line);
-      // 
-      // jsval js_stack;
-      // assert(JS_GetProperty(context->js, JSVAL_TO_OBJECT(context->ex), "stack", &js_stack));
-      // stack = convert_to_ruby(context, js_stack);
-      // 
-      // return rb_funcall(self, rb_intern("handle_js_exception"),
-      //   4, message, file, line, stack);
+    if (johnson_context->ex) {
+      RAISE_JS_ERROR(self, johnson_context->ex);
+      return Qnil;
     }
-    
-    char* msg = johnson_context->msg;
-
-    // toString() whatever the exception object is (if we have one)
-    if (johnson_context->ex)
-      msg = JS_GetStringBytes(JS_ValueToString(context, johnson_context->ex));
-
-    return Johnson_Error_raise(msg);
   }
 
   return convert_to_ruby(runtime, js);
@@ -189,7 +158,8 @@ initialize_native(VALUE self, VALUE UNUSED(options))
   if (runtime->js)
     JS_DestroyRuntime(runtime->js);
     
-  return Johnson_Error_raise("Couldn't initialize the runtime!");
+  rb_raise(rb_eRuntimeError, "Couldn't initialize the runtime!");
+  return Qnil;
 }
 
 JSContext* johnson_get_current_context(JohnsonRuntime * runtime)

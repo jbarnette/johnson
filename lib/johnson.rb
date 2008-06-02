@@ -24,6 +24,7 @@ require "johnson/spidermonkey/debugger"
 require "johnson/spidermonkey/immutable_node"
 
 # the 'public' interface
+require "johnson/error"
 require "johnson/runtime"
 require "johnson/parser"
 

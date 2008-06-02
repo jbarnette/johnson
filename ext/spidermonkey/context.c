@@ -1,7 +1,6 @@
 #include "context.h"
 #include "conversions.h"
 #include "global.h"
-#include "error.h"
 #include "extensions.h"
 #include "idhash.h"
 #include "jsdbgapi.h"
