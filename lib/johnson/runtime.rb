@@ -28,5 +28,12 @@ module Johnson
     def load(file)
       delegate.evaluate(IO.read(file), file, 1)
     end
+
+    private
+    # Called by SpiderMonkey's garbage collector to determine whether or
+    # not it should GC
+    def should_sm_gc?
+      false
+    end
   end
 end
