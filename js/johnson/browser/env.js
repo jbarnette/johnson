@@ -148,6 +148,7 @@ print = function(txt) { Ruby.puts(txt); };
   };
   
   DOMDocument.prototype = {
+    nodeType: 1,
     createTextNode: function(text){
       return makeNode( this._dom.createTextNode(
         text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")) );
