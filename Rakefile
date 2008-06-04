@@ -6,27 +6,32 @@ require "./lib/johnson/version.rb"
 # what sort of extension are we building?
 kind = Config::CONFIG["DLEXT"]
 
+CROSS = ENV['CROSS']
+LIBJS = FileList["vendor/spidermonkey/#{CROSS || ''}*.OBJ/libjs.{#{kind},so}"].first || :libjs
+
 GENERATED_NODE = "ext/spidermonkey/immutable_node.c"
 
 Hoe.new("johnson", Johnson::VERSION) do |p|
   p.rubyforge_name = "johnson"
-  p.author = "John Barnette"
-  p.email = "jbarnette@rubyforge.org"
+  p.author = ["John Barnette" "Aaron Patterson", "Yehuda Katz", "Matthew Draper"]
+  p.email = ["johnson-talk@googlegroups.com", "jbarnette@rubyforge.org"]
   p.summary = "Johnson wraps JavaScript in a loving Ruby embrace."
   p.description = p.paragraphs_of("README.txt", 2..5).join("\n\n")
   p.url = p.paragraphs_of("README.txt", 0).first.split(/\n/)[1..-1]
   p.changes = p.paragraphs_of("History.txt", 0..1).join("\n\n")
-  
+
   p.clean_globs = [
     "lib/johnson/spidermonkey.#{kind}",
     "ext/spidermonkey/Makefile",
     "ext/spidermonkey/*.{o,so,bundle,log}",
     GENERATED_NODE,
     "vendor/spidermonkey/**/*.OBJ"]
-    
+
   p.test_globs = ["test/**/*_test.rb"]
-    
+
   p.spec_extras = { :extensions => ["Rakefile"] }
+
+  p.extra_deps = ['rake']
 end
 
 namespace :test do
@@ -69,15 +74,24 @@ namespace :extensions do
   end
 end
 
-task :spidermonkey => "vendor/spidermonkey/jsapi.h" do
-  if ENV['CROSS']
-    Dir.chdir("vendor/spidermonkey") { sh "make -f Makefile.ref OS_CONFIG=#{ENV['CROSS']}" }
-  else
-    Dir.chdir("vendor/spidermonkey") { sh "make -f Makefile.ref" }
-  end
+build_sm = lambda do
+  cmd = "make -f Makefile.ref"
+  cmd << " OS_CONFIG=#{CROSS}" if CROSS
+  Dir.chdir("vendor/spidermonkey") { sh cmd }
 end
 
-task :spidermonkey => "vendor/spidermonkey/config/#{ENV['CROSS']}.mk" if ENV['CROSS']
+if Symbol === LIBJS
+  task LIBJS, &build_sm
+else
+  file LIBJS, &build_sm
+
+  task LIBJS => "vendor/spidermonkey/Makefile.ref"
+  task LIBJS => Dir["vendor/spidermonkey/*.[ch]"]
+  task LIBJS => Dir["vendor/spidermonkey/config/*.mk"]
+end
+
+task LIBJS => "vendor/spidermonkey/jsapi.h"
+task LIBJS => "vendor/spidermonkey/config/#{CROSS}.mk" if CROSS
 
 file "vendor/spidermonkey/config/MINGW32.mk" => "MINGW32.mk" do |t|
   cp t.prerequisites.first, t.name
@@ -89,9 +103,14 @@ file "vendor/spidermonkey/jsapi.h" do
 end
 
 file "ext/spidermonkey/spidermonkey.#{kind}" =>
-  ["ext/spidermonkey/Makefile"] + FileList["ext/spidermonkey/*.{c,h}"].to_a do
-  
+  ["ext/spidermonkey/Makefile"] + FileList["ext/spidermonkey/*.{c,h}"].to_a do |t|
+
+  old_time = File.mtime(t.name) rescue nil
   Dir.chdir("ext/spidermonkey") { sh "make" }
+
+  # If make chose not to rebuild the file, we'll touch it, so we don't
+  # bother to call make again next time.
+  sh "touch #{t.name}" if old_time && File.mtime(t.name) <= old_time
 end
 
 # for testing, we toss the SpiderMonkey extension in lib/johnson
@@ -102,9 +121,9 @@ file "lib/johnson/spidermonkey.#{kind}" =>
 end
 
 file "ext/spidermonkey/Makefile" =>
-  [:spidermonkey, GENERATED_NODE, "ext/spidermonkey/extconf.rb"] do
+  [LIBJS, GENERATED_NODE, "ext/spidermonkey/extconf.rb"] do
   
-  dirs = (ENV['CROSS'] ? [ENV["CROSSLIB"]] : []) + $:
+  dirs = (CROSS ? [ENV["CROSSLIB"]] : []) + $:
   command = ["ruby"] + dirs.map{|dir| "-I#{File.expand_path dir}"} + ["extconf.rb"]
   Dir.chdir("ext/spidermonkey") { sh *command }
 end
