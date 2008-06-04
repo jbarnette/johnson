@@ -67,6 +67,26 @@ static VALUE evaluate(int argc, VALUE* argv, VALUE self)
 
 /*
  * call-seq:
+ *   gc_zeal=(level)
+ *
+ * Sets the GC zeal.
+ * 0 = normal, 1 = Very Frequent, 2 = Extremely Frequent
+ */
+static VALUE
+set_gc_zeal(VALUE self, VALUE zeal)
+{
+  JohnsonRuntime* runtime;
+  Data_Get_Struct(self, JohnsonRuntime, runtime);
+
+  JSContext* context = johnson_get_current_context(runtime);
+
+  JS_SetGCZeal(context, NUM2INT(zeal));
+
+  return zeal;
+}
+
+/*
+ * call-seq:
  *   debugger=(debugger)
  *
  * Sets a debugger object
@@ -203,4 +223,5 @@ void init_Johnson_SpiderMonkey_Runtime(VALUE spidermonkey)
   rb_define_method(klass, "global", global, 0);
   rb_define_method(klass, "evaluate", evaluate, -1);
   rb_define_method(klass, "debugger=", set_debugger, 1);
+  rb_define_method(klass, "gc_zeal=", set_gc_zeal, 1);
 }
