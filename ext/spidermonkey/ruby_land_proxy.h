@@ -5,7 +5,7 @@
 #include "runtime.h"
 
 typedef struct {
-  char key[10];
+  void* key;
   JohnsonRuntime* runtime;
 } RubyLandProxy;
 

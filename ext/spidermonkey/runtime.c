@@ -134,9 +134,6 @@ initialize_native(VALUE self, VALUE UNUSED(options))
   JohnsonRuntime* runtime;
   Data_Get_Struct(self, JohnsonRuntime, runtime);
   
-  bool global_rooted_p = false;
-  bool gcthings_rooted_p = false;
-
   if ((runtime->js = JS_NewRuntime(0x100000))
     && (runtime->jsids = create_id_hash())
     && (runtime->rbids = create_id_hash())
@@ -147,17 +144,11 @@ initialize_native(VALUE self, VALUE UNUSED(options))
 
     JSContext* context = johnson_get_current_context(runtime);
     if(
-        (runtime->gcthings = JS_NewObject(context, NULL, 0, 0))
-        &&(gcthings_rooted_p = JS_AddNamedRoot(context, &(runtime->gcthings), "runtime->gcthings"))
-        &&(runtime->global = JS_GetGlobalObject(context))
-        &&(global_rooted_p = JS_AddNamedRoot(context, &(runtime->global), "runtime->global"))
+        (runtime->global = JS_GetGlobalObject(context))
+        && (JS_AddNamedRoot(context, &(runtime->global), "runtime->global"))
     ) {
       return self;
     }
-    if (global_rooted_p)
-      JS_RemoveRoot(context, &(runtime->global));
-    if (gcthings_rooted_p)
-      JS_RemoveRoot(context, &(runtime->gcthings));
   }
 
 

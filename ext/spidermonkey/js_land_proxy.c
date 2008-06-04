@@ -114,7 +114,7 @@ static bool const_p(VALUE self, char* name)
 
 static bool global_p(char* name)
 {
-  return rb_ary_includes(rb_f_global_variables(), rb_str_new2(name));
+  return *name == '$' && rb_ary_includes(rb_f_global_variables(), rb_str_new2(name));
 }
 
 static bool method_p(VALUE self, char* name)
@@ -549,7 +549,7 @@ static void finalize(JSContext* js_context, JSObject* obj)
             JS_GET_CLASS(context->js, obj), NULL);
     
     // remove the proxy OID from the id map
-    JS_HashTableRemove(runtime->rbids, (void *)rb_obj_id(self));
+    JS_HashTableRemove(runtime->rbids, (void *)self);
     
     // free up the ruby value for GC
     call_ruby_from_js(runtime, NULL, ruby_context, rb_intern("remove_gcthing"), 1, self);
@@ -558,15 +558,15 @@ static void finalize(JSContext* js_context, JSObject* obj)
 
 JSBool make_js_land_proxy(JohnsonRuntime* runtime, VALUE value, jsval* retval)
 {
-  JSContext * context = johnson_get_current_context(runtime);
-  jsid id = (jsid)JS_HashTableLookup(runtime->rbids, (void *)rb_obj_id(value));
+  *retval = (jsval)JS_HashTableLookup(runtime->rbids, (void *)value);
   
-  if (id)
+  if (*retval)
   {
-    return JS_IdToValue(context, id, retval);
+    return JS_TRUE;
   }
   else
   {
+    JSContext * context = johnson_get_current_context(runtime);
     PREPARE_JROOTS(context, 1);
 
     JSObject *jsobj;
@@ -597,11 +597,8 @@ JSBool make_js_land_proxy(JohnsonRuntime* runtime, VALUE value, jsval* retval)
 
     *retval = OBJECT_TO_JSVAL(jsobj);
 
-    jsval newid;
-    JCHECK(JS_ValueToId(context, *retval, &newid));
-  
     // put the proxy OID in the id map
-    JCHECK(JS_HashTableAdd(runtime->rbids, (void *)rb_obj_id(value), (void *)newid));
+    JCHECK(JS_HashTableAdd(runtime->rbids, (void *)value, (void *)(*retval)));
     
     // root the ruby value for GC
     VALUE ruby_context = (VALUE)JS_GetContextPrivate(context);

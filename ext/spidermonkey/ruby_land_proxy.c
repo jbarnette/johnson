@@ -9,23 +9,10 @@ DEFINE_RUBY_WRAPPER(rb_yield, rb_yield, ARGLIST1(v))
 
 static VALUE proxy_class = Qnil;
 
-static JSBool get_jsval_for_proxy(RubyLandProxy* proxy, jsval* jv)
+static inline JSBool get_jsval_for_proxy(RubyLandProxy* proxy, jsval* jv)
 {
-  JSContext * context = johnson_get_current_context(proxy->runtime);
-  PREPARE_JROOTS(context, 0);
-
-  // FIXME: this is totally lame
-  char global_key[10];
-  sprintf(global_key, "%x", (int)proxy->runtime->global);
-  
-  if (0 == strcmp(global_key, proxy->key))
-  {
-    *jv = OBJECT_TO_JSVAL(proxy->runtime->global);
-    JRETURN;
-  }
-  
-  JCHECK(JS_GetProperty(context, proxy->runtime->gcthings, proxy->key, jv));
-  JRETURN;
+  *jv = (jsval)(proxy->key);
+  return JS_TRUE;
 }
 
 static VALUE call_js_function_value(JohnsonRuntime* runtime, jsval target, jsval function, int argc, VALUE* argv)
@@ -454,23 +441,21 @@ static VALUE to_s(VALUE self)
 
 static void finalize(RubyLandProxy* proxy)
 {
-  JSContext * context = johnson_get_current_context(proxy->runtime);
-  PREPARE_RUBY_JROOTS(context, 0);
-  jsval proxy_value;
-  JCHECK_RUBY(get_jsval_for_proxy(proxy, &proxy_value));
-  
   // could get finalized after the context has been freed
   if (proxy->runtime && proxy->runtime->jsids)
   {
     // remove this proxy from the OID map
+    jsval proxy_value;
+    get_jsval_for_proxy(proxy, &proxy_value);
     JS_HashTableRemove(proxy->runtime->jsids, (void *)proxy_value);
-  
-    // remove our GC handle on the JS value
-    JS_DeleteProperty(context, proxy->runtime->gcthings, proxy->key);
-    
-    proxy->runtime = 0;
   }
-  
+
+  if (proxy->runtime)
+  {
+    // remove our GC handle on the JS value
+    JS_RemoveRootRT(proxy->runtime->js, &(proxy->key));
+  }
+
   free(proxy);
 }
 
@@ -496,13 +481,11 @@ JSBool unwrap_ruby_land_proxy(JohnsonRuntime* runtime, VALUE wrapped, jsval* ret
 VALUE make_ruby_land_proxy(JohnsonRuntime* runtime, jsval value)
 {
   VALUE id = (VALUE)JS_HashTableLookup(runtime->jsids, (void *)value);
-  JSContext * context = johnson_get_current_context(runtime);
   
   if (id)
   {
     // if we already have a proxy, return it
-    return rb_funcall(rb_const_get(rb_cObject,
-      rb_intern("ObjectSpace")), rb_intern("_id2ref"), 1, id);
+    return id;
   }
   else
   {    
@@ -510,18 +493,19 @@ VALUE make_ruby_land_proxy(JohnsonRuntime* runtime, jsval value)
     RubyLandProxy* our_proxy; 
     VALUE proxy = Data_Make_Struct(proxy_class, RubyLandProxy, 0, finalize, our_proxy);
 
+    JSContext * context = johnson_get_current_context(runtime);
+
     PREPARE_RUBY_JROOTS(context, 1);
     JROOT(value);
 
-    // root the value for JS GC and lookups
-    sprintf(our_proxy->key, "%x", (int)value);
-    
-    JCHECK(JS_SetProperty(context, runtime->gcthings, our_proxy->key, &value));
-
     our_proxy->runtime = runtime;
+    our_proxy->key = (void *)value;
+
+    // root the value for JS GC and lookups
+    JCHECK(JS_AddNamedRootRT(runtime->js, &(our_proxy->key), "RubyLandProxy"));
 
     // put the proxy OID in the id map
-    JCHECK(JS_HashTableAdd(runtime->jsids, (void *)value, (void *)rb_obj_id(proxy)));
+    JCHECK(JS_HashTableAdd(runtime->jsids, (void *)value, (void *)proxy));
     
     JRETURN_RUBY(proxy);
   }
