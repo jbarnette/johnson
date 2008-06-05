@@ -106,8 +106,8 @@ jspec.print_object = function(obj) {
   } else if(obj instanceof Array) {
     return "[" + obj.toString() + "]";
   } else if(typeof HTMLElement != "undefined" && obj instanceof HTMLElement) {
-     return "<" + obj.tagName + " " + (obj.className != "" ? "class='" + obj.className + "'" : "") + 
-       (obj.id != "" ? "id='" + obj.id + "'" : "") + ">";
+     return "<" + obj.tagName + (obj.className != "" ? " class='" + obj.className + "'" : "") + 
+       (obj.id != "" ? " id='" + obj.id + "'" : "") + ">";
   } else if(typeof DOMDocument != "undefined" && obj instanceof DOMDocument) {
     return "The document element";
   } else {
