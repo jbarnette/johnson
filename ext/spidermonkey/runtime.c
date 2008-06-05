@@ -67,6 +67,26 @@ static VALUE evaluate(int argc, VALUE* argv, VALUE self)
 
 /*
  * call-seq:
+ *   gc_zeal=(level)
+ *
+ * Sets the GC zeal.
+ * 0 = normal, 1 = Very Frequent, 2 = Extremely Frequent
+ */
+static VALUE
+set_gc_zeal(VALUE self, VALUE zeal)
+{
+  JohnsonRuntime* runtime;
+  Data_Get_Struct(self, JohnsonRuntime, runtime);
+
+  JSContext* context = johnson_get_current_context(runtime);
+
+  JS_SetGCZeal(context, NUM2INT(zeal));
+
+  return zeal;
+}
+
+/*
+ * call-seq:
  *   debugger=(debugger)
  *
  * Sets a debugger object
@@ -134,9 +154,6 @@ initialize_native(VALUE self, VALUE UNUSED(options))
   JohnsonRuntime* runtime;
   Data_Get_Struct(self, JohnsonRuntime, runtime);
   
-  bool global_rooted_p = false;
-  bool gcthings_rooted_p = false;
-
   if ((runtime->js = JS_NewRuntime(0x100000))
     && (runtime->jsids = create_id_hash())
     && (runtime->rbids = create_id_hash())
@@ -147,17 +164,11 @@ initialize_native(VALUE self, VALUE UNUSED(options))
 
     JSContext* context = johnson_get_current_context(runtime);
     if(
-        (runtime->gcthings = JS_NewObject(context, NULL, 0, 0))
-        &&(gcthings_rooted_p = JS_AddNamedRoot(context, &(runtime->gcthings), "runtime->gcthings"))
-        &&(runtime->global = JS_GetGlobalObject(context))
-        &&(global_rooted_p = JS_AddNamedRoot(context, &(runtime->global), "runtime->global"))
+        (runtime->global = JS_GetGlobalObject(context))
+        && (JS_AddNamedRoot(context, &(runtime->global), "runtime->global"))
     ) {
       return self;
     }
-    if (global_rooted_p)
-      JS_RemoveRoot(context, &(runtime->global));
-    if (gcthings_rooted_p)
-      JS_RemoveRoot(context, &(runtime->gcthings));
   }
 
 
@@ -212,4 +223,5 @@ void init_Johnson_SpiderMonkey_Runtime(VALUE spidermonkey)
   rb_define_method(klass, "global", global, 0);
   rb_define_method(klass, "evaluate", evaluate, -1);
   rb_define_method(klass, "debugger=", set_debugger, 1);
+  rb_define_method(klass, "gc_zeal=", set_gc_zeal, 1);
 }

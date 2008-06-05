@@ -3,8 +3,8 @@ module Johnson #:nodoc:
     class Context # native
       def initialize(runtime, options={})
         @runtime = runtime
-        initialize_native(runtime, options)
         @gcthings = {}
+        initialize_native(runtime, options)
       end
       
       # called from js_land_proxy.c:make_js_land_proxy
