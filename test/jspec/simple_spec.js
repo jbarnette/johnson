@@ -57,3 +57,10 @@ jspec.describe("jQuery Support", function() {
     expect($("hr").length).to("==", 2);
   });
 });
+
+jspec.describe("The jQuery file", function() {
+  it("loads the jQuery HTML files", function() {
+    window.location = "file:" + Ruby.File.expand_path(Ruby.Dir.pwd()) + "/test/assets/jquery_test.html";
+    expect($("h1").length).to("==", 1);
+  });
+});
