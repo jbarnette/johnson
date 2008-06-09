@@ -2,7 +2,6 @@
 #define JOHNSON_SPIDERMONKEY_H
 
 #include <assert.h>
-#include <stdio.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <ruby.h>
