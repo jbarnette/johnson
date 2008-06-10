@@ -3,10 +3,6 @@ require File.expand_path(File.join(File.dirname(__FILE__), "/../../helper"))
 module Johnson
   module Conversions
     class NumberTest < Johnson::TestCase
-      def setup
-        @runtime = Johnson::Runtime.new
-      end
-      
       def test_ruby_fixnum_in_js
         @runtime[:v] = 42
         

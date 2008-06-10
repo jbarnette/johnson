@@ -2,10 +2,6 @@ require File.expand_path(File.join(File.dirname(__FILE__), "/../helper"))
 
 module Johnson
   class PreludeTest < Johnson::TestCase
-    def setup
-      @runtime = Johnson::Runtime.new
-    end
-    
     def test_symbols_are_interned
       assert(@runtime.evaluate("Johnson.symbolize('foo') === Johnson.symbolize('foo')"))
     end

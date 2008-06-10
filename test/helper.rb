@@ -19,6 +19,10 @@ module Johnson
     end
 
     undef :default_test
+
+    def setup
+      @runtime = Johnson::Runtime.new
+    end
     
     def assert_js(expression, options={})
       runtime = options[:runtime] || @runtime

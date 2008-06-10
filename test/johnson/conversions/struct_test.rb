@@ -3,10 +3,6 @@ require File.expand_path(File.join(File.dirname(__FILE__), "/../../helper"))
 module Johnson
   module Conversions
     class StructTest < Johnson::TestCase
-      def setup
-        @runtime = Johnson::Runtime.new
-      end
-
       def test_use_struct
         f = Struct.new(:phil_collins).new
         f.phil_collins = 'awesome'

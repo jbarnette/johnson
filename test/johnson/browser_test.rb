@@ -5,7 +5,7 @@ require 'net/http'
 module Johnson
   class BrowserTest < Johnson::TestCase
     def setup
-      @runtime = Johnson::Runtime.new
+      super
       @runtime.evaluate('Johnson.require("johnson/browser");')
     end
 

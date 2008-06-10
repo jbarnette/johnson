@@ -3,10 +3,6 @@ require File.expand_path(File.join(File.dirname(__FILE__), "/../../helper"))
 module Johnson
   module Conversions
     class CallableTest < Johnson::TestCase
-      def setup
-        @runtime = Johnson::Runtime.new
-      end
-      
       def test_proc_works_in_jsland
         @runtime[:squared] = Proc.new { |x| x * x }
         assert_js_equal(4, "squared(2)")

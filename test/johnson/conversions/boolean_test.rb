@@ -3,10 +3,6 @@ require File.expand_path(File.join(File.dirname(__FILE__), "/../../helper"))
 module Johnson
   module Conversions
     class BooleanTest < Johnson::TestCase
-      def setup
-        @runtime = Johnson::Runtime.new
-      end
-      
       def test_truthiness
         @runtime[:v] = true
         assert_same(true, @runtime.evaluate("v === true"))

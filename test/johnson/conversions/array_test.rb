@@ -3,10 +3,6 @@ require File.expand_path(File.join(File.dirname(__FILE__), "/../../helper"))
 module Johnson
   module Conversions
     class ArrayTest < Johnson::TestCase
-      def setup
-        @runtime = Johnson::Runtime.new
-      end
-      
       def test_array_index_get
         @runtime[:list] = [1, 2, 3, 4]
         assert_equal(1, @runtime.evaluate("list[0]"))

@@ -4,7 +4,7 @@ module Johnson
   module Extensions
     class DefinePropertyTest < Johnson::TestCase
       def setup
-        @runtime = Johnson::Runtime.new
+        super
         @runtime.evaluate("x = {}")
       end      
       
