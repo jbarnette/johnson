@@ -5,6 +5,7 @@ module Johnson #:nodoc:
 
       def initialize(options={})
         initialize_native(options)
+        @debugger = nil
         self["Ruby"] = Object
       end
 

@@ -80,6 +80,9 @@ static void * call_hook(JSContext *UNUSED(js), JSStackFrame *UNUSED(fp), JSBool 
 
 static void object_hook(JSContext *js, JSObject *obj, JSBool isNew, void *rb)
 {
+  assert(rb);
+  assert(js);
+  assert(obj);
   VALUE self = (VALUE)rb;
 
   VALUE rb_obj = convert_to_ruby(OUR_RUNTIME(js), OBJECT_TO_JSVAL(obj));

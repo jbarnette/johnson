@@ -97,6 +97,7 @@ set_debugger(VALUE self, VALUE debugger)
   JohnsonRuntime* runtime;
   JSDebugHooks* debug_hooks;
 
+  rb_iv_set(self, "@debugger", debugger);
   Data_Get_Struct(self, JohnsonRuntime, runtime);
   Data_Get_Struct(debugger, JSDebugHooks, debug_hooks);
 
