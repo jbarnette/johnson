@@ -58,9 +58,11 @@ jspec.describe("jQuery Support", function() {
   });
 });
 
+Johnson.require("johnson/browser/jquery");
 jspec.describe("The jQuery file", function() {
   it("loads the jQuery HTML files", function() {
     window.location = "file:" + Ruby.File.expand_path(Ruby.Dir.pwd()) + "/test/assets/jquery_test.html";
+    Johnson.waitForThreads();
     expect($("h1").length).to("==", 1);
   });
 });

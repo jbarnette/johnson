@@ -141,7 +141,12 @@ print = function(txt) { Ruby.puts(txt); };
   window.DOMDocument = function(file){
     this._file = file;
     var parser = new W3CDOMImplementation();
-    this._dom = parser.loadXML(file);
+    try {
+      this._dom = parser.loadXML(file);
+    } catch(e) {
+      Ruby.puts("*** wycats to fix: " + parser.translateErrCode(e.code));
+      throw parser.translateErrCode(e.code);
+    }
     
     if ( !obj_nodes["key?"]( this._dom ) )
       obj_nodes[this._dom] = this;
@@ -632,9 +637,7 @@ print = function(txt) { Ruby.puts(txt); };
           self.responseXML = null;
           
           if ( self.responseText.match(/^\s*</) ) {
-            try {
-              self.responseXML = new DOMDocument( self.responseText );
-            } catch(e) {}
+            self.responseXML = new DOMDocument( self.responseText );
           }
         }
         
