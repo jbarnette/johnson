@@ -4,12 +4,15 @@
 #include "immutable_node.h"
 
 static JSTrapStatus interrupt_handler(JSContext *js, JSScript *UNUSED(script),
-                                      jsbytecode *pc, jsval *rval, void *rb)
+                                      jsbytecode *pc, jsval *UNUSED(rval), void *rb)
 {
+  assert(js);
+  assert(rb);
+  assert(pc);
+
   VALUE self = (VALUE)rb;
   VALUE rb_bytecode = jsop_to_symbol(*pc);
-  VALUE rb_rval = convert_to_ruby(OUR_RUNTIME(js), *rval);
-  return NUM2INT(rb_funcall(self, rb_intern("interrupt_handler"), 2, rb_bytecode, rb_rval));
+  return NUM2INT(rb_funcall(self, rb_intern("interrupt_handler"), 1, rb_bytecode));
 }
 
 static void new_script_hook(JSContext *UNUSED(js),
@@ -35,13 +38,12 @@ static void destroy_script_hook(JSContext *UNUSED(js),
   rb_funcall(self, rb_intern("destroy_script_hook"), 0);
 }
 
-static JSTrapStatus debugger_handler(JSContext *js, JSScript *UNUSED(script),
-                                     jsbytecode *pc, jsval *rval, void *rb)
+static JSTrapStatus debugger_handler(JSContext *UNUSED(js), JSScript *UNUSED(script),
+                                     jsbytecode *pc, jsval *UNUSED(rval), void *rb)
 {
   VALUE self = (VALUE)rb;
   VALUE rb_bytecode = jsop_to_symbol(*pc);
-  VALUE rb_rval = convert_to_ruby(OUR_RUNTIME(js), *rval);
-  return NUM2INT(rb_funcall(self, rb_intern("debugger_handler"), 2, rb_bytecode, rb_rval));
+  return NUM2INT(rb_funcall(self, rb_intern("debugger_handler"), 1, rb_bytecode));
 }
 
 static void source_handler(const char *filename, uintN lineno,
@@ -85,19 +87,17 @@ static void object_hook(JSContext *js, JSObject *obj, JSBool isNew, void *rb)
   assert(obj);
   VALUE self = (VALUE)rb;
 
-  VALUE rb_obj = convert_to_ruby(OUR_RUNTIME(js), OBJECT_TO_JSVAL(obj));
   VALUE rb_is_new = isNew ? Qtrue : Qfalse;
 
-  rb_funcall(self, rb_intern("object_hook"), 2, rb_obj, rb_is_new);
+  rb_funcall(self, rb_intern("object_hook"), 1, rb_is_new);
 }
 
-static JSTrapStatus throw_hook(JSContext *js, JSScript *UNUSED(script),
-                               jsbytecode *pc, jsval *rval, void *rb)
+static JSTrapStatus throw_hook(JSContext *UNUSED(js), JSScript *UNUSED(script),
+                               jsbytecode *pc, jsval *UNUSED(rval), void *rb)
 {
   VALUE self = (VALUE)rb;
   VALUE rb_bytecode = jsop_to_symbol(*pc);
-  VALUE rb_rval = convert_to_ruby(OUR_RUNTIME(js), *rval);
-  return NUM2INT(rb_funcall(self, rb_intern("throw_hook"), 2, rb_bytecode, rb_rval));
+  return NUM2INT(rb_funcall(self, rb_intern("throw_hook"), 1, rb_bytecode));
 }
 
 static JSBool debug_error_hook(JSContext *UNUSED(js), const char *message,

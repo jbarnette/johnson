@@ -11,8 +11,8 @@ module Johnson #:nodoc:
         @logger = logger
       end
 
-      def interrupt_handler(bytecode, rval)
-        logger.debug("interrupt_handler: #{bytecode}, #{rval}")
+      def interrupt_handler(bytecode)
+        logger.debug("interrupt_handler: #{bytecode}")
         JSTRAP_CONTINUE
       end
 
@@ -24,8 +24,8 @@ module Johnson #:nodoc:
         logger.debug("destroy_script_hook")
       end
 
-      def debugger_handler(bytecode, rval)
-        logger.debug("debugger_handler: #{bytecode} #{rval}")
+      def debugger_handler(bytecode)
+        logger.debug("debugger_handler: #{bytecode}")
         JSTRAP_CONTINUE
       end
 
@@ -45,14 +45,13 @@ module Johnson #:nodoc:
         logger.debug("call_hook: #{before} #{ok}")
       end
 
-      def object_hook(object, is_new)
-        # FIXME object.to_s breaks for eval... wtf?
-        logger.debug("object_hook: #{object.class} #{is_new}")
+      def object_hook(is_new)
+        logger.debug("object_hook: #{is_new}")
       end
 
       # This hook can change the control
-      def throw_hook(bytecode, rval)
-        logger.debug("throw_hook: #{bytecode} #{rval}")
+      def throw_hook(bytecode)
+        logger.debug("throw_hook: #{bytecode}")
         JSTRAP_CONTINUE
       end
 
