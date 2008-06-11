@@ -3,7 +3,40 @@
 #include "conversions.h"
 #include "immutable_node.h"
 
-static JSTrapStatus interrupt_handler(JSContext *js, JSScript *UNUSED(script),
+static VALUE frame_pc(VALUE UNUSED(self), VALUE context, VALUE frame)
+{
+  JSContext * js = NULL;
+  JSStackFrame * fp = NULL;
+  Data_Get_Struct(context, JSContext, js);
+  Data_Get_Struct(frame, JSStackFrame, fp);
+  return Data_Wrap_Struct(rb_cObject, NULL, NULL, JS_GetFramePC(js, fp));
+}
+
+static VALUE line_number(VALUE UNUSED(self), VALUE context, VALUE script, VALUE bytecode)
+{
+  JSContext * js        = NULL;
+  JSScript * js_script     = NULL;
+  jsbytecode * js_bytecode = NULL;
+
+  Data_Get_Struct(context, JSContext, js);
+  Data_Get_Struct(script, JSScript, js_script);
+  Data_Get_Struct(bytecode, jsbytecode, js_bytecode);
+
+  return INT2NUM(JS_PCToLineNumber(js, js_script, js_bytecode));
+}
+
+static VALUE file_name(VALUE UNUSED(self), VALUE context, VALUE script)
+{
+  JSContext * js        = NULL;
+  JSScript * js_script     = NULL;
+
+  Data_Get_Struct(context, JSContext, js);
+  Data_Get_Struct(script, JSScript, js_script);
+
+  return rb_str_new2(JS_GetScriptFilename(js, js_script));
+}
+
+static JSTrapStatus interrupt_handler(JSContext *js, JSScript *script,
                                       jsbytecode *pc, jsval *UNUSED(rval), void *rb)
 {
   assert(js);
@@ -11,8 +44,15 @@ static JSTrapStatus interrupt_handler(JSContext *js, JSScript *UNUSED(script),
   assert(pc);
 
   VALUE self = (VALUE)rb;
-  VALUE rb_bytecode = jsop_to_symbol(*pc);
-  return NUM2INT(rb_funcall(self, rb_intern("interrupt_handler"), 1, rb_bytecode));
+  VALUE rb_cx     = Data_Wrap_Struct(rb_cObject, NULL, NULL, js);
+  VALUE rb_script = Data_Wrap_Struct(rb_cObject, NULL, NULL, script);
+  VALUE rb_pc     = Data_Wrap_Struct(rb_cObject, NULL, NULL, pc);
+
+  return NUM2INT(rb_funcall(self, rb_intern("interrupt_handler"), 3,
+        rb_cx,
+        rb_script,
+        rb_pc
+        ));
 }
 
 static void new_script_hook(JSContext *UNUSED(js),
@@ -38,12 +78,23 @@ static void destroy_script_hook(JSContext *UNUSED(js),
   rb_funcall(self, rb_intern("destroy_script_hook"), 0);
 }
 
-static JSTrapStatus debugger_handler(JSContext *UNUSED(js), JSScript *UNUSED(script),
+static JSTrapStatus debugger_handler(JSContext *js, JSScript *script,
                                      jsbytecode *pc, jsval *UNUSED(rval), void *rb)
 {
+  assert(js);
+  assert(rb);
+  assert(pc);
+
   VALUE self = (VALUE)rb;
-  VALUE rb_bytecode = jsop_to_symbol(*pc);
-  return NUM2INT(rb_funcall(self, rb_intern("debugger_handler"), 1, rb_bytecode));
+  VALUE rb_cx     = Data_Wrap_Struct(rb_cObject, NULL, NULL, js);
+  VALUE rb_script = Data_Wrap_Struct(rb_cObject, NULL, NULL, script);
+  VALUE rb_pc     = Data_Wrap_Struct(rb_cObject, NULL, NULL, pc);
+
+  return NUM2INT(rb_funcall(self, rb_intern("debugger_handler"), 3,
+        rb_cx,
+        rb_script,
+        rb_pc
+        ));
 }
 
 static void source_handler(const char *filename, uintN lineno,
@@ -58,14 +109,16 @@ static void source_handler(const char *filename, uintN lineno,
   rb_funcall(self, rb_intern("source_handler"), 3, rb_filename, rb_lineno, rb_str);
 }
 
-static void * execute_hook(JSContext *UNUSED(js), JSStackFrame *UNUSED(fp), JSBool before,
+static void * execute_hook(JSContext *js, JSStackFrame *fp, JSBool before,
                            JSBool *ok, void *rb)
 {
   VALUE self = (VALUE)rb;
   VALUE rb_before = JS_TRUE == before ? Qtrue : Qfalse;
   VALUE rb_ok     = ok ? Qtrue : Qfalse;
+  VALUE rb_js     = Data_Wrap_Struct(rb_cObject, NULL, NULL, (void *)js);
+  VALUE rb_fp     = Data_Wrap_Struct(rb_cObject, NULL, NULL, (void *)fp);
 
-  rb_funcall(self, rb_intern("execute_hook"), 2, rb_before, rb_ok);
+  rb_funcall(self, rb_intern("execute_hook"), 4, rb_js,rb_fp,rb_before,rb_ok);
   return rb;
 }
 
@@ -146,7 +199,10 @@ void init_Johnson_SpiderMonkey_Debugger(VALUE spidermonkey)
   */
 
   /* This is the debugging hooks used with SpiderMonkey. */
-  VALUE context = rb_define_class_under(spidermonkey, "Debugger", rb_cObject);
+  VALUE debugger = rb_define_class_under(spidermonkey, "Debugger", rb_cObject);
+  rb_define_private_method(debugger, "frame_pc", frame_pc, 2);
+  rb_define_private_method(debugger, "line_number", line_number, 3);
+  rb_define_private_method(debugger, "file_name", file_name, 2);
 
-  rb_define_alloc_func(context, allocate);
+  rb_define_alloc_func(debugger, allocate);
 }

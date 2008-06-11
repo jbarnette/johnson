@@ -11,8 +11,10 @@ module Johnson #:nodoc:
         @logger = logger
       end
 
-      def interrupt_handler(bytecode)
-        logger.debug("interrupt_handler: #{bytecode}")
+      def interrupt_handler(context, script, bytecode)
+        line_num  = line_number(context, script, bytecode)
+        f_name    = file_name(context, script)
+        logger.debug("interrupt_handler #{f_name} #{line_num}")
         JSTRAP_CONTINUE
       end
 
@@ -24,7 +26,9 @@ module Johnson #:nodoc:
         logger.debug("destroy_script_hook")
       end
 
-      def debugger_handler(bytecode)
+      def debugger_handler(context, script, bytecode)
+        line_num  = line_number(context, script, bytecode)
+        f_name    = file_name(context, script)
         logger.debug("debugger_handler: #{bytecode}")
         JSTRAP_CONTINUE
       end
@@ -35,7 +39,7 @@ module Johnson #:nodoc:
 
       # +call_hook+ is called before and after script execution.  +before+
       # is +true+ if before, +false+ otherwise.
-      def execute_hook(before, ok)
+      def execute_hook(context, stack_frame, before, ok)
         logger.debug("execute_hook: #{before} #{ok}")
       end
 
