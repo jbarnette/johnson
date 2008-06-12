@@ -29,6 +29,22 @@ module Johnson
       delegate.evaluate(IO.read(file), file, 1)
     end
 
+    ###
+    # Compile +script+ with +filename+ and +linenum+
+    def compile(script, filename=nil, linenum=nil)
+      delegate.compile(script, filename, linenum)
+    end
+
+    ###
+    # Yield to +block+ in +filename+ at +linenum+
+    def break(filename, linenum, &block)
+      delegate.break(filename, linenum, &block)
+    end
+
+    def evaluate_compiled_script(script)
+      delegate.evaluate_compiled_script(script)
+    end
+
     private
     # Called by SpiderMonkey's garbage collector to determine whether or
     # not it should GC

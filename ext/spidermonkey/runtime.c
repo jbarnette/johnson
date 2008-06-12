@@ -3,6 +3,7 @@
 #include "idhash.h"
 #include "conversions.h"
 #include "jsdbgapi.h"
+#include "jroot.h"
 
 /*
  * call-seq:
@@ -17,35 +18,91 @@ static VALUE global(VALUE self)
   return convert_to_ruby(runtime, OBJECT_TO_JSVAL(runtime->global));
 }
 
+static JSTrapStatus trap_handler( JSContext *UNUSED(context),
+                                  JSScript *UNUSED(script),
+                                  jsbytecode *UNUSED(pc),
+                                  jsval *UNUSED(rval),
+                                  void *block_closure )
+{
+  VALUE block = (VALUE)block_closure;
+  rb_funcall(block, rb_intern("call"), 0);
+  return JSTRAP_CONTINUE;
+}
+
 /*
  * call-seq:
- *   evaluate(script, filename=nil, linenum=nil)
+ *   set_trap(script, parsecode, block)
  *
- * Evaluate +script+ with +filename+ using +linenum+
+ * Set the trap at +script+ and +parsecode+ to +block+
  */
-static VALUE evaluate(int argc, VALUE* argv, VALUE self)
+static VALUE set_trap(VALUE self, VALUE script, VALUE linenum, VALUE block)
 {
-  VALUE script, filename, linenum;
+  JohnsonRuntime* runtime;
+  Data_Get_Struct(self, JohnsonRuntime, runtime);
 
+  JSContext * context = johnson_get_current_context(runtime);
+  jsval compiled_js;
+  if(!convert_to_js(runtime, script, &compiled_js))
+    rb_raise(rb_eRuntimeError, "Couldn't get compiled script.");
+  JSScript * js_script = (JSScript *)JS_GetPrivate(context, JSVAL_TO_OBJECT(compiled_js));
+
+  jsbytecode * pc = JS_LineNumberToPC(context, js_script, (uintN)NUM2INT(linenum));
+  return JS_SetTrap(context, js_script, pc, trap_handler, (void*)block) ? Qtrue : Qfalse;
+}
+
+/*
+ * call-seq:
+ *   native_compile(script, filename, linenum)
+ *
+ * Compile +script+ with +filename+ using +linenum+
+ */
+static VALUE native_compile(VALUE self, VALUE script, VALUE filename, VALUE linenum)
+{
+  JohnsonRuntime* runtime;
+  Data_Get_Struct(self, JohnsonRuntime, runtime);
+
+  JSContext * context = johnson_get_current_context(runtime);
+
+  JSScript * compiled_js = JS_CompileScript(
+      context,
+      runtime->global,
+      StringValuePtr(script),
+      (size_t)StringValueLen(script),
+      StringValueCStr(filename),
+      (unsigned)NUM2INT(linenum)
+  );
+  JSObject * script_object = JS_NewScriptObject(context, compiled_js);
+  PREPARE_RUBY_JROOTS(context, 1);
+  JROOT(script_object);
+  JRETURN_RUBY(make_ruby_land_proxy(runtime, OBJECT_TO_JSVAL(script_object)));
+}
+
+/*
+ * call-seq:
+ *   evaluate_compiled_script(script)
+ *
+ * Evaluate +script+
+ */
+static VALUE evaluate_compiled_script(VALUE self, VALUE compiled_script)
+{
   JohnsonRuntime* runtime;
   Data_Get_Struct(self, JohnsonRuntime, runtime);
 
   JSContext * context = johnson_get_current_context(runtime);
   JohnsonContext * johnson_context = OUR_CONTEXT(context);
-  rb_scan_args( argc, argv, "12", &script, &filename, &linenum );
 
   // clean things up first
   johnson_context->ex = 0;
   memset(johnson_context->msg, 0, MAX_EXCEPTION_MESSAGE_SIZE);
 
-  const char* filenamez = RTEST(filename) ? StringValueCStr(filename) : "none";
-  int linenumi = RTEST(linenum) ? NUM2INT(linenum) : 1;
+  jsval compiled_js;
+  if(!convert_to_js(runtime, compiled_script, &compiled_js))
+    rb_raise(rb_eRuntimeError, "Script compilation failed");
+
+  JSScript * js_script = (JSScript *)JS_GetPrivate(context, JSVAL_TO_OBJECT(compiled_js));
 
   jsval js;
-
-  // FIXME: should be able to pass in the 'file' name
-  JSBool ok = JS_EvaluateScript(context, runtime->global,
-    StringValuePtr(script), (unsigned)StringValueLen(script), filenamez, (unsigned)linenumi, &js);
+  JSBool ok = JS_ExecuteScript(context, runtime->global, js_script, &js);
 
   if (!ok)
   {
@@ -222,7 +279,9 @@ void init_Johnson_SpiderMonkey_Runtime(VALUE spidermonkey)
   rb_define_private_method(klass, "initialize_native", initialize_native, 1);
 
   rb_define_method(klass, "global", global, 0);
-  rb_define_method(klass, "evaluate", evaluate, -1);
   rb_define_method(klass, "debugger=", set_debugger, 1);
   rb_define_method(klass, "gc_zeal=", set_gc_zeal, 1);
+  rb_define_method(klass, "evaluate_compiled_script", evaluate_compiled_script, 1);
+  rb_define_private_method(klass, "native_compile", native_compile, 3);
+  rb_define_private_method(klass, "set_trap", set_trap, 3);
 }

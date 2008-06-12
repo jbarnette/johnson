@@ -6,6 +6,7 @@ module Johnson #:nodoc:
       def initialize(options={})
         initialize_native(options)
         @debugger = nil
+        @compiled_scripts = {}
         self["Ruby"] = Object
       end
 
@@ -20,6 +21,29 @@ module Johnson #:nodoc:
       
       def []=(key, value)
         global[key] = value
+      end
+
+      ###
+      # Evaluate +script+ with +filename+ and +linenum+
+      def evaluate(script, filename = nil, linenum = nil)
+        evaluate_compiled_script(compile(script, filename, linenum))
+      end
+
+      ###
+      # Compile +script+ with +filename+ and +linenum+
+      def compile(script, filename=nil, linenum=nil)
+        filename ||= 'none'
+        linenum  ||= 1
+        @compiled_scripts[filename] = native_compile(script, filename, linenum)
+      end
+
+      ###
+      # Yield to +block+ in +filename+ at +linenum+
+      def break(filename, linenum, &block)
+        raise "#{filename} has not been compiled" unless @compiled_scripts.key?(filename)
+
+        compiled_script = @compiled_scripts[filename]
+        set_trap(compiled_script, linenum, block)
       end
 
       class << self
