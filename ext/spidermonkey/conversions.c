@@ -184,6 +184,7 @@ VALUE convert_to_ruby(JohnsonRuntime* runtime, jsval js)
   JSContext * context = johnson_get_current_context(runtime);
 
   PREPARE_RUBY_JROOTS(context, 1);
+  JROOT(js);
   
   switch (JS_TypeOfValue(context, js))
   {
@@ -192,8 +193,6 @@ VALUE convert_to_ruby(JohnsonRuntime* runtime, jsval js)
       
     case JSTYPE_FUNCTION: 
     case JSTYPE_OBJECT:
-      JROOT(js);
-
       if (OBJECT_TO_JSVAL(runtime->global) == js)
         // global gets special treatment, since the Prelude might not be loaded
         JRETURN_RUBY(make_ruby_land_proxy(runtime, js));

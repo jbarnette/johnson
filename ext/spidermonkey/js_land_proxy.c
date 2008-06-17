@@ -547,12 +547,12 @@ static void finalize(JSContext* js_context, JSObject* obj)
     
     VALUE self = (VALUE)JS_GetInstancePrivate(context->js, obj,
             JS_GET_CLASS(context->js, obj), NULL);
-    
+
     // remove the proxy OID from the id map
     JS_HashTableRemove(runtime->rbids, (void *)self);
     
     // free up the ruby value for GC
-    call_ruby_from_js(runtime, NULL, ruby_context, rb_intern("remove_gcthing"), 1, self);
+    call_ruby_from_js(runtime, NULL, ruby_runtime, rb_intern("remove_gcthing"), 1, self);
   }  
 }
 
@@ -601,8 +601,8 @@ JSBool make_js_land_proxy(JohnsonRuntime* runtime, VALUE value, jsval* retval)
     JCHECK(JS_HashTableAdd(runtime->rbids, (void *)value, (void *)(*retval)));
     
     // root the ruby value for GC
-    VALUE ruby_context = (VALUE)JS_GetContextPrivate(context);
-    rb_funcall(ruby_context, rb_intern("add_gcthing"), 1, value);
+    VALUE ruby_runtime = (VALUE)JS_GetRuntimePrivate(runtime->js);
+    rb_funcall(ruby_runtime, rb_intern("add_gcthing"), 1, value);
 
     JRETURN;
   }

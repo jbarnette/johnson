@@ -4,11 +4,23 @@ module Johnson #:nodoc:
       CONTEXT_MAP_KEY = :johnson_context_map
 
       def initialize(options={})
-        initialize_native(options)
         @debugger = nil
         @compiled_scripts = {}
+        @gcthings = {}
+        initialize_native(options)
         self["Ruby"] = Object
       end
+      
+      # called from js_land_proxy.c:make_js_land_proxy
+      def add_gcthing(thing)
+        @gcthings[thing.object_id] = thing
+      end
+      
+      # called from js_land_proxy.c:finalize
+      def remove_gcthing(thing)
+        @gcthings.delete(thing.object_id)
+      end
+
 
       def current_context
         contexts = (Thread.current[CONTEXT_MAP_KEY] ||= {})

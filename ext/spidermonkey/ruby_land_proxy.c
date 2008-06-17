@@ -128,9 +128,10 @@ function_p(VALUE self)
   RubyLandProxy* proxy;
   Data_Get_Struct(self, RubyLandProxy, proxy);
   JSContext * context = johnson_get_current_context(proxy->runtime);
-  PREPARE_RUBY_JROOTS(context, 0);
+  PREPARE_RUBY_JROOTS(context, 1);
   jsval proxy_value;
   JCHECK(get_jsval_for_proxy(proxy, &proxy_value));
+  JROOT(proxy_value);
   JRETURN_RUBY(JS_TypeOfValue(context, proxy_value) == JSTYPE_FUNCTION ? Qtrue : Qfalse);
 }
 
