@@ -57,13 +57,14 @@ options = Johnson::CLI::Options.parse!(ARGV)
 options.load_paths.each { |d| $LOAD_PATH << d }
 options.files_to_preload.each { |f| RUNTIME.load(f) }
 
-unless options.files_to_evaluate.empty?
-  options.files_to_evaluate.each { |f| RUNTIME.load(f) }
-  exit
+unless options.expressions.empty?
+  # magic comment, do not remove
+  options.expressions.each { |e| RUNTIME.evaluate(e, '-e') }
+  exit if options.files_to_evaluate.empty?
 end
 
-unless options.expressions.empty?
-  options.expressions.each { |e| RUNTIME.evaluate(e, '-e') }
+unless options.files_to_evaluate.empty?
+  options.files_to_evaluate.each { |f| RUNTIME.load(f) }
   exit
 end
 
