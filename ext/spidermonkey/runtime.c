@@ -4,6 +4,7 @@
 #include "conversions.h"
 #include "jsdbgapi.h"
 #include "jroot.h"
+#include "ruby_land_proxy.h"
 
 /*
  * call-seq:
@@ -90,7 +91,7 @@ static VALUE native_compile(VALUE self, VALUE script, VALUE filename, VALUE line
 
   PREPARE_RUBY_JROOTS(context, 1);
   JROOT(script_object);
-  JRETURN_RUBY(make_ruby_land_proxy(runtime, OBJECT_TO_JSVAL(script_object)));
+  JRETURN_RUBY(make_ruby_land_proxy(runtime, OBJECT_TO_JSVAL(script_object), "JSScriptProxy"));
 }
 
 /*

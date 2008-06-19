@@ -128,9 +128,10 @@ function_p(VALUE self)
   RubyLandProxy* proxy;
   Data_Get_Struct(self, RubyLandProxy, proxy);
   JSContext * context = johnson_get_current_context(proxy->runtime);
-  PREPARE_RUBY_JROOTS(context, 0);
+  PREPARE_RUBY_JROOTS(context, 1);
   jsval proxy_value;
   JCHECK(get_jsval_for_proxy(proxy, &proxy_value));
+  JROOT(proxy_value);
   JRETURN_RUBY(JS_TypeOfValue(context, proxy_value) == JSTYPE_FUNCTION ? Qtrue : Qfalse);
 }
 
@@ -478,7 +479,7 @@ JSBool unwrap_ruby_land_proxy(JohnsonRuntime* runtime, VALUE wrapped, jsval* ret
   JRETURN;
 }
 
-VALUE make_ruby_land_proxy(JohnsonRuntime* runtime, jsval value)
+VALUE make_ruby_land_proxy(JohnsonRuntime* runtime, jsval value, const char const* root_name)
 {
   VALUE id = (VALUE)JS_HashTableLookup(runtime->jsids, (void *)value);
   
@@ -502,7 +503,7 @@ VALUE make_ruby_land_proxy(JohnsonRuntime* runtime, jsval value)
     our_proxy->key = (void *)value;
 
     // root the value for JS GC and lookups
-    JCHECK(JS_AddNamedRootRT(runtime->js, &(our_proxy->key), "RubyLandProxy"));
+    JCHECK(JS_AddNamedRootRT(runtime->js, &(our_proxy->key), root_name));
 
     // put the proxy OID in the id map
     JCHECK(JS_HashTableAdd(runtime->jsids, (void *)value, (void *)proxy));

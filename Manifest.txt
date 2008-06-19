@@ -32,6 +32,7 @@ ext/spidermonkey/spidermonkey.c
 ext/spidermonkey/spidermonkey.h
 js/johnson/browser.js
 js/johnson/browser/env.js
+js/johnson/browser/jquery.js
 js/johnson/browser/xmlsax.js
 js/johnson/browser/xmlw3cdom.js
 js/johnson/prelude.js
@@ -66,6 +67,7 @@ lib/johnson/visitors/enumerating_visitor.rb
 lib/johnson/visitors/sexp_visitor.rb
 lib/rails/init.rb
 test/assets/index.html
+test/assets/jquery_test.html
 test/helper.rb
 test/johnson/browser_test.rb
 test/johnson/conversions/array_test.rb
@@ -117,6 +119,14 @@ test/johnson/version_test.rb
 test/johnson/visitors/dot_visitor_test.rb
 test/johnson/visitors/enumerating_visitor_test.rb
 test/johnson_test.rb
+test/jquery_units/test.js
+test/jquery_units/test_helper.js
+test/jquery_units/units/ajax.js
+test/jquery_units/units/core.js
+test/jquery_units/units/event.js
+test/jquery_units/units/fx.js
+test/jquery_units/units/offset.js
+test/jquery_units/units/selector.js
 test/jspec/helper.js
 test/jspec/jspec.js
 test/jspec/simple_spec.js
