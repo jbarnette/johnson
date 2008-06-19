@@ -195,7 +195,7 @@ VALUE convert_to_ruby(JohnsonRuntime* runtime, jsval js)
     case JSTYPE_OBJECT:
       if (OBJECT_TO_JSVAL(runtime->global) == js)
         // global gets special treatment, since the Prelude might not be loaded
-        JRETURN_RUBY(make_ruby_land_proxy(runtime, js));
+        JRETURN_RUBY(make_ruby_land_proxy(runtime, js, "GlobalProxy"));
       
       // this conditional requires the Prelude
       if (js_value_is_symbol(runtime, js))
@@ -207,7 +207,7 @@ VALUE convert_to_ruby(JohnsonRuntime* runtime, jsval js)
       if (js_value_is_regexp(runtime, js))
         JRETURN_RUBY(convert_regexp_to_ruby(runtime, js));
     
-      JRETURN_RUBY(make_ruby_land_proxy(runtime, js));
+      JRETURN_RUBY(make_ruby_land_proxy(runtime, js, "RubyLandProxy"));
         
     case JSTYPE_BOOLEAN:
       JRETURN_RUBY(JSVAL_TRUE == js ? Qtrue : Qfalse);

@@ -479,7 +479,7 @@ JSBool unwrap_ruby_land_proxy(JohnsonRuntime* runtime, VALUE wrapped, jsval* ret
   JRETURN;
 }
 
-VALUE make_ruby_land_proxy(JohnsonRuntime* runtime, jsval value)
+VALUE make_ruby_land_proxy(JohnsonRuntime* runtime, jsval value, const char const* root_name)
 {
   VALUE id = (VALUE)JS_HashTableLookup(runtime->jsids, (void *)value);
   
@@ -503,7 +503,7 @@ VALUE make_ruby_land_proxy(JohnsonRuntime* runtime, jsval value)
     our_proxy->key = (void *)value;
 
     // root the value for JS GC and lookups
-    JCHECK(JS_AddNamedRootRT(runtime->js, &(our_proxy->key), "RubyLandProxy"));
+    JCHECK(JS_AddNamedRootRT(runtime->js, &(our_proxy->key), root_name));
 
     // put the proxy OID in the id map
     JCHECK(JS_HashTableAdd(runtime->jsids, (void *)value, (void *)proxy));
