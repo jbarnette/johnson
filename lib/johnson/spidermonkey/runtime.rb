@@ -26,7 +26,8 @@ module Johnson #:nodoc:
       ###
       # Evaluate +script+ with +filename+ and +linenum+
       def evaluate(script, filename = nil, linenum = nil)
-        evaluate_compiled_script(compile(script, filename, linenum))
+        compiled_script = compile(script, filename, linenum)
+        evaluate_compiled_script(compiled_script)
       end
 
       ###

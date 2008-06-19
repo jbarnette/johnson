@@ -62,6 +62,7 @@ static VALUE native_compile(VALUE self, VALUE script, VALUE filename, VALUE line
   Data_Get_Struct(self, JohnsonRuntime, runtime);
 
   JSContext * context = johnson_get_current_context(runtime);
+  JohnsonContext * johnson_context = OUR_CONTEXT(context);
 
   JSScript * compiled_js = JS_CompileScript(
       context,
@@ -71,7 +72,22 @@ static VALUE native_compile(VALUE self, VALUE script, VALUE filename, VALUE line
       StringValueCStr(filename),
       (unsigned)NUM2INT(linenum)
   );
+  if(compiled_js == NULL) {
+    if (JS_IsExceptionPending(context))
+    {
+      // If there's an exception pending here, it's a syntax error.
+      JS_GetPendingException(context, &johnson_context->ex);
+      JS_ClearPendingException(context);
+    }
+
+    if (johnson_context->ex) {
+      RAISE_JS_ERROR(self, johnson_context->ex);
+      return Qnil;
+    }
+  }
+
   JSObject * script_object = JS_NewScriptObject(context, compiled_js);
+
   PREPARE_RUBY_JROOTS(context, 1);
   JROOT(script_object);
   JRETURN_RUBY(make_ruby_land_proxy(runtime, OBJECT_TO_JSVAL(script_object)));

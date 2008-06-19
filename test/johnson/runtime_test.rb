@@ -14,6 +14,15 @@ module Johnson
       assert_equal(1, @runtime.evaluate('eval("1");'))
     end
 
+    def test_js_throws_compile_errors
+      assert_raises(Johnson::Error) {
+        @runtime.evaluate("var js_lambda = function(x) { return x ** 2; }")
+      }
+      assert_raises(Johnson::Error) {
+        @runtime.compile("var js_lambda = function(x) { return x ** 2; }")
+      }
+    end
+
     def test_breakpoint_gets_called
       break_times = 0
       @runtime['some_number'] = 0
