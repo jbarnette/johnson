@@ -1,8 +1,8 @@
 require "generator"
 require "johnson/version"
 
-# the command-line option parser
-require "johnson/cli/options"
+# the command-line option parser and support libs
+require "johnson/cli"
 
 # the native SpiderMonkey extension
 require "johnson/spidermonkey"

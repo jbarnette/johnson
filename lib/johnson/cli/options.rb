@@ -7,17 +7,16 @@ module Johnson
         alias_method :parse!, :new
       end
       
-      attr_reader :expressions, :load_paths, :files_to_preload, :files_to_evaluate
+      attr_reader :expressions, :load_paths, :files_to_preload, :file_to_evaluate, :arguments
     
       def initialize(*args)
         argv = args.flatten
         @expressions = []
         @load_paths = []
         @files_to_preload = []
-        @files_to_evaluate = []
 
         parser = OptionParser.new do |parser|
-          parser.banner = "Usage: johnson [options] [files...]"
+          parser.banner = "Usage: johnson [options] [file.js] [-- jsargs]"
           parser.version = Johnson::VERSION
 
           parser.on("-e [EXPRESSION]", "Evaluate [EXPRESSION] and exit") do |expression|
@@ -47,8 +46,10 @@ module Johnson
           end  
         end
         
-        parser.parse!(argv)      
-        argv.each { |f| @files_to_evaluate << f }
+        parser.parse!(argv)
+
+        @file_to_evaluate = argv.shift
+        @arguments = argv.dup
       end 
     end
   end

@@ -10,7 +10,7 @@ end
 require "readline"
 
 RUNTIME = js = Johnson::Runtime.new
-RUNTIME[:alert] = lambda { |m| puts m }
+RUNTIME.evaluate(Johnson::CLI::JS)
 
 EXIT_VERBS = [nil] + %w(exit quit)
 
@@ -41,6 +41,8 @@ end
 def rescued(&block)
   yield
 rescue Exception => e
+  exit if SystemExit === e
+
   puts e.message
   puts e.backtrace.reject { |l| l =~ /bin\/johnson/ }
 end
@@ -60,11 +62,12 @@ options.files_to_preload.each { |f| RUNTIME.load(f) }
 unless options.expressions.empty?
   # magic comment, do not remove
   options.expressions.each { |e| RUNTIME.evaluate(e, '-e') }
-  exit if options.files_to_evaluate.empty?
+  exit if !options.file_to_evaluate
 end
 
-unless options.files_to_evaluate.empty?
-  options.files_to_evaluate.each { |f| RUNTIME.load(f) }
+if options.file_to_evaluate
+  RUNTIME[:arguments] = options.arguments
+  RUNTIME.load(options.file_to_evaluate)
   exit
 end
 
