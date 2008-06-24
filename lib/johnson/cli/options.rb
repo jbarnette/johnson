@@ -1,8 +1,8 @@
 require "optparse"
 
-module Johnson
-  module CLI
-    class Options
+module Johnson #:nodoc:
+  module CLI #:nodoc:
+    class Options #:nodoc:
       class << self
         alias_method :parse!, :new
       end

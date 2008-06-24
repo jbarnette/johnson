@@ -2,9 +2,9 @@
 
 Johnson wraps JavaScript in a loving Ruby embrace.
 
-  http://github.com/jbarnette/johnson
-  http://johnson.lighthouseapp.com
-  http://johnson.rubyforge.org
+* {Source Code}[http://github.com/jbarnette/johnson]
+* {Bug Tracker}[http://johnson.lighthouseapp.com]
+* {RubyForge Project}[http://johnson.rubyforge.org]
 
 == Usage
 
@@ -16,7 +16,7 @@ Johnson wraps JavaScript in a loving Ruby embrace.
   
 == Installing
 
-[sudo] gem install johnson
+  [sudo] gem install johnson
 
 == Installing Development Versions
 
