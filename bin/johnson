@@ -58,7 +58,7 @@ end
 options = Johnson::CLI::Options.parse!(ARGV)
 
 options.load_paths.each { |d| $LOAD_PATH << d }
-options.paths_to_require.each { |p| RUNTIME.evaluate("Johnson").require(p) }
+options.paths_to_require.each { |p| RUNTIME.evaluate("Johnson.require('#{p}')") }
 options.files_to_preload.each { |f| RUNTIME.load(f) }
 
 unless options.expressions.empty?
