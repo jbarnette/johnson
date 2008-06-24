@@ -30,6 +30,7 @@ ext/spidermonkey/runtime.c
 ext/spidermonkey/runtime.h
 ext/spidermonkey/spidermonkey.c
 ext/spidermonkey/spidermonkey.h
+johnson.gemspec
 js/johnson/browser.js
 js/johnson/browser/env.js
 js/johnson/browser/jquery.js
