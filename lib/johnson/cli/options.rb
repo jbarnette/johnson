@@ -7,13 +7,19 @@ module Johnson #:nodoc:
         alias_method :parse!, :new
       end
       
-      attr_reader :expressions, :load_paths, :files_to_preload, :file_to_evaluate, :arguments
+      attr_reader :arguments
+      attr_reader :expressions
+      attr_reader :files_to_preload
+      attr_reader :file_to_evaluate
+      attr_reader :load_paths
+      attr_reader :paths_to_require
     
       def initialize(*args)
         argv = args.flatten
         @expressions = []
         @load_paths = []
         @files_to_preload = []
+        @paths_to_require = []
 
         parser = OptionParser.new do |parser|
           parser.banner = "Usage: johnson [options] [file.js] [-- jsargs]"
@@ -30,9 +36,9 @@ module Johnson #:nodoc:
           parser.on("-i [FILE]", "Evaluate [FILE] before interaction") do |file|
             @files_to_preload << file
           end
-      
-          parser.on("-i [FILE]", "Evaluate [FILE] before interaction") do |file|
-            @files_to_preload << file
+          
+          parser.on("-r [PATH]", "Require [PATH] before executing") do |path|
+            @paths_to_require << path
           end
       
           parser.on("-h", "-?", "--help", "Show this message") do
