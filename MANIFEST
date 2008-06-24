@@ -1,7 +1,7 @@
-History.txt
+CHANGELOG
+MANIFEST
 MINGW32.mk
-Manifest.txt
-README.txt
+README.rdoc
 Rakefile
 bin/johnson
 cross-compile.txt
@@ -35,9 +35,12 @@ js/johnson/browser/env.js
 js/johnson/browser/jquery.js
 js/johnson/browser/xmlsax.js
 js/johnson/browser/xmlw3cdom.js
+js/johnson/cli.js
 js/johnson/prelude.js
 js/johnson/template.js
+lib/hoe.rb
 lib/johnson.rb
+lib/johnson/cli.rb
 lib/johnson/cli/options.rb
 lib/johnson/error.rb
 lib/johnson/nodes.rb

@@ -1,24 +1,24 @@
-require "rubygems"
-require "hoe"
-require 'erb'
+require "erb"
+
+require "./lib/hoe.rb"
 require "./lib/johnson/version.rb"
 
 # what sort of extension are we building?
 kind = Config::CONFIG["DLEXT"]
 
-CROSS = ENV['CROSS']
+CROSS = ENV["CROSS"]
 LIBJS = FileList["vendor/spidermonkey/#{CROSS || ''}*.OBJ/libjs.{#{kind},so}"].first || :libjs
 
 GENERATED_NODE = "ext/spidermonkey/immutable_node.c"
 
-Hoe.new("johnson", Johnson::VERSION) do |p|
+HOE = Hoe.new("johnson", Johnson::VERSION) do |p|
+  p.author         = ["John Barnette", "Aaron Patterson", "Yehuda Katz", "Matthew Draper"]
+  p.changes        = p.paragraphs_of("CHANGELOG", 0..1).join("\n\n")
+  p.description    = p.paragraphs_of("README.rdoc", 2..5).join("\n\n")
+  p.email          = "johnson-talk@googlegroups.com"
   p.rubyforge_name = "johnson"
-  p.author = ["John Barnette" "Aaron Patterson", "Yehuda Katz", "Matthew Draper"]
-  p.email = ["johnson-talk@googlegroups.com", "jbarnette@rubyforge.org"]
-  p.summary = "Johnson wraps JavaScript in a loving Ruby embrace."
-  p.description = p.paragraphs_of("README.txt", 2..5).join("\n\n")
-  p.url = p.paragraphs_of("README.txt", 0).first.split(/\n/)[1..-1]
-  p.changes = p.paragraphs_of("History.txt", 0..1).join("\n\n")
+  p.description    = "Johnson wraps JavaScript in a loving Ruby embrace."
+  p.url            = "http://github.com/jbarnette/johnson/wikis"
 
   p.clean_globs = [
     "lib/johnson/spidermonkey.#{kind}",
@@ -28,15 +28,23 @@ Hoe.new("johnson", Johnson::VERSION) do |p|
     "vendor/spidermonkey/**/*.OBJ"]
 
   p.test_globs = ["test/**/*_test.rb"]
-
   p.spec_extras = { :extensions => ["Rakefile"] }
+  p.extra_deps = ["rake"]
+end
 
-  p.extra_deps = ['rake']
+namespace :gem do
+  namespace :spec do
+    task :generate do
+      File.open("johnson.gemspec", "w") do |f|
+        f.puts(HOE.spec.to_ruby)
+      end
+    end
+  end
 end
 
 namespace :test do
   Rake::TestTask.new("todo") do |t|
-    t.test_files = FileList['todo/**/*_test.rb']
+    t.test_files = FileList["todo/**/*_test.rb"]
     t.verbose = true
   end
   
@@ -59,9 +67,6 @@ Rake::Task[:check_manifest].prerequisites << GENERATED_NODE
 
 task :build => :extensions
 task :extension => :build
-
-# gem depends on the native extension actually building
-Rake::Task[:gem].prerequisites << :extensions
 
 task :extensions => ["lib/johnson/spidermonkey.#{kind}"]
 
@@ -130,7 +135,7 @@ end
 
 def jsops
   ops = []
-  File.open('vendor/spidermonkey/jsopcode.tbl', 'rb') { |f|
+  File.open("vendor/spidermonkey/jsopcode.tbl", "rb") { |f|
     f.each_line do |line|
       if line =~ /^OPDEF\((\w+),/
         ops << $1
@@ -142,10 +147,10 @@ end
 
 def tokens
   toks = []
-  File.open('vendor/spidermonkey/jsscan.h', 'rb') { |f|
+  File.open("vendor/spidermonkey/jsscan.h", "rb") { |f|
     f.each_line do |line|
       line.scan(/TOK_\w+/).each do |token|
-        next if token == 'TOK_ERROR'
+        next if token == "TOK_ERROR"
         toks << token
       end
     end
@@ -154,8 +159,8 @@ def tokens
 end
 
 file GENERATED_NODE => ["ext/spidermonkey/immutable_node.c.erb", "vendor/spidermonkey/jsopcode.tbl", "vendor/spidermonkey/jsscan.h"] do |t|
-  template = ERB.new(File.open(t.prerequisites.first, 'rb') { |x| x.read })
-  File.open(GENERATED_NODE, 'wb') { |f|
+  template = ERB.new(File.open(t.prerequisites.first, "rb") { |x| x.read })
+  File.open(GENERATED_NODE, "wb") { |f|
     f.write template.result(binding)
   }
 end
