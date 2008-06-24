@@ -102,11 +102,6 @@ file "vendor/spidermonkey/config/MINGW32.mk" => "MINGW32.mk" do |t|
   cp t.prerequisites.first, t.name
 end
 
-file "vendor/spidermonkey/jsapi.h" do
-  # if this file's missing, pull in the submodule
-  sh "git submodule init && git submodule update"
-end
-
 file "ext/spidermonkey/spidermonkey.#{kind}" =>
   ["ext/spidermonkey/Makefile"] + FileList["ext/spidermonkey/*.{c,h}"].to_a do |t|
 
