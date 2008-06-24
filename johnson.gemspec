@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name = %q{johnson}
-  s.version = "1.0.0.200806241049"
+  s.version = "1.0.0.200806241255"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["John Barnette", "Aaron Patterson", "Yehuda Katz", "Matthew Draper"]
