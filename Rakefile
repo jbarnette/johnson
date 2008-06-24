@@ -14,10 +14,10 @@ GENERATED_NODE = "ext/spidermonkey/immutable_node.c"
 HOE = Hoe.new("johnson", Johnson::VERSION) do |p|
   p.author         = ["John Barnette", "Aaron Patterson", "Yehuda Katz", "Matthew Draper"]
   p.changes        = p.paragraphs_of("CHANGELOG", 0..1).join("\n\n")
-  p.description    = p.paragraphs_of("README.rdoc", 2..5).join("\n\n")
   p.email          = "johnson-talk@googlegroups.com"
   p.rubyforge_name = "johnson"
   p.description    = "Johnson wraps JavaScript in a loving Ruby embrace."
+  p.summary        = p.description
   p.url            = "http://github.com/jbarnette/johnson/wikis"
 
   p.clean_globs = [
