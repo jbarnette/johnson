@@ -4,11 +4,11 @@
 * http://johnson.lighthouseapp.com
 * http://johnson.rubyforge.org
 
-== DESCRIPTION:
+== Description
 
 Johnson wraps JavaScript in a loving Ruby embrace.
 
-== SYNOPSIS:
+== Usage
 
   # FIXME: write some decent examples
   require "johnson"
@@ -16,16 +16,14 @@ Johnson wraps JavaScript in a loving Ruby embrace.
   Johnson.evaluate("4 + 4") # => 8
   Johnson.evaluate("4 + foo", :foo => 4) # => 8
 
-== INSTALL:
+== Installation
 
-  sudo gem install johnson
+  [sudo] gem sources -a http://gems.github.com   # if you haven't already
+  [sudo] gem install jbarnette-johnson
 
-== LICENSE:
+== License
 
-(The MIT License)
-
-Copyright (c) 2008 John Barnette, Aaron Patterson,
-                   Yehuda Katz, Matthew Draper
+Copyright 2008 John Barnette, Aaron Patterson, Yehuda Katz, Matthew Draper
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
