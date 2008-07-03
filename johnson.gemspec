@@ -1,10 +1,10 @@
 Gem::Specification.new do |s|
   s.name = %q{johnson}
-  s.version = "1.0.0.200806282156"
+  s.version = "1.0.0.200807031344"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["John Barnette", "Aaron Patterson", "Yehuda Katz", "Matthew Draper"]
-  s.date = %q{2008-06-28}
+  s.date = %q{2008-07-03}
   s.default_executable = %q{johnson}
   s.description = %q{Johnson wraps JavaScript in a loving Ruby embrace.}
   s.email = %q{johnson-talk@googlegroups.com}
