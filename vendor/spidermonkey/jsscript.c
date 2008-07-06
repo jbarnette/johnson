@@ -1532,7 +1532,7 @@ js_DestroyScript(JSContext *cx, JSScript *script)
     if (script->principals)
         JSPRINCIPALS_DROP(cx, script->principals);
 
-    if (JS_GSN_CACHE(cx).script == script)
+    if (JS_GSN_CACHE(cx).code == script->code)
         JS_CLEAR_GSN_CACHE(cx);
 
     /*
@@ -1633,7 +1633,7 @@ js_GetSrcNoteCached(JSContext *cx, JSScript *script, jsbytecode *pc)
     if ((uint32)target >= script->length)
         return NULL;
 
-    if (JS_GSN_CACHE(cx).script == script) {
+    if (JS_GSN_CACHE(cx).code == script->code) {
         JS_METER_GSN_CACHE(cx, hits);
         entry = (GSNCacheEntry *)
                 JS_DHashTableOperate(&JS_GSN_CACHE(cx).table, pc,
@@ -1655,7 +1655,7 @@ js_GetSrcNoteCached(JSContext *cx, JSScript *script, jsbytecode *pc)
         }
     }
 
-    if (JS_GSN_CACHE(cx).script != script &&
+    if (JS_GSN_CACHE(cx).code != script->code &&
         script->length >= GSN_CACHE_THRESHOLD) {
         JS_CLEAR_GSN_CACHE(cx);
         nsrcnotes = 0;
@@ -1681,7 +1681,7 @@ js_GetSrcNoteCached(JSContext *cx, JSScript *script, jsbytecode *pc)
                     entry->sn = sn;
                 }
             }
-            JS_GSN_CACHE(cx).script = script;
+            JS_GSN_CACHE(cx).code = script->code;
             JS_METER_GSN_CACHE(cx, fills);
         }
     }
