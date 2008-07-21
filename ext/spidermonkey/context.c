@@ -89,17 +89,10 @@ initialize_native(VALUE self, VALUE rb_runtime, VALUE UNUSED(options))
 //// INFRASTRUCTURE BELOW HERE ////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////
 
-static void deallocate(JohnsonContext* context)
-{
-  JS_SetContextPrivate(context->js, 0);
-  JS_DestroyContext(context->js);
-  free(context);
-}
-
 static VALUE allocate(VALUE klass)
 {
   JohnsonContext* context = calloc(1, sizeof(JohnsonContext));
-  return Data_Wrap_Struct(klass, 0, deallocate, context);
+  return Data_Wrap_Struct(klass, 0, 0, context);
 }
 
 void init_Johnson_SpiderMonkey_Context(VALUE spidermonkey)

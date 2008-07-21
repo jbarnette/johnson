@@ -550,10 +550,10 @@ static void finalize(JSContext* js_context, JSObject* obj)
 
     // remove the proxy OID from the id map
     JS_HashTableRemove(runtime->rbids, (void *)self);
-    
+
     // free up the ruby value for GC
-    call_ruby_from_js(runtime, NULL, ruby_runtime, rb_intern("remove_gcthing"), 1, self);
-  }  
+    rb_funcall(ruby_runtime, rb_intern("remove_gcthing"), 1, rb_obj_id(self));
+  }
 }
 
 JSBool make_js_land_proxy(JohnsonRuntime* runtime, VALUE value, jsval* retval)
