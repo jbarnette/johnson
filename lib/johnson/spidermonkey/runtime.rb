@@ -18,7 +18,7 @@ module Johnson #:nodoc:
       
       # called from js_land_proxy.c:finalize
       def remove_gcthing(object_id)
-        @gcthings.delete(object_id) if @gcthings
+        @gcthings.delete(object_id) if defined? @gcthings
       end
 
 
