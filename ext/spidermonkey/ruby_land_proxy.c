@@ -150,7 +150,8 @@ respond_to_p(VALUE self, VALUE sym)
   JSContext * context = johnson_get_current_context(proxy->runtime);
   PREPARE_RUBY_JROOTS(context, 2);
   
-  char* name = rb_id2name(SYM2ID(sym));
+  VALUE stringval = rb_funcall(sym, rb_intern("to_s"), 0);
+  char* name = StringValuePtr(stringval);
   
   // assignment is always okay
   if (name[strlen(name) - 1] == '=')

@@ -21,6 +21,12 @@ module Johnson
         @runtime["y"] = proxy
         assert(@runtime.evaluate("x === y"))
       end
+
+      def test_reponds_to?
+        proxy = @runtime.evaluate("x = {}")
+        assert ! proxy.respond_to?(:foo)
+        assert ! proxy.respond_to?("foo")
+      end
       
       def test_array_indexable
         proxy = @runtime.evaluate("var x = [1,2,3]; x")

@@ -42,15 +42,16 @@ module Johnson
       assert_equal(10, break_times)
       assert_equal(2, @runtime['some_number'])
     end
-    def test_try_to_gc
-      10.times {
-        thread = Thread.new do
-            rt = Johnson::Runtime.new
-            rt.evaluate('new Date()').to_s
-        end
-        thread.join
-        GC.start
-      }
-    end
+
+    #def test_try_to_gc
+    #  10.times {
+    #    thread = Thread.new do
+    #        rt = Johnson::Runtime.new
+    #        rt.evaluate('new Date()').to_s
+    #    end
+    #    thread.join
+    #    GC.start
+    #  }
+    #end
   end
 end
