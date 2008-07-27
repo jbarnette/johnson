@@ -22,7 +22,7 @@ static JSBool convert_symbol_to_js(JohnsonRuntime* runtime, VALUE symbol, jsval*
   PREPARE_JROOTS(context, 2);
 
   VALUE to_s = CALL_RUBY_WRAPPER(rb_funcall_0, symbol, rb_intern("to_s"), 0);
-  jsval name = STRING_TO_JSVAL(JS_NewStringCopyN(context, StringValuePtr(to_s), (unsigned) StringValueLen(to_s)));
+  jsval name = STRING_TO_JSVAL(JS_NewStringCopyN(context, StringValuePtr(to_s), (size_t) StringValueLen(to_s)));
 
   JROOT(name);
 
@@ -40,60 +40,59 @@ static JSBool convert_symbol_to_js(JohnsonRuntime* runtime, VALUE symbol, jsval*
 static JSBool convert_regexp_to_js(JohnsonRuntime* runtime, VALUE regexp, jsval* retval)
 {
   JSContext * context = johnson_get_current_context(runtime);
+  PREPARE_JROOTS(context, 0);
   VALUE source = rb_funcall(regexp, rb_intern("source"), 0);
-  int options = NUM2INT(rb_funcall(regexp, rb_intern("options"), 0));
+  jsint options = (jsint)(NUM2INT(rb_funcall(regexp, rb_intern("options"), 0)));
 
   JSObject* obj = JS_NewRegExpObject(context,
         StringValuePtr(source),
-        (unsigned) StringValueLen(source),
+        (size_t) StringValueLen(source),
         (unsigned) options);
 
-  if (obj) {
-    *retval = OBJECT_TO_JSVAL(obj);
-    return JS_TRUE;
-  } else {
-    return JS_FALSE;
-  }
+  JCHECK(obj);
+  *retval = OBJECT_TO_JSVAL(obj);
+  JRETURN;
 }
 
 JSBool convert_to_js(JohnsonRuntime* runtime, VALUE ruby, jsval* retval)
 {
   JSContext * context = johnson_get_current_context(runtime);
+  PREPARE_JROOTS(context, 0);
   switch(TYPE(ruby))
   {
     case T_NIL:
       *retval = JSVAL_NULL;
-      return JS_TRUE;
+      JRETURN;
 
     case T_TRUE:
       *retval = JSVAL_TRUE;
-      return JS_TRUE;
+      JRETURN;
     
     case T_FALSE:
       *retval = JSVAL_FALSE;
-      return JS_TRUE;
+      JRETURN;
 
     case T_STRING:
       {
-        JSString* str = JS_NewStringCopyN(context, StringValuePtr(ruby), (unsigned) StringValueLen(ruby));
-        if (str) {
-          *retval = STRING_TO_JSVAL(str);
-          return JS_TRUE;
-        } else {
-          return JS_FALSE;
-        }
+        JSString* str = JS_NewStringCopyN(context, StringValuePtr(ruby), (size_t) StringValueLen(ruby));
+        JCHECK(str);
+        *retval = STRING_TO_JSVAL(str);
+        JRETURN;
       }
 
     case T_FIXNUM:
-      *retval = INT_TO_JSVAL(NUM2INT(ruby));
-      return JS_TRUE;
+      // FIXME: Not all T_FIXNUM will fit in a jsint ( == int32)
+      *retval = INT_TO_JSVAL((jsint)(NUM2INT(ruby)));
+      JRETURN;
 
     case T_FLOAT:
     case T_BIGNUM:
-      return convert_float_or_bignum_to_js(runtime, ruby, retval);
+      JCHECK(convert_float_or_bignum_to_js(runtime, ruby, retval));
+      JRETURN;
 
     case T_SYMBOL:
-      return convert_symbol_to_js(runtime, ruby, retval);
+      JCHECK(convert_symbol_to_js(runtime, ruby, retval));
+      JRETURN;
 
     case T_CLASS:
     case T_ARRAY:
@@ -102,24 +101,26 @@ JSBool convert_to_js(JohnsonRuntime* runtime, VALUE ruby, jsval* retval)
     case T_FILE:
     case T_STRUCT:
     case T_OBJECT:
-      return make_js_land_proxy(runtime, ruby, retval);
+      JCHECK(make_js_land_proxy(runtime, ruby, retval));
+      JRETURN;
       
     case T_REGEXP:
-      return convert_regexp_to_js(runtime, ruby, retval);
+      JCHECK(convert_regexp_to_js(runtime, ruby, retval));
+      JRETURN;
 
     case T_DATA: // HEY! keep T_DATA last for fall-through
       if (ruby_value_is_proxy(ruby))
-        return unwrap_ruby_land_proxy(runtime, ruby, retval);
+        JCHECK(unwrap_ruby_land_proxy(runtime, ruby, retval));
+      else // If we can't identify the object, just wrap it
+        JCHECK(make_js_land_proxy(runtime, ruby, retval));
+      JRETURN;
 
-      // If we can't identify the object, just wrap it
-      return make_js_land_proxy(runtime, ruby, retval);
-    
     default:
-      rb_raise(rb_eRuntimeError, "unknown ruby type in switch");
+      JERROR("unknown ruby type in switch");
   }
   
   *retval = JSVAL_NULL;
-  return JS_TRUE;
+  JRETURN;
 }
 
 VALUE convert_js_string_to_ruby(JohnsonRuntime* runtime, JSString* str)
@@ -129,7 +130,7 @@ VALUE convert_js_string_to_ruby(JohnsonRuntime* runtime, JSString* str)
   JROOT(str);
   char* bytes = JS_GetStringBytes(str);
   JCHECK(bytes);
-  JRETURN_RUBY(rb_str_new(bytes, (signed)JS_GetStringLength(str)));
+  JRETURN_RUBY(rb_str_new(bytes, (signed long)JS_GetStringLength(str)));
 }
 
 static VALUE convert_regexp_to_ruby(JohnsonRuntime* runtime, jsval regexp)
@@ -141,7 +142,7 @@ static VALUE convert_regexp_to_ruby(JohnsonRuntime* runtime, jsval regexp)
 
   JRETURN_RUBY(CALL_RUBY_WRAPPER(rb_funcall_2, rb_cRegexp, rb_intern("new"), 2,
     convert_js_string_to_ruby(runtime, re->source),
-    INT2NUM(re->flags)));
+    INT2NUM((long)re->flags)));
 }
 
 static bool js_value_is_regexp(JohnsonRuntime* runtime, jsval maybe_regexp)

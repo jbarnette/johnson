@@ -61,14 +61,14 @@ static VALUE call_ruby_from_js_invoke(VALUE args)
 JSBool call_ruby_from_js_va(JohnsonRuntime* runtime, VALUE* result, VALUE self, ID id, int argc, va_list va)
 {
   VALUE old_errinfo = ruby_errinfo;
-  VALUE args = rb_ary_new2(argc + 2);
+  VALUE args = rb_ary_new2((long)argc + 2);
 
-  int i;
+  long i;
   for(i = 0; i < argc; i++)
     rb_ary_store(args, i, va_arg(va, VALUE));
 
-  rb_ary_store(args, argc, ID2SYM(id));
-  rb_ary_store(args, argc + 1, self);
+  rb_ary_store(args, (long)argc, ID2SYM(id));
+  rb_ary_store(args, (long)argc + 1, self);
 
   int state;
   *result = rb_protect(call_ruby_from_js_invoke, args, &state);
@@ -181,8 +181,9 @@ static bool respond_to_p(JSContext* js_context, JSObject* obj, char* name)
 
 static jsval evaluate_js_property_expression(JohnsonRuntime * runtime, const char * property, jsval* retval) {
   JSContext * context = johnson_get_current_context(runtime);
+  assert(strlen(property) < INT_MAX);
   return JS_EvaluateScript(context, runtime->global,
-      property, strlen(property), "johnson:evaluate_js_property_expression", 1,
+      property, (unsigned int)strlen(property), "johnson:evaluate_js_property_expression", 1,
       retval);
 }
 

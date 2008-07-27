@@ -22,7 +22,7 @@ static VALUE line_number(VALUE UNUSED(self), VALUE context, VALUE script, VALUE 
   Data_Get_Struct(script, JSScript, js_script);
   Data_Get_Struct(bytecode, jsbytecode, js_bytecode);
 
-  return INT2NUM(JS_PCToLineNumber(js, js_script, js_bytecode));
+  return INT2NUM((long)JS_PCToLineNumber(js, js_script, js_bytecode));
 }
 
 static VALUE file_name(VALUE UNUSED(self), VALUE context, VALUE script)
@@ -64,7 +64,7 @@ static void new_script_hook(JSContext *UNUSED(js),
 {
   VALUE self = (VALUE)rb;
   VALUE rb_filename = rb_str_new2(filename);
-  VALUE rb_linenum  = UINT2NUM(lineno);
+  VALUE rb_linenum  = UINT2NUM((unsigned long)lineno);
 
   /* FIXME: Pass the rest of this crap to the debugger? */
   rb_funcall(self, rb_intern("new_script_hook"), 2, rb_filename, rb_linenum);
@@ -103,8 +103,8 @@ static void source_handler(const char *filename, uintN lineno,
 {
   VALUE self = (VALUE)rb;
   VALUE rb_filename = rb_str_new2(filename);
-  VALUE rb_lineno   = UINT2NUM(lineno);
-  VALUE rb_str      = rb_str_new((char *)str, (signed)(length * sizeof(jschar)));
+  VALUE rb_lineno   = ULONG2NUM((unsigned long)lineno);
+  VALUE rb_str      = rb_str_new((char *)str, (signed long)(length * sizeof(jschar)));
 
   rb_funcall(self, rb_intern("source_handler"), 3, rb_filename, rb_lineno, rb_str);
 }
@@ -164,7 +164,7 @@ static JSBool debug_error_hook(JSContext *UNUSED(js), const char *message,
 
 static VALUE allocate(VALUE klass)
 {
-  JSDebugHooks* debug = calloc(1, sizeof(JSDebugHooks));
+  JSDebugHooks* debug = calloc(1L, sizeof(JSDebugHooks));
   VALUE self = Data_Wrap_Struct(klass, 0, 0, debug);
 
   debug->interruptHandler = interrupt_handler;

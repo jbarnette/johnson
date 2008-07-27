@@ -284,7 +284,7 @@ static void deallocate(JohnsonRuntime* runtime)
 
 static VALUE allocate(VALUE klass)
 {
-  JohnsonRuntime* runtime = calloc(1, sizeof(JohnsonRuntime));
+  JohnsonRuntime* runtime = calloc(1L, sizeof(JohnsonRuntime));
   return Data_Wrap_Struct(klass, 0, deallocate, runtime);
 }
 

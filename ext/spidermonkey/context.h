@@ -3,7 +3,7 @@
 
 #include "spidermonkey.h"
 
-#define MAX_EXCEPTION_MESSAGE_SIZE 2048
+#define MAX_EXCEPTION_MESSAGE_SIZE 2048L
 
 typedef struct {
   JSContext *js;

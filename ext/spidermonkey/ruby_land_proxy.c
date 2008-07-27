@@ -65,7 +65,7 @@ get(VALUE self, VALUE name)
   switch(TYPE(name)) {
     case T_FIXNUM:
       JCHECK(JS_GetElement(context,
-          JSVAL_TO_OBJECT(proxy_value), NUM2INT(name), &js_value));
+          JSVAL_TO_OBJECT(proxy_value), (jsint)(NUM2INT(name)), &js_value));
       break;
     default:
       Check_Type(name, T_STRING);
@@ -104,7 +104,7 @@ set(VALUE self, VALUE name, VALUE value)
   switch(TYPE(name)) {
     case T_FIXNUM:
       JCHECK(JS_SetElement(context,
-              JSVAL_TO_OBJECT(proxy_value), NUM2INT(name), &js_value));
+              JSVAL_TO_OBJECT(proxy_value), (jsint)(NUM2INT(name)), &js_value));
       break;
     default:
       Check_Type(name, T_STRING);
@@ -279,7 +279,7 @@ each(VALUE self)
       VALUE key = CONVERT_TO_RUBY(proxy->runtime, js_key);
       VALUE value = CONVERT_TO_RUBY(proxy->runtime, js_value);
 
-      CALL_RUBY_WRAPPER(rb_yield, rb_ary_new3(2, key, value));
+      CALL_RUBY_WRAPPER(rb_yield, rb_ary_new3(2L, key, value));
 
       JUNROOT(js_value);
       JUNROOT(js_key);

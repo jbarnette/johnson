@@ -1,8 +1,8 @@
 #ifndef JOHNSON_JROOT_H
 #define JOHNSON_JROOT_H
 
-#define _JROOT_NAMESIZE 200
-#define _JROOT_ERRSIZE 500
+#define _JROOT_NAMESIZE 200L
+#define _JROOT_ERRSIZE 500L
 
 #define _JROOT_ROOT (void*)(1)
 
@@ -176,10 +176,10 @@
 #define DEFINE_RUBY_WRAPPER(name, func, arglist) \
   VALUE name ## _invoke(VALUE magic) \
   { \
-    name ## _args * _data = (name ## _args *)(FIX2INT(magic) << 2); \
+    name ## _args * _data = (name ## _args *)(FIX2LONG(magic) << 2); \
     return func(arglist); \
   }
-#define RUBY_WRAPPER_ARG(name, args...) ({ name ## _args _x = { args }; INT2FIX((int)(&_x) >> 2); })
+#define RUBY_WRAPPER_ARG(name, args...) ({ name ## _args _x = { args }; LONG2FIX((long)(&_x) >> 2); })
 #define RUBY_WRAPPER(name) name ## _invoke
 #define CALL_RUBY_WRAPPER(name, args...) JPROTECT(RUBY_WRAPPER(name), RUBY_WRAPPER_ARG(name, args))
 

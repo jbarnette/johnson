@@ -17,12 +17,12 @@ static void deallocate(ImmutableNodeContext* context)
 
 static VALUE allocate(VALUE klass)
 {
-  ImmutableNodeContext * context = calloc(1, sizeof(ImmutableNodeContext));
+  ImmutableNodeContext * context = calloc(1L, sizeof(ImmutableNodeContext));
 
   VALUE self = Data_Wrap_Struct(klass, 0, deallocate, context);
 
   assert(context->runtime = JS_NewRuntime(0x100000));
-  assert(context->js = JS_NewContext(context->runtime, 8192));
+  assert(context->js = JS_NewContext(context->runtime, 8192L));
 
   return self;
 }
@@ -40,7 +40,7 @@ static VALUE parse_io(int argc, VALUE *argv, VALUE klass) {
   ImmutableNodeContext* context;
   Data_Get_Struct(self, ImmutableNodeContext, context);
 
-  assert(context->pc = calloc(1, sizeof(JSParseContext)));
+  assert(context->pc = calloc(1L, sizeof(JSParseContext)));
 
   rb_scan_args( argc, argv, "12", &stream, &filename, &linenum );
   
@@ -80,7 +80,7 @@ static VALUE parse_io(int argc, VALUE *argv, VALUE klass) {
                   Qnil :
                   rb_str_new2(JS_GetStringBytes(JSVAL_TO_STRING(message))),
                 rb_str_new2(JS_GetStringBytes(JSVAL_TO_STRING(file_name))),
-                INT2NUM(JSVAL_TO_INT(line_number))
+                INT2NUM((long)JSVAL_TO_INT(line_number))
                 );
 
   }
@@ -97,7 +97,7 @@ static VALUE line(VALUE self) {
   ImmutableNodeContext * ctx;
 
   Data_Get_Struct(self, ImmutableNodeContext, ctx);
-  return INT2NUM(ctx->node->pn_pos.begin.lineno);
+  return INT2NUM((long)(ctx->node->pn_pos.begin.lineno));
 }
 
 /*
@@ -110,7 +110,7 @@ static VALUE begin_index(VALUE self) {
   ImmutableNodeContext * ctx;
 
   Data_Get_Struct(self, ImmutableNodeContext, ctx);
-  return INT2NUM(ctx->node->pn_pos.begin.index);
+  return INT2NUM((long)(ctx->node->pn_pos.begin.index));
 }
 
 /*
@@ -157,7 +157,7 @@ static VALUE pn_type(VALUE self) {
     case <%= token %>: return ID2SYM(rb_intern("<%= token.downcase %>"));
     <% end %>
   }
-  return INT2NUM(ctx->node->pn_type);
+  return INT2NUM((long)(ctx->node->pn_type));
 }
 
 /*
@@ -273,7 +273,7 @@ static VALUE data_pn_dval(VALUE self) {
   if(JSVAL_IS_NUMBER(ATOM_KEY(ctx->node->pn_atom))) {
     return rb_float_new(ctx->node->pn_dval);
   } else {
-    return INT2NUM((int)(ctx->node->pn_dval));
+    return INT2NUM((long)(ctx->node->pn_dval));
   }
 }
 
@@ -322,7 +322,7 @@ static VALUE data_pn_extra(VALUE self) {
 
   Data_Get_Struct(self, ImmutableNodeContext, ctx);
 
-  return UINT2NUM(ctx->node->pn_extra);
+  return UINT2NUM((unsigned long)(ctx->node->pn_extra));
 }
 
 /*
@@ -393,7 +393,7 @@ static VALUE function_args(VALUE self) {
   object = ctx->node->pn_funpob->object;
   f = (JSFunction *)JS_GetPrivate(ctx->js, ctx->node->pn_funpob->object);
 
-  func_args = rb_ary_new2(f->nargs);
+  func_args = rb_ary_new2((long)f->nargs);
   if(f->nargs > 0) {
     names = js_GetLocalNameArray(ctx->js, f, &ctx->js->tempPool);
     for(i = 0; i < f->nargs; i++) {
@@ -484,7 +484,7 @@ VALUE jsop_to_symbol(JSUint32 jsop)
     case <%= jsop %>: return ID2SYM(rb_intern("<%= jsop.downcase %>"));
     <% end %>
   }
-  return UINT2NUM(jsop);
+  return UINT2NUM((unsigned long)(jsop));
 }
 
 void init_Johnson_SpiderMonkey_Immutable_Node(VALUE spidermonkey)

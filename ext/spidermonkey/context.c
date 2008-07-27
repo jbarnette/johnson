@@ -48,7 +48,7 @@ initialize_native(VALUE self, VALUE rb_runtime, VALUE UNUSED(options))
   Data_Get_Struct(self, JohnsonContext, context);
   Data_Get_Struct(rb_runtime, JohnsonRuntime, runtime);
 
-  if ((context->js = JS_NewContext(runtime->js, 8192)))
+  if ((context->js = JS_NewContext(runtime->js, 8192L)))
   {
     // See if the runtime already has a shared global object.
     JSObject* global = runtime->global;
@@ -97,7 +97,7 @@ static void deallocate(JohnsonContext *context) {
 
 static VALUE allocate(VALUE klass)
 {
-  JohnsonContext* context = calloc(1, sizeof(JohnsonContext));
+  JohnsonContext* context = calloc(1L, sizeof(JohnsonContext));
   return Data_Wrap_Struct(klass, 0, deallocate, context);
 }
 
