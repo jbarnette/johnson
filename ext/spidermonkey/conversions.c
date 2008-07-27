@@ -81,9 +81,14 @@ JSBool convert_to_js(JohnsonRuntime* runtime, VALUE ruby, jsval* retval)
       }
 
     case T_FIXNUM:
-      // FIXME: Not all T_FIXNUM will fit in a jsint ( == int32)
-      *retval = INT_TO_JSVAL((jsint)(NUM2INT(ruby)));
-      JRETURN;
+      {
+        long val = NUM2LONG(ruby);
+        if (val >= JSVAL_INT_MIN && val <= JSVAL_INT_MAX)
+        {
+          *retval = INT_TO_JSVAL((jsint)val);
+          JRETURN;
+        }
+      }
 
     case T_FLOAT:
     case T_BIGNUM:
