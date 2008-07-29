@@ -429,13 +429,6 @@ class Hoe #:nodoc:
       puts spec.to_ruby
     end
     
-    desc "Generate #{name}.gemspec"
-    task :gemspec do
-      File.open("#{name}.gemspec", "w") do |f|
-        f.write spec.to_ruby
-      end
-    end
-
     self.lib_files = spec.files.grep(/^(lib|ext)/)
     self.bin_files = spec.files.grep(/^bin/)
     self.test_files = spec.files.grep(/^test/)

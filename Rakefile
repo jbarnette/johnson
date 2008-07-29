@@ -33,11 +33,9 @@ HOE = Hoe.new("johnson", Johnson::VERSION) do |p|
 end
 
 namespace :gem do
-  namespace :spec do
-    task :generate do
-      File.open("johnson.gemspec", "w") do |f|
-        f.puts(HOE.spec.to_ruby)
-      end
+  task :spec do
+    File.open("johnson.gemspec", "w") do |f|
+      f.puts(HOE.spec.to_ruby)
     end
   end
 end
