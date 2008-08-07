@@ -16,6 +16,10 @@ Johnson wraps JavaScript in a loving Ruby embrace.
   
 == Installing
 
+We haven't rolled an official 1.0 for Johnson, though we plan to Real Soon Now.
+For the moment, follow the instructions in "Installing Development Versions".
+Once we push a 1.0 to RubyForge, it'll be as easy as:
+
   [sudo] gem install johnson
 
 == Installing Development Versions
@@ -24,7 +28,8 @@ We periodically update Johnson's gemspec on Github. Rather than installing the
 official releases (hosted on RubyForge), you can track the development version.
 Development versions will have a timestamped version number, like 1.0.0.200806232349.
 
-  [sudo] gem sources -a http://gems.github.com   # if you haven't already
+  # requires RubyGems 1.2!
+  [sudo] gem sources -a http://gems.github.com
   [sudo] gem install jbarnette-johnson
 
 == License
