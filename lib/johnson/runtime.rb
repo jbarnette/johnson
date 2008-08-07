@@ -25,8 +25,8 @@ module Johnson
       delegate.global
     end
     
-    def load(file)
-      delegate.evaluate(IO.read(file), file, 1)
+    def load(*files)
+      files.each { |f| delegate.evaluate(IO.read(f), f, 1) }
     end
 
     ###
