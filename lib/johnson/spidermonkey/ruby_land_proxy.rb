@@ -9,7 +9,9 @@ module Johnson #:nodoc:
       
       private :initialize
       
+      # FIXME: need to revisit array vs non-array proxy, to_a/to_ary semantics, etc.
       alias_method :size, :length
+      alias_method :to_ary, :to_a
       
       def to_proc
         @proc ||= Proc.new { |*args| call(*args) }

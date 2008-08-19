@@ -208,6 +208,15 @@ module Johnson
         asplode = lambda { raise err }
         assert_js_equal(err, "x = null; try { foo(); } catch(ex) { x = ex; }; x", :foo => asplode)
       end
+      
+      def test_array_multiple_assignment
+        a = @runtime.evaluate("[1,2,3]")
+        x, y, z = a
+        
+        assert_equal(1, x)
+        assert_equal(2, y)
+        assert_equal(3, z)
+      end
 
       # FIXME: If you uncomment this test, we get this error:
       #
