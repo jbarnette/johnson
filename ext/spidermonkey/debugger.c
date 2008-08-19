@@ -3,6 +3,12 @@
 #include "conversions.h"
 #include "immutable_node.h"
 
+/*
+ * call-seq:
+ *   frame_pc(context, frame)
+ *
+ * Get the frame parse context
+ */
 static VALUE frame_pc(VALUE UNUSED(self), VALUE context, VALUE frame)
 {
   JSContext * js = NULL;
@@ -12,6 +18,12 @@ static VALUE frame_pc(VALUE UNUSED(self), VALUE context, VALUE frame)
   return Data_Wrap_Struct(rb_cObject, NULL, NULL, JS_GetFramePC(js, fp));
 }
 
+/*
+ * call-seq:
+ *   line_number(context, script, bytecode)
+ *
+ * Get the line number of the +bytecode+ given +context+ and +script+
+ */
 static VALUE line_number(VALUE UNUSED(self), VALUE context, VALUE script, VALUE bytecode)
 {
   JSContext * js        = NULL;
@@ -25,6 +37,12 @@ static VALUE line_number(VALUE UNUSED(self), VALUE context, VALUE script, VALUE 
   return INT2NUM((long)JS_PCToLineNumber(js, js_script, js_bytecode));
 }
 
+/*
+ * call-seq:
+ *   file_name(context, script)
+ *
+ * Get the file name of the +script+ given +context+
+ */
 static VALUE file_name(VALUE UNUSED(self), VALUE context, VALUE script)
 {
   JSContext * js        = NULL;

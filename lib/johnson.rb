@@ -44,4 +44,12 @@ module Johnson
   def self.parse(js, *args)
     Johnson::Parser.parse(js, *args)
   end
+
+  ###
+  # Create a new runtime and load all +files+.  Returns a new Johnson::Runtime.
+  def self.load(*files)
+    rt = Johnson::Runtime.new
+    rt.load(*files)
+    rt
+  end
 end

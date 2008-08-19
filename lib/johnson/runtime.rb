@@ -30,6 +30,14 @@ module Johnson
     end
 
     ###
+    # Johnson.require on each file in +files+
+    def require(*files)
+      files.each do |file|
+        evaluate("Johnson.require('#{file}');")
+      end
+    end
+
+    ###
     # Compile +script+ with +filename+ and +linenum+
     def compile(script, filename=nil, linenum=nil)
       delegate.compile(script, filename, linenum)
