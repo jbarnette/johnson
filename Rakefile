@@ -122,7 +122,10 @@ file "ext/spidermonkey/Makefile" =>
   [LIBJS, GENERATED_NODE, "ext/spidermonkey/extconf.rb"] do
   
   dirs = (CROSS ? [ENV["CROSSLIB"]] : []) + $:
-  ruby_exec = ENV["RUBY_EXEC"] || "ruby"
+  if defined?(RbConfig)
+    ruby_exec = File.join(RbConfig::CONFIG["bindir"], RbConfig::CONFIG["ruby_install_name"])
+  end
+  ruby_exec ||= "ruby"
   command = [ruby_exec] + dirs.map{|dir| "-I#{File.expand_path dir}"} + ["extconf.rb"]
   Dir.chdir("ext/spidermonkey") { sh *command }
 end
