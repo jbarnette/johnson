@@ -34,7 +34,7 @@ end
 
 namespace :gem do
   task :spec do
-    File.open("johnson.gemspec", "w") do |f|
+    File.open("#{HOE.name}.gemspec", "w") do |f|
       f.puts(HOE.spec.to_ruby)
     end
   end
