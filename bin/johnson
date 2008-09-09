@@ -1,13 +1,9 @@
 #!/usr/bin/env ruby
 
-begin
-  require "johnson"
-rescue LoadError
-  require "rubygems"
-  require "johnson"
-end
+$:.unshift(File.expand_path(File.join(File.dirname(__FILE__), "..", "lib")))
 
 require "readline"
+require "johnson"
 
 RUNTIME = js = Johnson::Runtime.new
 RUNTIME.evaluate(Johnson::CLI::JS)
@@ -63,12 +59,16 @@ options.files_to_preload.each { |f| RUNTIME.load(f) }
 
 unless options.expressions.empty?
   options.expressions.each { |e| RUNTIME.evaluate(e, '-e') }
-  exit if !options.file_to_evaluate
+  exit if options.files_to_evaluate.empty?
 end
 
-if options.file_to_evaluate
+unless options.files_to_evaluate.empty?
   RUNTIME[:arguments] = options.arguments
-  RUNTIME.load(options.file_to_evaluate)
+  
+  options.files_to_evaluate.each do |file|
+    RUNTIME.load(file)
+  end
+  
   exit
 end
 

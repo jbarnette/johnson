@@ -10,19 +10,26 @@ module Johnson #:nodoc:
       attr_reader :arguments
       attr_reader :expressions
       attr_reader :files_to_preload
-      attr_reader :file_to_evaluate
+      attr_reader :files_to_evaluate
       attr_reader :load_paths
       attr_reader :paths_to_require
     
       def initialize(*args)
-        argv = args.flatten
+        @arguments = []
         @expressions = []
         @load_paths = []
         @files_to_preload = []
         @paths_to_require = []
 
+        argv = args.flatten
+        
+        if index = argv.index("--")
+          @arguments = argv[(index+1)..-1]
+          argv = argv[0..index]
+        end
+
         parser = OptionParser.new do |parser|
-          parser.banner = "Usage: johnson [options] [file.js] [-- jsargs]"
+          parser.banner = "Usage: johnson [options] [file.js...] [-- jsargs...]"
           parser.version = Johnson::VERSION
 
           parser.on("-e [EXPRESSION]", "Evaluate [EXPRESSION] and exit") do |expression|
@@ -53,9 +60,7 @@ module Johnson #:nodoc:
         end
         
         parser.parse!(argv)
-
-        @file_to_evaluate = argv.shift
-        @arguments = argv.dup
+        @files_to_evaluate = argv.dup
       end 
     end
   end
