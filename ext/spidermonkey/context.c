@@ -91,8 +91,10 @@ initialize_native(VALUE self, VALUE rb_runtime, VALUE UNUSED(options))
 
 static void deallocate(JohnsonContext *context) {
   JS_SetContextPrivate(context->js, 0);
+  /*
   JS_DestroyContext(context->js);
   free(context);
+  */
 }
 
 static VALUE allocate(VALUE klass)

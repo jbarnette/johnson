@@ -272,11 +272,13 @@ static void deallocate(JohnsonRuntime* runtime)
 {
   JS_RemoveRoot(johnson_get_current_context(runtime), &(runtime->global));
   
-  JSContext *context;
+  JSContext *context = NULL;
   JSContext *iterator = NULL;
 
-  while ((context = JS_ContextIterator(runtime->js, &iterator)) != NULL)
-    JS_DestroyContext(context);
+  while ((context = JS_ContextIterator(runtime->js, &iterator)) != NULL) {
+    JS_DestroyContext(iterator);
+    iterator = NULL;
+  }
   
   JS_DestroyRuntime(runtime->js);
   free(runtime);
