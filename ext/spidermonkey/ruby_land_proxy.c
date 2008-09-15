@@ -142,8 +142,12 @@ function_p(VALUE self)
  * Returns <code>true</code> if _obj_ responds to given method.
  */
 static VALUE
-respond_to_p(VALUE self, VALUE sym)
+respond_to_p(int argc, const VALUE* argv, VALUE self)
 {
+  VALUE sym, priv;
+
+  rb_scan_args(argc, argv, "11", &sym, &priv);
+
   RubyLandProxy* proxy;
   Data_Get_Struct(self, RubyLandProxy, proxy);
 
@@ -169,7 +173,7 @@ respond_to_p(VALUE self, VALUE sym)
 
   JCHECK(JS_HasProperty(context, obj, name, &found));
 
-  JRETURN_RUBY(found ? Qtrue : CALL_RUBY_WRAPPER(rb_call_super, 1, &sym));
+  JRETURN_RUBY(found ? Qtrue : CALL_RUBY_WRAPPER(rb_call_super, argc, argv));
 }
 
 /*
@@ -526,7 +530,7 @@ void init_Johnson_SpiderMonkey_Proxy(VALUE spidermonkey)
   rb_define_method(proxy_class, "[]", get, 1);
   rb_define_method(proxy_class, "[]=", set, 2);
   rb_define_method(proxy_class, "function?", function_p, 0);
-  rb_define_method(proxy_class, "respond_to?", respond_to_p, 1);
+  rb_define_method(proxy_class, "respond_to?", respond_to_p, -1);
   rb_define_method(proxy_class, "each", each, 0);
   rb_define_method(proxy_class, "length", length, 0);
   rb_define_method(proxy_class, "to_s", to_s, 0);
