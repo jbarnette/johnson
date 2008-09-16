@@ -26,4 +26,7 @@
 # endif
 #endif
 
+#define ENTER_GC_PHASE do { gc_phase++; } while(0)
+#define LEAVE_GC_PHASE do { gc_phase--; } while(0)
+
 #endif

@@ -6,6 +6,8 @@
 #include "jroot.h"
 #include "ruby_land_proxy.h"
 
+extern int gc_phase;
+
 /*
  * call-seq:
  *   global
@@ -217,6 +219,8 @@ JSBool gc_callback(JSContext *context, JSGCStatus status)
 {
   if(status == JSGC_BEGIN) {
     VALUE ruby_runtime = (VALUE)JS_GetRuntimePrivate(JS_GetRuntime(context));
+    if(gc_phase > 0)
+      return JS_FALSE;
     if(rb_funcall(ruby_runtime, rb_intern("should_sm_gc?"), 0) == Qtrue)
       return JS_TRUE;
   }
@@ -240,7 +244,7 @@ initialize_native(VALUE self, VALUE UNUSED(options))
     JSContext* context = johnson_get_current_context(runtime);
     if(
         (runtime->global = JS_GetGlobalObject(context))
-        && (JS_AddNamedRoot(context, &(runtime->global), "runtime->global"))
+        && (JS_AddNamedRootRT(runtime->js, &(runtime->global), "runtime->global"))
     ) {
       return self;
     }
@@ -270,18 +274,25 @@ JSContext* johnson_get_current_context(JohnsonRuntime * runtime)
 
 static void deallocate(JohnsonRuntime* runtime)
 {
-  JS_RemoveRoot(johnson_get_current_context(runtime), &(runtime->global));
-  
+  ENTER_GC_PHASE;
+
   JSContext *context = NULL;
   JSContext *iterator = NULL;
 
   while ((context = JS_ContextIterator(runtime->js, &iterator)) != NULL) {
+    if (runtime->global) {
+      JS_RemoveRootRT(runtime->js, &(runtime->global));
+      runtime->global = NULL;
+    }
+
     JS_DestroyContext(iterator);
     iterator = NULL;
   }
   
   JS_DestroyRuntime(runtime->js);
   free(runtime);
+
+  LEAVE_GC_PHASE;
 }
 
 static VALUE allocate(VALUE klass)
