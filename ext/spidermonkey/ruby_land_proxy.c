@@ -1,8 +1,6 @@
 #include "ruby_land_proxy.h"
 #include "conversions.h"
 
-extern int gc_phase;
-
 DECLARE_RUBY_WRAPPER(rb_call_super, int argc; const VALUE* argv)
 DEFINE_RUBY_WRAPPER(rb_call_super, rb_call_super, ARGLIST2(argc, argv))
 
@@ -449,8 +447,6 @@ static VALUE to_s(VALUE self)
 
 static void finalize(RubyLandProxy* proxy)
 {
-  ENTER_GC_PHASE;
-
   // could get finalized after the context has been freed
   if (proxy->runtime && proxy->runtime->jsids)
   {
@@ -467,8 +463,6 @@ static void finalize(RubyLandProxy* proxy)
   }
 
   free(proxy);
-
-  LEAVE_GC_PHASE;
 }
 
 bool ruby_value_is_proxy(VALUE maybe_proxy)

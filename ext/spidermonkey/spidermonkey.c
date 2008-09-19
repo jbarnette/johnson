@@ -4,8 +4,6 @@
 #include "debugger.h"
 #include "immutable_node.h"
 
-int gc_phase = 0;
-
 void Init_spidermonkey()
 {
   VALUE johnson = rb_define_module("Johnson"); // FIXME: this belongs outside the extension

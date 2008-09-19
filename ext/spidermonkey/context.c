@@ -5,8 +5,6 @@
 #include "idhash.h"
 #include "jsdbgapi.h"
 
-extern int gc_phase;
-
 // callback for JS_SetErrorReporter
 static void report_js_error(JSContext* js, const char* message, JSErrorReport* UNUSED(report))
 {
@@ -92,13 +90,11 @@ initialize_native(VALUE self, VALUE rb_runtime, VALUE UNUSED(options))
 ///////////////////////////////////////////////////////////////////////////
 
 static void deallocate(JohnsonContext *context) {
-  ENTER_GC_PHASE;
   JS_SetContextPrivate(context->js, 0);
   /*
   JS_DestroyContext(context->js);
   free(context);
   */
-  LEAVE_GC_PHASE;
 }
 
 static VALUE allocate(VALUE klass)
