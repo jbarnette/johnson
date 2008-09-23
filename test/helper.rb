@@ -18,7 +18,7 @@ module Johnson
       end
     end
 
-    undef :default_test
+    undef :default_test if method_defined? :default_test
 
     def setup
       @runtime = Johnson::Runtime.new
@@ -41,7 +41,7 @@ module Johnson
   class NodeTestCase < Test::Unit::TestCase
     include Johnson::Nodes
   
-    undef :default_test
+    undef :default_test if method_defined? :default_test
     
     def setup
       @parser = Johnson::Parser
