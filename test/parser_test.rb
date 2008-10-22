@@ -22,6 +22,12 @@ class ParserTest < Test::Unit::TestCase
     }
   end
 
+  def test_let
+    doc = @parser.parse(<<-eojs)
+      let a = 1;
+    eojs
+  end
+
   def test_exception_has_info
     begin
       @parser.parse('if(')

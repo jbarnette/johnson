@@ -61,6 +61,7 @@ static VALUE parse_io(int argc, VALUE *argv, VALUE klass) {
       chars,
       length,
       NULL, filenamez, (unsigned)linenumi));
+  JS_SetVersion(context->js, JSVERSION_LATEST);
 
   context->node = js_ParseScript(context->js, 
       JS_NewObject(context->js, NULL, NULL, NULL),
