@@ -3,6 +3,7 @@ module Johnson
     LIST_NODES = %w{
       SourceElements
       VarStatement
+      LetStatement
       Comma
       ObjectLiteral
       ArrayLiteral

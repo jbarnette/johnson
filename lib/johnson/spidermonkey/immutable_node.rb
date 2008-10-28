@@ -11,6 +11,7 @@ module Johnson #:nodoc:
               :tok_colon  => :visit_Label,
               :tok_name   => :visit_AssignExpr,
               :tok_dot    => :visit_DotAccessor,
+              :tok_lexicalscope => :visit_LexicalScope
             }[pn_type]
             raise "Unknown type #{pn_type}" unless m
             visitor.send(m, self)
@@ -112,6 +113,7 @@ module Johnson #:nodoc:
           m = {
             :tok_lc         => :visit_SourceElements,
             :tok_var        => :visit_VarStatement,
+            :tok_let        => :visit_LetStatement,
             :tok_comma      => :visit_Comma,
             :tok_rc         => :visit_ObjectLiteral,
             :tok_rb         => :visit_ArrayLiteral,

@@ -41,6 +41,14 @@ module Johnson
                       ro_node.function_body.accept(self) )
       end
 
+      def visit_LexicalScope(ro_node)
+        LexicalScope.new(
+          ro_node.line,
+          ro_node.index,
+          Name.new(ro_node.line, ro_node.index, "unnamed"), # lexical scope nodes don't hold a name
+          ro_node.pn_expr.accept(self))
+      end
+
       %w{ Label AssignExpr DotAccessor }.each do |type|
         define_method(:"visit_#{type}") do |ro_node|
           Nodes.const_get(type).new(
@@ -55,6 +63,7 @@ module Johnson
       %w{
         SourceElements
         VarStatement
+        LetStatement
         Comma
         ObjectLiteral
         ArrayLiteral

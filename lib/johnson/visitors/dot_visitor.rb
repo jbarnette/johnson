@@ -52,6 +52,7 @@ module Johnson
 
       %w{
         VarStatement
+        LetStatement
         Comma
         ObjectLiteral
         ArrayLiteral
@@ -147,6 +148,7 @@ module Johnson
         OpModEqual OpMultiply OpMultiplyEqual OpRShift OpRShiftEqual
         OpSubtract OpSubtractEqual OpURShift OpURShiftEqual Or Property
         SetterProperty StrictEqual StrictNotEqual Switch While With
+        LexicalScope
       }.each do |node|
         define_method(:"visit_#{node}") do |o|
           @nodes << Node.new(o.object_id, node, [])

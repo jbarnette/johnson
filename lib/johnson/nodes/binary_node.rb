@@ -13,6 +13,7 @@ module Johnson
       AssignExpr
       BracketAccess
       DotAccessor
+      LexicalScope
       Equal
       GetterProperty
       Label

@@ -42,6 +42,10 @@ module Johnson
         "var #{o.value.map { |x| x.accept(self) }.join(', ')}"
       end
 
+      def visit_LetStatement(o)
+        "let #{o.value.map { |x| x.accept(self) }.join(', ')}"
+      end
+
       def visit_ArrayLiteral(o)
         "[#{o.value.map { |x| x.accept(self) }.join(', ')}]"
       end
@@ -112,6 +116,10 @@ module Johnson
 
       def visit_BracketAccess(o)
         "#{o.left.accept(self)}[#{o.right.accept(self)}]"
+      end
+
+      def visit_LexicalScope(o)
+        "#{o.right.accept(self)}"
       end
       
       def visit_DoWhile(o)

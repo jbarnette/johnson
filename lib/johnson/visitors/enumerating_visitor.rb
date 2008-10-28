@@ -12,9 +12,15 @@ module Johnson
         self
       end
 
+      def visit_LexicalScope(o)
+        block.call(o)
+        o.right.accept(self)
+        self
+      end
+
       %w{
         ArrayLiteral Comma Export FunctionCall Import New ObjectLiteral
-        VarStatement
+        VarStatement LetStatement
       }.each do |type|
         define_method(:"visit_#{type}") do |o|
           block.call(o)

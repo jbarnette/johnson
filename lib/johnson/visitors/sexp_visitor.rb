@@ -7,6 +7,7 @@ module Johnson
 
       {
         'VarStatement'  => :var,
+        'LetStatement'  => :let,
         'Comma'         => :comma,
         'ObjectLiteral' => :object,
         'ArrayLiteral'  => :array,
@@ -151,6 +152,7 @@ module Johnson
         'AssignExpr'          => :assign,
         'BracketAccess'       => :bracket_access,
         'DotAccessor'         => :dot_accessor,
+        'LexicalScope'        => :lexical_scope,
         'Equal'               => :equal,
         'NotEqual'            => :not_equal,
         'Or'                  => :or,
