@@ -112,7 +112,7 @@ static bool class_or_module_p(VALUE self)
 
 static bool const_p(VALUE self, char* name)
 {
-  return rb_obj_is_kind_of(self, rb_cModule)
+  return class_or_module_p(self)
     && rb_is_const_id(rb_intern(name))
     && RTEST( rb_funcall(self, rb_intern("const_defined?"), 1, ID2SYM(rb_intern(name))) );
 }

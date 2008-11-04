@@ -7,7 +7,9 @@ module Johnson
 
     def []= key, value
       if value.respond_to?(:function?) && value.function?
-        puts "FIXME: got a function here that needs dealin' with!"
+        @target.__send__ :define_method, key do |*args|
+          value.apply(self, Johnson.mark_for_conversion_by_value(args))
+        end
       else
         Johnson::Prototyper.defaults_for(@target)[key] = value
 
@@ -15,7 +17,8 @@ module Johnson
           attr_writer "#{key}"
 
           def #{key}
-            @#{key} || Johnson::Prototyper.defaults_for(#{@target.name})["#{key}"]
+            defined?(@#{key}) ? @#{key} :
+              @#{key} = Johnson::Prototyper.defaults_for(#{@target.name})["#{key}"]
           end
         END
       end
