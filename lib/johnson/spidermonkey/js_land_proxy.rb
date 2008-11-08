@@ -3,10 +3,6 @@ require "johnson/prototyper"
 module Johnson
   module SpiderMonkey
     module JSLandProxy #:nodoc:
-      def self.prototype_for(proxied)
-        (@prototypes ||= Hash.new { |h,k| h[k] = Johnson::Prototyper.new(k) })[proxied]
-      end
-
       def self.send_with_possible_block(target, symbol, args)
         block = args.pop if args.last.is_a?(RubyLandProxy) && args.last.function?
         target.__send__(symbol, *args, &block)

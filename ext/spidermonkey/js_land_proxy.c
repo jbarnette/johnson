@@ -239,8 +239,8 @@ static JSBool get(JSContext* js_context, JSObject* obj, jsval id, jsval* retval)
   // for the "prototype". No, this isn't a can of worms or anything.
 
   if (class_or_module_p(self) && !strcasecmp("prototype", name)) {
-    JCHECK(call_ruby_from_js(runtime, retval, Johnson_SpiderMonkey_JSLandProxy(),
-      rb_intern("prototype_for"), 1, self));
+    JCHECK(call_ruby_from_js(runtime, retval, Johnson_Prototyper(),
+      rb_intern("for"), 1, self));
   }
   
   // if the Ruby object has a dynamic js property with a key

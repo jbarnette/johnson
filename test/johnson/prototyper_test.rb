@@ -51,6 +51,15 @@ module Johnson
       a = %w(one two three)
       assert_equal a.length, a.newLength
     end
+    
+    def test_prototyper_keeps_track_of_methods_defined_from_prototype
+      
+    end
+    
+    def test_retrieving_prototype_function_from_instance_does_the_right_thing
+      @runtime.evaluate("Ruby.Array.prototype.foo = function() {}")
+      assert_js("(new Ruby.Array).foo === Ruby.Array.prototype.foo")
+    end
   end
 end
 
