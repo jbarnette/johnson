@@ -45,11 +45,25 @@ module Johnson
     Johnson::Parser.parse(js, *args)
   end
 
-  ###
   # Create a new runtime and load all +files+.  Returns a new Johnson::Runtime.
+
   def self.load(*files)
     rt = Johnson::Runtime.new
     rt.load(*files)
     rt
+  end
+  
+  # Mark +obj+ for by-value conversion to JavaScript. When +obj+ crosses
+  # over into JSLand, it'll be converted into a JS-native type. This
+  # happens already for strings, numbers, and regular expressions.
+  #
+  # Only arrays are currently supported for explicit by-value conversion.
+  # If you mark an array, it will be shallowly copied into a JavaScript
+  # array any time it crosses over.
+  
+  def self.mark_for_conversion_by_value obj
+    unless obj.respond_to? :convert_to_js_by_value?
+      def obj.convert_to_js_by_value?; true; end
+    end
   end
 end

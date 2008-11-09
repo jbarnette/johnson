@@ -105,9 +105,14 @@ static bool autovivified_p(VALUE UNUSED(ruby_context), VALUE self, char* name)
     self, rb_str_new2(name)));
 }
 
+static bool class_or_module_p(VALUE self)
+{
+  return rb_obj_is_kind_of(self, rb_cModule);
+}
+
 static bool const_p(VALUE self, char* name)
 {
-  return rb_obj_is_kind_of(self, rb_cModule)
+  return class_or_module_p(self)
     && rb_is_const_id(rb_intern(name))
     && RTEST( rb_funcall(self, rb_intern("const_defined?"), 1, ID2SYM(rb_intern(name))) );
 }
@@ -228,6 +233,14 @@ static JSBool get(JSContext* js_context, JSObject* obj, jsval id, jsval* retval)
   
   if (!strcasecmp("__iterator__", name)) {
     JCHECK(evaluate_js_property_expression(runtime, "Johnson.Generator.create", retval));
+  }
+
+  // if the Ruby object is a class or a module, special-case a property
+  // for the "prototype". No, this isn't a can of worms or anything.
+
+  if (class_or_module_p(self) && !strcasecmp("prototype", name)) {
+    JCHECK(call_ruby_from_js(runtime, retval, Johnson_Prototyper(),
+      rb_intern("for"), 1, self));
   }
   
   // if the Ruby object has a dynamic js property with a key

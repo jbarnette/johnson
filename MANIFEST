@@ -1,3 +1,4 @@
+.autotest
 CHANGELOG
 MANIFEST
 MINGW32.mk
@@ -54,6 +55,7 @@ lib/johnson/nodes/node.rb
 lib/johnson/nodes/ternary_node.rb
 lib/johnson/parser.rb
 lib/johnson/parser/syntax_error.rb
+lib/johnson/prototyper.rb
 lib/johnson/runtime.rb
 lib/johnson/spidermonkey/context.rb
 lib/johnson/spidermonkey/debugger.rb
@@ -76,6 +78,7 @@ test/helper.rb
 test/johnson/browser_test.rb
 test/johnson/conversions/array_test.rb
 test/johnson/conversions/boolean_test.rb
+test/johnson/conversions/by_value_test.rb
 test/johnson/conversions/callable_test.rb
 test/johnson/conversions/file_test.rb
 test/johnson/conversions/nil_test.rb
@@ -100,6 +103,7 @@ test/johnson/nodes/function_test.rb
 test/johnson/nodes/if_test.rb
 test/johnson/nodes/import_test.rb
 test/johnson/nodes/label_test.rb
+test/johnson/nodes/let_test.rb
 test/johnson/nodes/object_literal_test.rb
 test/johnson/nodes/return_test.rb
 test/johnson/nodes/semi_test.rb
@@ -113,6 +117,7 @@ test/johnson/nodes/void_test.rb
 test/johnson/nodes/while_test.rb
 test/johnson/nodes/with_test.rb
 test/johnson/prelude_test.rb
+test/johnson/prototyper_test.rb
 test/johnson/runtime_test.rb
 test/johnson/spidermonkey/context_test.rb
 test/johnson/spidermonkey/immutable_node_test.rb
@@ -279,7 +284,6 @@ vendor/spidermonkey/js.c
 vendor/spidermonkey/js.mak
 vendor/spidermonkey/js.mdp
 vendor/spidermonkey/js.msg
-vendor/spidermonkey/js.pkg
 vendor/spidermonkey/js3240.rc
 vendor/spidermonkey/jsOS240.def
 vendor/spidermonkey/jsapi.c
