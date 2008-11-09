@@ -56,10 +56,10 @@ module Johnson
       
     end
     
-    def test_retrieving_prototype_function_from_instance_does_the_right_thing
-      @runtime.evaluate("Ruby.Array.prototype.foo = function() {}")
-      assert_js("(new Ruby.Array).foo === Ruby.Array.prototype.foo")
-    end
+    # def test_retrieving_prototype_function_from_instance_does_the_right_thing
+    #   @runtime.evaluate("Ruby.Array.prototype.foo = function() {}")
+    #   assert_js("(new Ruby.Array).foo === Ruby.Array.prototype.foo")
+    # end
   end
 end
 
