@@ -28,6 +28,7 @@ We periodically update Johnson's gemspec on Github. Rather than installing the
 official releases (hosted on RubyForge), you can track the development version.
 Development versions will have a timestamped version number, like 1.0.0.200806232349.
 
+  # requires RubyGems 1.2!
   [sudo] gem sources -a http://gems.github.com
   [sudo] gem install jbarnette-johnson
 

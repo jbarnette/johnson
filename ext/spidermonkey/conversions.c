@@ -10,12 +10,6 @@ DEFINE_RUBY_WRAPPER(rb_funcall_0, rb_funcall, ARGLIST3(obj, sym, argc))
 DECLARE_RUBY_WRAPPER(rb_funcall_2, VALUE obj; ID sym; int argc; VALUE a; VALUE b)
 DEFINE_RUBY_WRAPPER(rb_funcall_2, rb_funcall, ARGLIST5(obj, sym, argc, a, b))
 
-static bool convert_to_js_by_value_p(VALUE obj)
-{
-	ID sym = rb_intern("convert_to_js_by_value?");
-	return rb_respond_to(obj, sym) && Qtrue == rb_funcall(obj, sym, 0);
-}
-
 static JSBool convert_float_or_bignum_to_js(JohnsonRuntime* runtime, VALUE float_or_bignum, jsval* retval)
 {
   JSContext * context = johnson_get_current_context(runtime);
@@ -41,28 +35,6 @@ static JSBool convert_symbol_to_js(JohnsonRuntime* runtime, VALUE symbol, jsval*
   JCHECK(JS_CallFunctionName(context, JSVAL_TO_OBJECT(nsJohnson), "symbolize", 1, &name, retval));
 
   JRETURN;
-}
-
-static JSBool convert_array_to_js_by_value(JohnsonRuntime* runtime, VALUE array, jsval* retval)
-{
-	JSContext* context = johnson_get_current_context(runtime);
-	
-	PREPARE_JROOTS(context, RARRAY(array)->len + 1);
-
-	JSObject* converted = JS_NewArrayObject(context, RARRAY(array)->len, NULL);
-	JROOT(converted);
-	
-	int i; for (i = 0; i < RARRAY(array)->len; ++i) {
-		jsval js_value;
-		
-		JCHECK(convert_to_js(runtime, RARRAY(array)->ptr[i], &js_value));
-		JROOT(js_value);
-		JCHECK(JS_SetElement(context, converted, i, &js_value));
-	}
-	
-	*retval = OBJECT_TO_JSVAL(converted);
-	
-	JRETURN;
 }
 
 static JSBool convert_regexp_to_js(JohnsonRuntime* runtime, VALUE regexp, jsval* retval)
@@ -127,14 +99,8 @@ JSBool convert_to_js(JohnsonRuntime* runtime, VALUE ruby, jsval* retval)
       JCHECK(convert_symbol_to_js(runtime, ruby, retval));
       JRETURN;
 
-    case T_ARRAY:
-	  	if (convert_to_js_by_value_p(ruby))
-			{
-				JCHECK(convert_array_to_js_by_value(runtime, ruby, retval));
-				JRETURN;
-			}
-
     case T_CLASS:
+    case T_ARRAY:
     case T_HASH:
     case T_MODULE:
     case T_FILE:

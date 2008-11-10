@@ -1,5 +1,3 @@
-require "johnson/prototyper"
-
 module Johnson
   module SpiderMonkey
     module JSLandProxy #:nodoc:

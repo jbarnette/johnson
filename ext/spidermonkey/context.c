@@ -121,8 +121,3 @@ VALUE Johnson_SpiderMonkey_JSLandProxy()
 {
   return rb_eval_string("Johnson::SpiderMonkey::JSLandProxy");
 }
-
-VALUE Johnson_Prototyper()
-{
-  return rb_eval_string("Johnson::Prototyper");
-}
