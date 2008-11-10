@@ -3,6 +3,8 @@ require "erb"
 require "./lib/hoe.rb"
 require "./lib/johnson/version.rb"
 
+abort "Need Ruby version 1.8.6!" unless RUBY_VERSION == "1.8.6"
+
 # what sort of extension are we building?
 kind = Config::CONFIG["DLEXT"]
 
