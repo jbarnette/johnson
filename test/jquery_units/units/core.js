@@ -1,5 +1,7 @@
 module("core");
 
+var isLocal = true;
+
 test("Basic requirements", function() {
 	expect(7);
 	ok( Array.prototype.push, "Array.push()" );
@@ -15,6 +17,7 @@ test("$()", function() {
 	expect(4);
 	
 	var main = $("#main");
+		
 	isSet( $("div p", main).get(), q("sndp", "en", "sap"), "Basic selector with jQuery object as context" );
 	
 /*
@@ -298,29 +301,29 @@ test("index(Object)", function() {
 });
 
 test("attr(String)", function() {
-	expect(20);
-	ok( $('#text1').attr('value') == "Test", 'Check for value attribute' );
-	ok( $('#text1').attr('value', "Test2").attr('defaultValue') == "Test", 'Check for defaultValue attribute' );
-	ok( $('#text1').attr('type') == "text", 'Check for type attribute' );
-	ok( $('#radio1').attr('type') == "radio", 'Check for type attribute' );
-	ok( $('#check1').attr('type') == "checkbox", 'Check for type attribute' );
-	ok( $('#simon1').attr('rel') == "bookmark", 'Check for rel attribute' );
-	ok( $('#google').attr('title') == "Google!", 'Check for title attribute' );
-	ok( $('#mark').attr('hreflang') == "en", 'Check for hreflang attribute' );
-	ok( $('#en').attr('lang') == "en", 'Check for lang attribute' );
-	ok( $('#simon').attr('class') == "blog link", 'Check for class attribute' );
-	ok( $('#name').attr('name') == "name", 'Check for name attribute' );
-	ok( $('#text1').attr('name') == "action", 'Check for name attribute' );
-	ok( $('#form').attr('action').indexOf("formaction") >= 0, 'Check for action attribute' );
-	ok( $('#text1').attr('maxlength') == '30', 'Check for maxlength attribute' );
-	ok( $('#text1').attr('maxLength') == '30', 'Check for maxLength attribute' );
-	ok( $('#area1').attr('maxLength') == '30', 'Check for maxLength attribute' );
-	ok( $('#select2').attr('selectedIndex') == 3, 'Check for selectedIndex attribute' );
-	ok( $('#foo').attr('nodeName') == 'DIV', 'Check for nodeName attribute' );
-	ok( $('#foo').attr('tagName') == 'DIV', 'Check for tagName attribute' );
-	
-	$('<a id="tAnchor5"></a>').attr('href', '#5').appendTo('#main'); // using innerHTML in IE causes href attribute to be serialized to the full path
-	ok( $('#tAnchor5').attr('href') == "#5", 'Check for non-absolute href (an anchor)' );
+ expect(20);
+ ok( $('#text1').attr('value') == "Test", 'Check for value attribute' );
+ ok( $('#text1').attr('value', "Test2").attr('defaultValue') == "Test", 'Check for defaultValue attribute' );
+ ok( $('#text1').attr('type') == "text", 'Check for type attribute' );
+ ok( $('#radio1').attr('type') == "radio", 'Check for type attribute' );
+ ok( $('#check1').attr('type') == "checkbox", 'Check for type attribute' );
+ ok( $('#simon1').attr('rel') == "bookmark", 'Check for rel attribute' );
+ ok( $('#google').attr('title') == "Google!", 'Check for title attribute' );
+ ok( $('#mark').attr('hreflang') == "en", 'Check for hreflang attribute' );
+ ok( $('#en').attr('lang') == "en", 'Check for lang attribute' );
+ ok( $('#simon').attr('class') == "blog link", 'Check for class attribute' );
+ ok( $('#name').attr('name') == "name", 'Check for name attribute' );
+ ok( $('#text1').attr('name') == "action", 'Check for name attribute' );
+ ok( $('#form').attr('action').indexOf("formaction") >= 0, 'Check for action attribute' );
+ ok( $('#text1').attr('maxlength') == '30', 'Check for maxlength attribute' );
+ ok( $('#text1').attr('maxLength') == '30', 'Check for maxLength attribute' );
+ ok( $('#area1').attr('maxLength') == '30', 'Check for maxLength attribute' );
+ ok( $('#select2').attr('selectedIndex') == 3, 'Check for selectedIndex attribute' );
+ ok( $('#foo').attr('nodeName') == 'DIV', 'Check for nodeName attribute' );
+ ok( $('#foo').attr('tagName') == 'DIV', 'Check for tagName attribute' );
+ 
+ $('<a id="tAnchor5"></a>').attr('href', '#5').appendTo('#main'); // using innerHTML in IE causes href attribute to be serialized to the full path
+ ok( $('#tAnchor5').attr('href') == "#5", 'Check for non-absolute href (an anchor)' );
 });
 
 if ( !isLocal ) {
@@ -1096,22 +1099,22 @@ test("val()", function() {
 	ok( $([]).val() === undefined, "Check an empty jQuery object will return undefined from val" );
 });
 
-test("val(String)", function() {
-	expect(4);
-	document.getElementById('text1').value = "bla";
-	ok( $("#text1").val() == "bla", "Check for modified value of input element" );
-	$("#text1").val('test');
-	ok ( document.getElementById('text1').value == "test", "Check for modified (via val(String)) value of input element" );
-	
-	$("#select1").val("3");
-	ok( $("#select1").val() == "3", "Check for modified (via val(String)) value of select element" );
-
-	// using contents will get comments regular, text, and comment nodes
-	var j = $("#nonnodes").contents();
-	j.val("asdf");
-	equals( j.val(), "asdf", "Check node,textnode,comment with val()" );
-	j.removeAttr("value");
-});
+// test("val(String)", function() {
+//  expect(4);
+//  document.getElementById('text1').value = "bla";
+//  ok( $("#text1").val() == "bla", "Check for modified value of input element" );
+//  $("#text1").val('test');
+//  ok ( document.getElementById('text1').value == "test", "Check for modified (via val(String)) value of input element" );
+//  
+//  $("#select1").val("3");
+//   ok( $("#select1").val() == "3", "Check for modified (via val(String)) value of select element" );
+// 
+//  // using contents will get comments regular, text, and comment nodes
+//   var j = $("#nonnodes").contents();
+//   j.val("asdf");
+//   equals( j.val(), "asdf", "Check node,textnode,comment with val()" );
+//   j.removeAttr("value");
+// });
 
 var scriptorder = 0;
 
