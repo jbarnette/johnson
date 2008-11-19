@@ -65,6 +65,17 @@ Rake::Task["test:todo"].prerequisites << :extensions
 
 Rake::Task[:check_manifest].prerequisites << GENERATED_NODE
 
+task :install_expat do
+  Dir.chdir("./srcs") do
+    `tar -xf xmlparser-0.6.8.tar`
+    Dir.chdir("xmlparser") do
+      puts `#{Gem.ruby} extconf.rb`
+      puts `make`
+      puts `sudo make install`
+    end
+  end
+end
+
 task :build => :extensions
 task :extension => :build
 
