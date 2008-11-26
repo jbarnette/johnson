@@ -1,3 +1,4 @@
+.autotest
 CHANGELOG
 MANIFEST
 MINGW32.mk
@@ -70,6 +71,7 @@ lib/johnson/visitors/ecma_visitor.rb
 lib/johnson/visitors/enumerating_visitor.rb
 lib/johnson/visitors/sexp_visitor.rb
 lib/rails/init.rb
+srcs/xmlparser-0.6.8.tar
 test/assets/index.html
 test/assets/jquery_test.html
 test/helper.rb
@@ -100,6 +102,7 @@ test/johnson/nodes/function_test.rb
 test/johnson/nodes/if_test.rb
 test/johnson/nodes/import_test.rb
 test/johnson/nodes/label_test.rb
+test/johnson/nodes/let_test.rb
 test/johnson/nodes/object_literal_test.rb
 test/johnson/nodes/return_test.rb
 test/johnson/nodes/semi_test.rb
@@ -123,6 +126,7 @@ test/johnson/version_test.rb
 test/johnson/visitors/dot_visitor_test.rb
 test/johnson/visitors/enumerating_visitor_test.rb
 test/johnson_test.rb
+test/jquery_units/simple.js
 test/jquery_units/test.js
 test/jquery_units/test_helper.js
 test/jquery_units/units/ajax.js
@@ -279,7 +283,6 @@ vendor/spidermonkey/js.c
 vendor/spidermonkey/js.mak
 vendor/spidermonkey/js.mdp
 vendor/spidermonkey/js.msg
-vendor/spidermonkey/js.pkg
 vendor/spidermonkey/js3240.rc
 vendor/spidermonkey/jsOS240.def
 vendor/spidermonkey/jsapi.c
