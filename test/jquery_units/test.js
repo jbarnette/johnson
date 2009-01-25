@@ -10,6 +10,10 @@ Johnson.waitForThreads = function() {
 window.location = "file://" + Ruby.File.expand_path(Ruby.Dir.pwd()) + "/test/assets/jquery_test.html";
 Ruby.eval("(Thread.list - [Thread.main]).each {|t| t.join}");
 
+document = Ruby.Taka.DOM.send("HTML",
+    Ruby.File.open(Ruby.File.expand_path(Ruby.Dir.pwd()) + "/test/assets/jquery_test.html")
+);
+
 // Load the test runner
 Johnson.require("test/jquery_units/test_helper.js");
 

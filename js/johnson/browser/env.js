@@ -8,7 +8,7 @@
 var window = this;
 
 Ruby.require("uri");
-Ruby.require("xml/dom/builder");
+Ruby.require("taka");
 
 print = function(txt) { Ruby.puts(txt); };
 
@@ -140,9 +140,10 @@ print = function(txt) { Ruby.puts(txt); };
   // DOM Document
   
   var parse = function(text) {
-    var parser = new Ruby.XML.DOM.Builder();
     try {
-      return parser.parse(text);
+      // Annoying.  We have to do send because HTML isn't recognized
+      // as a function.
+      return Ruby.Taka.DOM.send("HTML", text);
     } catch(e) {
       Ruby.puts("FAIL\n" + text);
       Ruby.raise(e)
@@ -175,7 +176,7 @@ print = function(txt) { Ruby.puts(txt); };
       
     },
     getElementById: function(id){
-      return makeNode( this._dom._searchID(id) );
+      return this._dom.getElementById(id);
     },
     get body(){
       return this.getElementsByTagName("body")[0];
