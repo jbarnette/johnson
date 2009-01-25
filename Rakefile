@@ -58,6 +58,14 @@ namespace :test do
       Johnson::Runtime.new.load(file)
     end
   end
+
+  task :jquery => :extensions do
+    $LOAD_PATH << File.expand_path(File.dirname(__FILE__) + "/lib")
+    $LOAD_PATH << File.expand_path(File.dirname(__FILE__) + "/../taka/lib")
+    Johnson.send(:remove_const, :VERSION)
+    require 'johnson'
+    Johnson::Runtime.new.load('test/jquery_units/test.js')
+  end
 end
 
 # make sure the C bits are up-to-date when testing
