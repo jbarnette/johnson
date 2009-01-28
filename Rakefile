@@ -3,7 +3,7 @@ require "erb"
 require "./lib/hoe.rb"
 require "./lib/johnson/version.rb"
 
-abort "Need Ruby version 1.8.6!" unless RUBY_VERSION == "1.8.6"
+abort "Need Ruby version 1.8.x!" unless RUBY_VERSION > "1.8"
 
 # what sort of extension are we building?
 kind = Config::CONFIG["DLEXT"]
@@ -37,6 +37,7 @@ end
 namespace :gem do
   task :spec do
     File.open("#{HOE.name}.gemspec", "w") do |f|
+      HOE.spec.version = "#{HOE.version}.#{Time.now.strftime("%Y%m%d%H%M%S")}"
       f.puts(HOE.spec.to_ruby)
     end
   end
@@ -56,6 +57,14 @@ namespace :test do
     Dir["test/jspec/**/*_spec.js"].each do |file|
       Johnson::Runtime.new.load(file)
     end
+  end
+
+  task :jquery => :extensions do
+    $LOAD_PATH << File.expand_path(File.dirname(__FILE__) + "/lib")
+    $LOAD_PATH << File.expand_path(File.dirname(__FILE__) + "/../taka/lib")
+    Johnson.send(:remove_const, :VERSION)
+    require 'johnson'
+    Johnson::Runtime.new.load('test/jquery_units/test.js')
   end
 end
 
@@ -77,7 +86,7 @@ task :install_expat do
 end
 
 task :build => :extensions
-task :extension => :build
+task :extension => :build # FIXME: why is this here?
 
 task :extensions => ["lib/johnson/spidermonkey.#{kind}"]
 
@@ -219,4 +228,11 @@ namespace :test do
     puts cmdline
     system cmdline
   end
+end
+
+# Evil evil hack.  Do not run tests when gem installs
+if ENV['RUBYARCHDIR']
+  prereqs = Rake::Task[:default].prerequisites
+  prereqs.clear
+  prereqs << :build
 end
