@@ -26,7 +26,7 @@ module Johnson
     end
     
     def load(*files)
-      files.each { |f| delegate.evaluate(IO.read(f), f, 1) }
+      files.each { |f| delegate.evaluate(File.read(f).gsub(/\A#!.*$/, ''), f, 1) }
     end
 
     ###
