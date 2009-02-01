@@ -8,6 +8,7 @@
 var window = this;
 
 Ruby.require("uri");
+Ruby.require("xml/dom/builder");
 
 print = function(txt) { Ruby.puts(txt); };
 
@@ -138,15 +139,20 @@ print = function(txt) { Ruby.puts(txt); };
   
   // DOM Document
   
+  var parse = function(text) {
+    var parser = new Ruby.XML.DOM.Builder();
+    try {
+      return parser.parse(text);
+    } catch(e) {
+      Ruby.puts("FAIL\n" + text);
+      Ruby.raise(e)
+      Ruby.exit()
+    }
+  }
+  
   window.DOMDocument = function(file){
     this._file = file;
-    var parser = new W3CDOMImplementation();
-    try {
-      this._dom = parser.loadXML(file);
-    } catch(e) {
-      Ruby.puts("*** wycats to fix: " + parser.translateErrCode(e.code));
-      throw parser.translateErrCode(e.code);
-    }
+    this._dom = parse(file)
     
     if ( !obj_nodes["key?"]( this._dom ) )
       obj_nodes[this._dom] = this;
@@ -165,14 +171,17 @@ print = function(txt) { Ruby.puts(txt); };
       return new DOMNodeList( this._dom.getElementsByTagName(
         name.toLowerCase()) );
     },
+    _cacheIds: function() {
+      
+    },
     getElementById: function(id){
-      return makeNode( this._dom.getElementById(id) );
+      return makeNode( this._dom._searchID(id) );
     },
     get body(){
       return this.getElementsByTagName("body")[0];
     },
     get documentElement(){
-      return makeNode( this._dom.getDocumentElement() );
+      return makeNode( this._dom.documentElement() );
     },
     get ownerDocument(){
       return null;
@@ -225,14 +234,14 @@ print = function(txt) { Ruby.puts(txt); };
   };
   
   function getDocument(node){
-    return obj_nodes[node];
+    return obj_nodes[node];      
   }
   
   // DOM NodeList
   
   window.DOMNodeList = function(list){
     this._dom = list;
-    this.length = list.getLength();
+    this.length = list.length();
     
     for ( var i = 0; i < this.length; i++ ) {
       var node = list.item(i);
@@ -259,31 +268,32 @@ print = function(txt) { Ruby.puts(txt); };
   
   DOMNode.prototype = {
     get nodeType(){
-      return this._dom.getNodeType();
+      return this._dom.nodeType();
     },
     get nodeValue(){
-      return this._dom.getNodeValue();
+      return this._dom.nodeValue();
     },
     get nodeName() {
-      return this._dom.getNodeName();
+      return this._dom.nodeName();
     },
     cloneNode: function(deep){
       return makeNode( this._dom.cloneNode(deep) );
     },
     get ownerDocument(){
-      return getDocument( this._dom.getOwnerDocument() );
+      return getDocument( this._dom.ownerDocument );
+      // return getDocument( this._dom.ownerDocument() );
     },
     get documentElement(){
-      return makeNode( this._dom.getDocumentElement() );
+      return makeNode( this._dom.documentElement() );
     },
     get parentNode() {
-      return makeNode( this._dom.getParentNode() );
+      return makeNode( this._dom.parentNode() );
     },
     get nextSibling() {
-      return makeNode( this._dom.getNextSibling() );
+      return makeNode( this._dom.nextSibling() );
     },
     get previousSibling() {
-      return makeNode( this._dom.getPreviousSibling() );
+      return makeNode( this._dom.previousSibling() );
     },
     toString: function(){
       return '"' + this.nodeValue + '"';
@@ -317,16 +327,17 @@ print = function(txt) { Ruby.puts(txt); };
       return this.tagName.toUpperCase();
     },
     get tagName(){
-      return this._dom.getTagName().toUpperCase();
+      return this._dom.tagName().toUpperCase();
     },
     toString: function(){
       return "<" + this.tagName + (this.id ? "#" + this.id : "" ) + ">";
     },
     get outerHTML(){
-      var ret = "<" + this.tagName, attr = this.attributes;
+      var ret = "<" + this.tagName, attrs = this._dom.attributes();
       
-      for ( var i in attr )
-        ret += " " + i + "='" + attr[i] + "'";
+      attrs.each(function(attr) {
+        ret += " " + attr.nodeName() + "='" + attr.nodeValue() + "'";
+      });
         
       if ( this.childNodes.length || this.nodeName == "SCRIPT" )
         ret += ">" + this.childNodes.outerHTML + 
@@ -338,9 +349,9 @@ print = function(txt) { Ruby.puts(txt); };
     },
     
     get attributes(){
-      var attr = {}, attrs = this._dom.getAttributes();
+      var attr = {}, attrs = this._dom.attributes();
       
-      for ( var i = 0; i < attrs.getLength(); i++ )
+      for ( var i = 0; i < attrs.length(); i++ )
         attr[ attrs.item(i).nodeName ] = attrs.item(i).nodeValue;
         
       return attr;
@@ -354,15 +365,18 @@ print = function(txt) { Ruby.puts(txt); };
         return m.toLowerCase();
       });
       
-      var nodes = this.ownerDocument.importNode(
-        new DOMDocument( html ).documentElement, true
-      ).childNodes;
-        
+      // Ruby.p(this._dom.ownerDocument);
+      var frag = parse("<doc>" + html + "</doc>");
+      
+      var nodes = new DOMNodeList(frag.getElementsByTagName("doc")[0].childNodes());
+        // new DOMDocument( html ).documentElement.childNodes
+
       while (this.firstChild)
         this.removeChild( this.firstChild );
-      
-      for ( var i = 0; i < nodes.length; i++ )
+
+      for ( var i = 0; i < nodes.length; i++ ) {
         this.appendChild( nodes[i] );
+      }
     },
     
     get textContent(){
@@ -401,7 +415,11 @@ print = function(txt) { Ruby.puts(txt); };
       var val = this.getAttribute("checked");
       return val != "false" && !!val;
     },
-    set checked(val) { return this.setAttribute("checked",val); },
+    set checked(val) { return this.setAttribute("checked",val.toString()); },
+    
+    get options() {
+      return this.getElementsByTagName("options");
+    },
     
     get selected() {
       if ( !this._selectDone ) {
@@ -450,9 +468,7 @@ print = function(txt) { Ruby.puts(txt); };
     set id(val) { return this.setAttribute("id",val); },
     
     getAttribute: function(name){
-      return this._dom.hasAttribute(name) ?
-        new String( this._dom.getAttribute(name) ) :
-        null;
+      return this._dom.getAttribute(name);
     },
     setAttribute: function(name,value){
       this._dom.setAttribute(name,value);
@@ -462,19 +478,20 @@ print = function(txt) { Ruby.puts(txt); };
     },
     
     get childNodes(){
-      return new DOMNodeList( this._dom.getChildNodes() );
+      return new DOMNodeList( this._dom.childNodes() );
     },
     get firstChild(){
-      return makeNode( this._dom.getFirstChild() );
+      return makeNode( this._dom.firstChild() );
     },
     get lastChild(){
-      return makeNode( this._dom.getLastChild() );
+      return makeNode( this._dom.lastChild() );
     },
     appendChild: function(node){
       this._dom.appendChild( node._dom );
     },
     insertBefore: function(node,before){
-      this._dom.insertBefore( node._dom, before ? before._dom : before );
+      if(!before) return;
+      this._dom.insertBefore( node._dom, before._dom );
     },
     removeChild: function(node){
       this._dom.removeChild( node._dom );
@@ -550,12 +567,12 @@ print = function(txt) { Ruby.puts(txt); };
   
   function makeNode(node){
     if ( node ) {
-      if ( !obj_nodes['key?']( node ) )
-        obj_nodes[node] = node.getNodeType() == 
-          W3CDOMNode.ELEMENT_NODE ?
-            new DOMElement( node ) : new DOMNode( node );
+      if ( !obj_nodes['key?']( node.object_id() ) ) {
+        obj_nodes[node.object_id()] = node.nodeType() == 1 ?
+          new DOMElement( node ) : new DOMNode( node );
+      }
       
-      return obj_nodes[node];
+      return obj_nodes[node.object_id()];
     } else
       return null;
   }

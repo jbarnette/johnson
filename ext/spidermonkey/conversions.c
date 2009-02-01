@@ -88,6 +88,34 @@ JSBool convert_to_js(JohnsonRuntime* runtime, VALUE ruby, jsval* retval)
   PREPARE_JROOTS(context, 0);
   switch(TYPE(ruby))
   {
+    case T_NONE:
+      JERROR("I don't know how to handle T_NONE.");
+      JRETURN;
+
+    case T_ICLASS:
+      JERROR("I don't know how to handle T_ICLASS.");
+      JRETURN;
+
+    case T_MATCH:
+      JERROR("I don't know how to handle T_MATCH.");
+      JRETURN;
+
+    case T_BLKTAG:
+      JERROR("I don't know how to handle T_BLKTAG.");
+      JRETURN;
+
+    case T_NODE:
+      JERROR("I don't know how to handle T_NODE | T_MASK.");
+      JRETURN;
+
+    case T_UNDEF:
+      JERROR("I don't know how to handle T_UNDEF.");
+      JRETURN;
+
+    case T_VARMAP:
+      JERROR("I don't know how to handle T_VARMAP.");
+      JRETURN;
+
     case T_NIL:
       *retval = JSVAL_NULL;
       JRETURN;

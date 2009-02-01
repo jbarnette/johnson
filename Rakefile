@@ -3,6 +3,8 @@ require "erb"
 require "./lib/hoe.rb"
 require "./lib/johnson/version.rb"
 
+abort "Need Ruby version 1.8.x!" unless RUBY_VERSION > "1.8"
+
 # what sort of extension are we building?
 kind = Config::CONFIG["DLEXT"]
 
@@ -35,6 +37,7 @@ end
 namespace :gem do
   task :spec do
     File.open("#{HOE.name}.gemspec", "w") do |f|
+      HOE.spec.version = "#{HOE.version}.#{Time.now.strftime("%Y%m%d%H%M%S")}"
       f.puts(HOE.spec.to_ruby)
     end
   end
@@ -55,6 +58,14 @@ namespace :test do
       Johnson::Runtime.new.load(file)
     end
   end
+
+  task :jquery => :extensions do
+    $LOAD_PATH << File.expand_path(File.dirname(__FILE__) + "/lib")
+    $LOAD_PATH << File.expand_path(File.dirname(__FILE__) + "/../taka/lib")
+    Johnson.send(:remove_const, :VERSION)
+    require 'johnson'
+    Johnson::Runtime.new.load('test/jquery_units/test.js')
+  end
 end
 
 # make sure the C bits are up-to-date when testing
@@ -63,8 +74,19 @@ Rake::Task["test:todo"].prerequisites << :extensions
 
 Rake::Task[:check_manifest].prerequisites << GENERATED_NODE
 
+task :install_expat do
+  Dir.chdir("./srcs") do
+    `tar -xf xmlparser-0.6.8.tar`
+    Dir.chdir("xmlparser") do
+      puts `#{Gem.ruby} extconf.rb`
+      puts `make`
+      puts `sudo make install`
+    end
+  end
+end
+
 task :build => :extensions
-task :extension => :build
+task :extension => :build # FIXME: why is this here?
 
 task :extensions => ["lib/johnson/spidermonkey.#{kind}"]
 
@@ -160,4 +182,57 @@ file GENERATED_NODE => ["ext/spidermonkey/immutable_node.c.erb", "vendor/spiderm
   File.open(GENERATED_NODE, "wb") { |f|
     f.write template.result(binding)
   }
+end
+
+def test_suite_cmdline
+  require 'find'
+  files = []
+  Find.find("test") do |f|
+    files << f if File.basename(f) =~ /.*test.*\.rb$/
+  end
+  cmdline = "ruby -w -I.:lib:ext:test -rtest/unit -e '%w[#{files.join(' ')}].each {|f| require f}'"
+end
+
+namespace :test do
+  # partial-loads-ok and undef-value-errors necessary to ignore
+  # spurious (and eminently ignorable) warnings from the ruby
+  # interpreter
+  VALGRIND_BASIC_OPTS = "--num-callers=50 --error-limit=no --partial-loads-ok=yes --undef-value-errors=no"
+
+  desc "run test suite under valgrind with basic ruby options"
+  task :valgrind => :build do
+    cmdline = "valgrind #{VALGRIND_BASIC_OPTS} #{test_suite_cmdline}"
+    puts cmdline
+    system cmdline
+  end
+
+  desc "run test suite under valgrind with memory-fill ruby options"
+  task :valgrind_mem => :build do
+    # fill malloced memory with "m" and freed memory with "f"
+    cmdline = "valgrind #{VALGRIND_BASIC_OPTS} --freelist-vol=100000000 --malloc-fill=6D --free-fill=66 #{test_suite_cmdline}"
+    puts cmdline
+    system cmdline
+  end
+
+  desc "run test suite under valgrind with memory-zero ruby options"
+  task :valgrind_mem0 => :build do
+    # fill malloced and freed memory with 0
+    cmdline = "valgrind #{VALGRIND_BASIC_OPTS} --freelist-vol=100000000 --malloc-fill=00 --free-fill=00 #{test_suite_cmdline}"
+    puts cmdline
+    system cmdline
+  end
+
+  desc "run test suite under gdb"
+  task :gdb => :build do
+    cmdline = "gdb --args #{test_suite_cmdline}"
+    puts cmdline
+    system cmdline
+  end
+end
+
+# Evil evil hack.  Do not run tests when gem installs
+if ENV['RUBYARCHDIR']
+  prereqs = Rake::Task[:default].prerequisites
+  prereqs.clear
+  prereqs << :build
 end

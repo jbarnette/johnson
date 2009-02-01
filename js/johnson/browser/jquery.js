@@ -181,7 +181,7 @@ jQuery.fn = jQuery.prototype = {
 				options = {};
 				options[ name ] = value;
 			}
-		
+
 		// Check to see if we're setting style values
 		return this.each(function(i){
 			// Set all the styles
@@ -631,6 +631,8 @@ jQuery.extend({
 	
 	// check if an element is in a (or is an) XML document
 	isXMLDoc: function( elem ) {
+	  // TODO: hax
+	  return false;
 		return elem.documentElement && !elem.body ||
 			elem.tagName && elem.ownerDocument && !elem.ownerDocument.body;
 	},
@@ -742,7 +744,7 @@ jQuery.extend({
 
 		// A special, fast, case for the most common use of each
 		} else {
-			if ( object.length == undefined ) {
+			if ( !object || object.length == undefined ) {
 				for ( var name in object )
 					if ( callback.call( object[ name ], name, object[ name ] ) === false )
 						break;
@@ -1053,7 +1055,7 @@ jQuery.extend({
 		// Accessing the parent's selectedIndex property fixes it
 		if ( name == "selected" && jQuery.browser.safari )
 			elem.parentNode.selectedIndex;
-		
+
 		// Certain attributes only work when accessed via the old DOM 0 way
 		if ( fix[ name ] ) {
 			if ( value != undefined )
