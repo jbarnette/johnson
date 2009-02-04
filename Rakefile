@@ -9,6 +9,7 @@ abort "Need Ruby version 1.8.x!" unless RUBY_VERSION > "1.8"
 kind = Config::CONFIG["DLEXT"]
 
 CROSS = ENV["CROSS"]
+MAKE  = ENV["MAKE"] || RUBY_PLATFORM =~ /freebsd/ ? 'gmake' : 'make'
 LIBJS = FileList["vendor/spidermonkey/#{CROSS || ''}*.OBJ/libjs.{#{kind},so}"].first || :libjs
 
 GENERATED_NODE = "ext/spidermonkey/immutable_node.c"
@@ -79,8 +80,8 @@ task :install_expat do
     `tar -xf xmlparser-0.6.8.tar`
     Dir.chdir("xmlparser") do
       puts `#{Gem.ruby} extconf.rb`
-      puts `make`
-      puts `sudo make install`
+      puts `#{MAKE}`
+      puts `sudo #{MAKE} install`
     end
   end
 end
@@ -100,7 +101,7 @@ namespace :extensions do
 end
 
 build_sm = lambda do
-  cmd = "make -f Makefile.ref"
+  cmd = "#{MAKE} -f Makefile.ref"
   cmd << " OS_CONFIG=#{CROSS}" if CROSS
   Dir.chdir("vendor/spidermonkey") { sh cmd }
 end
@@ -126,7 +127,7 @@ file "ext/spidermonkey/spidermonkey.#{kind}" =>
   ["ext/spidermonkey/Makefile"] + FileList["ext/spidermonkey/*.{c,h}"].to_a do |t|
 
   old_time = File.mtime(t.name) rescue nil
-  Dir.chdir("ext/spidermonkey") { sh "make" }
+  Dir.chdir("ext/spidermonkey") { sh "#{MAKE}" }
 
   # If make chose not to rebuild the file, we'll touch it, so we don't
   # bother to call make again next time.
