@@ -1,4 +1,5 @@
 require File.expand_path(File.join(File.dirname(__FILE__), "/../helper"))
+require 'tempfile'
 
 module Johnson
   class RuntimeTest < Johnson::TestCase
@@ -12,6 +13,12 @@ module Johnson
 
     def test_js_eval
       assert_equal(1, @runtime.evaluate('eval("1");'))
+    end
+
+    def test_shebang_removal
+      t = Tempfile.new("johnson_shebang")
+      t.open { |tf| tf.write "#!/usr/bin/johnson\ntrue;" }
+      assert Johnson.load(t.path)
     end
 
     def test_js_throws_compile_errors
