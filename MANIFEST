@@ -157,6 +157,7 @@ vendor/spidermonkey/config/Darwin1.3.mk
 vendor/spidermonkey/config/Darwin1.4.mk
 vendor/spidermonkey/config/Darwin5.2.mk
 vendor/spidermonkey/config/Darwin5.3.mk
+vendor/spidermonkey/config/FreeBSD.mk
 vendor/spidermonkey/config/HP-UXB.10.10.mk
 vendor/spidermonkey/config/HP-UXB.10.20.mk
 vendor/spidermonkey/config/HP-UXB.11.00.mk
