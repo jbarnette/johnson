@@ -22,9 +22,9 @@ libjs = Dir[spidermonkey_dir + "/**/libjs.a"].first
 abort "libjs.a isn't built!" unless libjs
 $LOCAL_LIBS<< libjs
 
-dir_config "spidermonkey"
+dir_config "johnson/spidermonkey"
 
 find_header "jsautocfg.h", File.dirname(libjs)
 find_header "jsapi.h", spidermonkey_dir
 
-create_makefile "spidermonkey"
+create_makefile "johnson/spidermonkey"

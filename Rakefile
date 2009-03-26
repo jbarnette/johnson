@@ -16,7 +16,6 @@ HOE = Hoe.new "johnson", Johnson::VERSION do |p|
   p.url              = "http://github.com/jbarnette/johnson/wikis"
 
   p.extra_rdoc_files = [p.readme_file]
-  p.need_tar         = false
   p.test_globs       = %w(test/**/*_test.rb)
 
   p.clean_globs     << "lib/johnson/spidermonkey.bundle"
@@ -25,14 +24,18 @@ HOE = Hoe.new "johnson", Johnson::VERSION do |p|
 
   p.extra_deps      << "rake"
   p.extra_dev_deps  << "rake-compiler"
+  p.spec_extras      = { :extensions => %w(Rakefile) }
 end
 
 Rake::ExtensionTask.new "spidermonkey", HOE.spec do |ext|
   ext.lib_dir = "lib/johnson"
 end
 
-HOE.spec.extensions = Dir["ext/**/extconf.rb"]
-
 task :test => :compile
 
 Dir["lib/tasks/*.rake"].each { |f| load f }
+
+# HACK: If Rake is running as part of the gem install, clear out the
+# default task and make the extensions compile instead.
+
+Rake::Task[:default].prerequisites.replace %w(compile) if ENV["RUBYARCHDIR"]
