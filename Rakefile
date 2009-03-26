@@ -1,6 +1,6 @@
 require "rubygems"
-require "hoe"
 require "erb"
+require "hoe"
 
 require "./lib/johnson/version.rb"
 abort "Need Ruby version 1.8.x!" unless RUBY_VERSION > "1.8"
@@ -48,41 +48,10 @@ namespace :gem do
   end
 end
 
-namespace :test do
-  task :jspec => :extensions do
-    $LOAD_PATH << File.expand_path(File.dirname(__FILE__) + "/lib")
-    Johnson.send(:remove_const, :VERSION)
-    require "johnson"
-
-    Dir["test/jspec/**/*_spec.js"].each do |file|
-      Johnson::Runtime.new.load(file)
-    end
-  end
-
-  task :jquery => :extensions do
-    $LOAD_PATH << File.expand_path(File.dirname(__FILE__) + "/lib")
-    $LOAD_PATH << File.expand_path(File.dirname(__FILE__) + "/../taka/lib")
-    Johnson.send(:remove_const, :VERSION)
-    require 'johnson'
-    Johnson::Runtime.new.load('test/jquery_units/test.js')
-  end
-end
-
 # make sure the C bits are up-to-date when testing
 Rake::Task[:test].prerequisites << :extensions
 
 Rake::Task[:check_manifest].prerequisites << GENERATED_NODE
-
-task :install_expat do
-  Dir.chdir("./srcs") do
-    `tar -xf xmlparser-0.6.8.tar`
-    Dir.chdir("xmlparser") do
-      puts `#{Gem.ruby} extconf.rb`
-      puts `#{MAKE}`
-      puts `sudo #{MAKE} install`
-    end
-  end
-end
 
 task :build => :extensions
 task :extension => :build # FIXME: why is this here?

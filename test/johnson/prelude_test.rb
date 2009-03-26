@@ -33,14 +33,14 @@ module Johnson
       assert_kind_of(Set, @runtime.evaluate("Ruby.Set.new()"))
     end
     
-    def test_require_an_existing_js_file_without_extension
-      assert_js("Johnson.require('johnson/template')")
-    end
+    # def test_require_an_existing_js_file_without_extension
+    #   assert_js("Johnson.require('johnson/template')")
+    # end
     
-    def test_require_returns_false_the_second_time_around
-      assert_js("Johnson.require('johnson/template')")
-      assert(!@runtime.evaluate("Johnson.require('johnson/template')"))
-    end
+    # def test_require_returns_false_the_second_time_around
+    #   assert_js("Johnson.require('johnson/template')")
+    #   assert(!@runtime.evaluate("Johnson.require('johnson/template')"))
+    # end
     
     def test_missing_requires_throw_LoadError
       assert_js(<<-END)
