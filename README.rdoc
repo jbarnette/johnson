@@ -6,35 +6,37 @@ Johnson wraps JavaScript in a loving Ruby embrace.
 * {Bug Tracker}[http://johnson.lighthouseapp.com]
 * {RubyForge Project}[http://johnson.rubyforge.org]
 
-== Usage
+== Examples
 
-  # FIXME: write some decent examples
-  require "johnson"
-  
-  Johnson.evaluate("4 + 4") # => 8
-  Johnson.evaluate("4 + foo", :foo => 4) # => 8
-  
-== Installing
+    # FIXME: write some decent examples
+    require "johnson"
 
-We haven't rolled an official 1.0 for Johnson, though we plan to Real Soon Now.
-For the moment, follow the instructions in "Installing Development Versions".
-Once we push a 1.0 to RubyForge, it'll be as easy as:
+    Johnson.evaluate("4 + 4") # => 8
+    Johnson.evaluate("4 + foo", :foo => 4) # => 8
+
+== Installation
+
+We haven't rolled an official 1.x for Johnson, though we plan to Real
+Soon Now.  For the moment, follow the instructions in "Installing
+Development Versions".  Once we push a 1.0 to RubyForge, it'll be as
+easy as:
 
   [sudo] gem install johnson
 
-== Installing Development Versions
+=== Development Versions
 
-We periodically update Johnson's gemspec on Github. Rather than installing the
-official releases (hosted on RubyForge), you can track the development version.
-Development versions will have a timestamped version number, like 1.0.0.200806232349.
+We periodically update Johnson's gemspec on Github. Rather than
+installing the official releases (hosted on RubyForge), you can track
+the development version. Development versions will have a timestamped
+version number, like 1.0.0.200806232349.
 
-  # requires RubyGems 1.2!
-  [sudo] gem sources -a http://gems.github.com
-  [sudo] gem install jbarnette-johnson
+    $ [sudo] gem sources -a http://gems.github.com # once
+    $ [sudo] gem install jbarnette-johnson
 
 == License
 
-Copyright 2008 John Barnette, Aaron Patterson, Yehuda Katz, Matthew Draper
+Copyright 2008-2009 John Barnette, Aaron Patterson, Yehuda Katz,
+Matthew Draper
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
