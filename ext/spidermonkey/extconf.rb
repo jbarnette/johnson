@@ -1,25 +1,30 @@
-# this needs to happen before mkmf is required.
+# this needs to happen before mkmf is required
 ENV["ARCHFLAGS"] = "-arch #{`uname -p` =~ /powerpc/ ? 'ppc' : 'i386'}"
 
+require "find"
 require "mkmf"
 
-if Config::CONFIG['target_os'] == 'mingw32'
-  $libs = append_library($libs, "winmm")
-  $CFLAGS << " -DXP_WIN -DXP_WIN32"
-else
-  $CFLAGS << " -g -DXP_UNIX"
-end
-$CFLAGS << " -O3 -Wall -Wextra -Wcast-qual -Wwrite-strings -Wconversion -Wmissing-noreturn -Winline"
+cflags  = %w(g)
+defines = %w(XP_UNIX)
 
-spidermonkey_base_dir = "../../vendor/spidermonkey"
+warnings  = %w(all extra cast-qual write-strings conversion missing-noreturn)
+warnings << "inline"
 
-spidermonkey_obj_dir = Dir[spidermonkey_base_dir + "/#{ENV['CROSS'] || ''}*.OBJ"].first
+cflags.concat warnings.collect { |w| "W#{w}" }
+cflags.concat defines.collect  { |d| "D#{d}" }
 
-dir_config("johnson/spidermonkey")
+$CFLAGS << cflags.collect { |f| " -#{f}" }.join(" ")
 
-find_header("jsautocfg.h", spidermonkey_obj_dir)
-find_header("jsapi.h", spidermonkey_base_dir)
+spidermonkey_dir = File.expand_path File.dirname(__FILE__) +
+  "/../../vendor/spidermonkey"
 
-$LOCAL_LIBS << spidermonkey_obj_dir + "/libjs.a"
+libjs = Dir[spidermonkey_dir + "/**/libjs.a"].first
+abort "libjs.a isn't built!" unless libjs
+$LOCAL_LIBS<< libjs
 
-create_makefile("johnson/spidermonkey")
+dir_config "spidermonkey"
+
+find_header "jsautocfg.h", File.dirname(libjs)
+find_header "jsapi.h", spidermonkey_dir
+
+create_makefile "spidermonkey"

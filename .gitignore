@@ -1,5 +1,6 @@
-/pkg
 /doc
+/pkg
+/tmp
 
 /ext/spidermonkey/*.bundle
 /ext/spidermonkey/Makefile

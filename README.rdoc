@@ -23,6 +23,11 @@ easy as:
 
   [sudo] gem install johnson
 
+=== Restrictions
+
+Johnson is currently developed and tested on Mac OS X with Ruby
+1.8.6. We'd like to widen our support: contributions are very welcome!
+
 === Development Versions
 
 We periodically update Johnson's gemspec on Github. Rather than

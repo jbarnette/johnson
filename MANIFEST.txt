@@ -65,7 +65,10 @@ lib/johnson/visitors/enumerating_visitor.rb
 lib/johnson/visitors/sexp_visitor.rb
 lib/johnson/visitors/visitor.rb
 lib/rails/init.rb
+lib/tasks/gem.rake
+lib/tasks/parsing.rake
 lib/tasks/testing.rake
+lib/tasks/vendor.rake
 test/helper.rb
 test/johnson/browser_test.rb
 test/johnson/conversions/array_test.rb
