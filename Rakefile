@@ -1,8 +1,8 @@
+require "rubygems"
+require "hoe"
 require "erb"
 
-require "./lib/hoe.rb"
 require "./lib/johnson/version.rb"
-
 abort "Need Ruby version 1.8.x!" unless RUBY_VERSION > "1.8"
 
 # what sort of extension are we building?
@@ -15,13 +15,17 @@ LIBJS = FileList["vendor/spidermonkey/#{CROSS || ''}*.OBJ/libjs.{#{kind},so}"].f
 GENERATED_NODE = "ext/spidermonkey/immutable_node.c"
 
 HOE = Hoe.new("johnson", Johnson::VERSION) do |p|
-  p.author         = ["John Barnette", "Aaron Patterson", "Yehuda Katz", "Matthew Draper"]
-  p.changes        = p.paragraphs_of("CHANGELOG", 0..1).join("\n\n")
-  p.email          = "johnson-talk@googlegroups.com"
-  p.rubyforge_name = "johnson"
-  p.description    = "Johnson wraps JavaScript in a loving Ruby embrace."
-  p.summary        = p.description
-  p.url            = "http://github.com/jbarnette/johnson/wikis"
+  p.developer "John Barnette",   "jbarnette@rubyforge.org"
+  p.developer "Aaron Patterson", "aaron.patterson@gmail.com"
+  p.developer "Yehuda Katz",     "wycats@gmail.com"
+  p.developer "Matthew Draper",  "matthew@trebex.net"
+
+  p.summary          = "Johnson wraps JavaScript in a loving Ruby embrace."
+  p.history_file     = "CHANGELOG.rdoc"
+  p.readme_file      = "README.rdoc"
+  p.extra_rdoc_files = [p.readme_file]
+  p.need_tar         = false
+  p.url              = "http://github.com/jbarnette/johnson/wikis"
 
   p.clean_globs = [
     "lib/johnson/spidermonkey.#{kind}",
@@ -30,9 +34,9 @@ HOE = Hoe.new("johnson", Johnson::VERSION) do |p|
     GENERATED_NODE,
     "vendor/spidermonkey/**/*.OBJ"]
 
-  p.test_globs = ["test/**/*_test.rb"]
+  p.test_globs  = %w(test/**/*_test.rb)
   p.spec_extras = { :extensions => ["Rakefile"] }
-  p.extra_deps = ["rake"]
+  p.extra_deps  = ["rake"]
 end
 
 namespace :gem do
@@ -45,11 +49,6 @@ namespace :gem do
 end
 
 namespace :test do
-  Rake::TestTask.new("todo") do |t|
-    t.test_files = FileList["todo/**/*_test.rb"]
-    t.verbose = true
-  end
-  
   task :jspec => :extensions do
     $LOAD_PATH << File.expand_path(File.dirname(__FILE__) + "/lib")
     Johnson.send(:remove_const, :VERSION)
@@ -71,7 +70,6 @@ end
 
 # make sure the C bits are up-to-date when testing
 Rake::Task[:test].prerequisites << :extensions
-Rake::Task["test:todo"].prerequisites << :extensions
 
 Rake::Task[:check_manifest].prerequisites << GENERATED_NODE
 

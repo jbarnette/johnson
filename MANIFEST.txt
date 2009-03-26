@@ -1,6 +1,6 @@
 .autotest
-CHANGELOG
-MANIFEST
+CHANGELOG.rdoc
+MANIFEST.txt
 MINGW32.mk
 README.rdoc
 Rakefile
@@ -40,7 +40,6 @@ js/johnson/browser/xmlw3cdom.js
 js/johnson/cli.js
 js/johnson/prelude.js
 js/johnson/template.js
-lib/hoe.rb
 lib/johnson.rb
 lib/johnson/cli.rb
 lib/johnson/cli/options.rb
@@ -140,7 +139,6 @@ test/jspec/helper.js
 test/jspec/jspec.js
 test/jspec/simple_spec.js
 test/parser_test.rb
-todo/.keep
 vendor/spidermonkey/.cvsignore
 vendor/spidermonkey/Makefile.in
 vendor/spidermonkey/Makefile.ref
