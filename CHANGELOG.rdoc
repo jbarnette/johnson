@@ -1,8 +1,9 @@
-=== PENDING
+=== 1.1.0 (pending)
 
-* First RubyForge release.
-* Updated to a more recent SpiderMonkey.
+* First real/RubyForge release!
 * Cleaned up the build.
+* Updated to a more recent SpiderMonkey.
+* Fixed allocation-during-GC bugs.
 
 === 1.0.0 (2008-03-11)
 

@@ -252,24 +252,21 @@ initialize_native(VALUE self, VALUE UNUSED(options))
 {
   JohnsonRuntime* runtime;
   Data_Get_Struct(self, JohnsonRuntime, runtime);
-  
+
   if ((runtime->js = JS_NewRuntime(0x100000))
     && (runtime->jsids = create_id_hash())
-    && (runtime->rbids = create_id_hash())
-  )
+    && (runtime->rbids = create_id_hash()))
   {
     JS_SetRuntimePrivate(runtime->js, (void *)self);
     JS_SetGCCallbackRT(runtime->js, gc_callback);
 
     JSContext* context = johnson_get_current_context(runtime);
-    if(
-        (runtime->global = JS_GetGlobalObject(context))
-        && (JS_AddNamedRoot(context, &(runtime->global), "runtime->global"))
-    ) {
+
+    if (runtime->global = JS_GetGlobalObject(context))
       return self;
-    }
   }
 
+  // clean up after an initialization failure
 
   if (runtime->rbids)
     JS_HashTableDestroy(runtime->rbids);
@@ -294,14 +291,10 @@ JSContext* johnson_get_current_context(JohnsonRuntime * runtime)
 
 static void deallocate(JohnsonRuntime* runtime)
 {
-  // Calling our gc callback can create ruby objects, so we can't do that here.
+  // our gc callback can create ruby objects, so disable it
   JS_SetGCCallbackRT(runtime->js, NULL);
 
-  JSContext * cx = JS_NewContext(runtime->js, 8192L);
-  JS_RemoveRoot(cx, &(runtime->global));
-  JS_DestroyContext(cx);
-  
-  JSContext *context = NULL;
+  JSContext *context  = NULL;
   JSContext *iterator = NULL;
 
   while ((context = JS_ContextIterator(runtime->js, &iterator)) != NULL) {
@@ -309,7 +302,7 @@ static void deallocate(JohnsonRuntime* runtime)
     JS_DestroyContext(iterator);
     iterator = NULL;
   }
-  
+
   JS_DestroyRuntime(runtime->js);
   free(runtime);
 }
