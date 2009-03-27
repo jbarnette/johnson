@@ -1,5 +1,9 @@
-=== 1.0.0 / 2008-03-11
+=== PENDING
 
-* 1 major enhancement
-  * Birthday!
+* First RubyForge release.
+* Updated to a more recent SpiderMonkey.
+* Cleaned up the build.
 
+=== 1.0.0 (2008-03-11)
+
+* Birthday!
