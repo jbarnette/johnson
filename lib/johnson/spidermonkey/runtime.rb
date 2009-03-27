@@ -7,6 +7,7 @@ module Johnson #:nodoc:
         @debugger = nil
         @compiled_scripts = {}
         @gcthings = {}
+        @traps = []
         initialize_native(options)
         self["Ruby"] = Object
       end
@@ -42,6 +43,13 @@ module Johnson #:nodoc:
         evaluate_compiled_script(compiled_script)
       end
 
+      def evaluate_compiled script
+        evaluate_compiled_script(script)
+        @traps.each do |trap_tuple|
+          clear_trap(*trap_tuple)
+        end
+      end
+
       ###
       # Compile +script+ with +filename+ and +linenum+
       def compile(script, filename=nil, linenum=nil)
@@ -57,6 +65,7 @@ module Johnson #:nodoc:
 
         compiled_script = @compiled_scripts[filename]
         set_trap(compiled_script, linenum, block)
+        @traps << [compiled_script, linenum]
       end
 
       class << self

@@ -32,6 +32,30 @@ static JSTrapStatus trap_handler( JSContext *UNUSED(context),
 
 /*
  * call-seq:
+ *   clear_trap(script, line_num)
+ *
+ * Set the trap at +script+ and +line_num+ to +block+
+ */
+static VALUE clear_trap(VALUE self, VALUE script, VALUE linenum)
+{
+  JohnsonRuntime* runtime;
+  Data_Get_Struct(self, JohnsonRuntime, runtime);
+
+  JSContext * context = johnson_get_current_context(runtime);
+  jsval compiled_js;
+  if(!convert_to_js(runtime, script, &compiled_js))
+    rb_raise(rb_eRuntimeError, "Couldn't get compiled script.");
+
+  JSScript * js_script = (JSScript *)JS_GetPrivate(context, JSVAL_TO_OBJECT(compiled_js));
+
+  jsbytecode * pc = JS_LineNumberToPC(context, js_script, (uintN)NUM2INT(linenum));
+  JS_ClearTrap(context, js_script, pc, NULL, NULL);
+
+  return self;
+}
+
+/*
+ * call-seq:
  *   set_trap(script, parsecode, block)
  *
  * Set the trap at +script+ and +parsecode+ to +block+
@@ -270,12 +294,18 @@ JSContext* johnson_get_current_context(JohnsonRuntime * runtime)
 
 static void deallocate(JohnsonRuntime* runtime)
 {
-  JS_RemoveRoot(johnson_get_current_context(runtime), &(runtime->global));
+  // Calling our gc callback can create ruby objects, so we can't do that here.
+  JS_SetGCCallbackRT(runtime->js, NULL);
+
+  JSContext * cx = JS_NewContext(runtime->js, 8192L);
+  JS_RemoveRoot(cx, &(runtime->global));
+  JS_DestroyContext(cx);
   
   JSContext *context = NULL;
   JSContext *iterator = NULL;
 
   while ((context = JS_ContextIterator(runtime->js, &iterator)) != NULL) {
+    JS_SetContextPrivate(iterator, NULL);
     JS_DestroyContext(iterator);
     iterator = NULL;
   }
@@ -303,4 +333,5 @@ void init_Johnson_SpiderMonkey_Runtime(VALUE spidermonkey)
   rb_define_method(klass, "evaluate_compiled_script", evaluate_compiled_script, 1);
   rb_define_private_method(klass, "native_compile", native_compile, 3);
   rb_define_private_method(klass, "set_trap", set_trap, 3);
+  rb_define_private_method(klass, "clear_trap", clear_trap, 2);
 }

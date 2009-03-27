@@ -50,7 +50,7 @@ module Johnson
     end
 
     def evaluate_compiled_script(script)
-      delegate.evaluate_compiled_script(script)
+      delegate.evaluate_compiled(script)
     end
 
     private
