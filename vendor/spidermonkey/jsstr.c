@@ -1216,9 +1216,7 @@ match_or_replace(JSContext *cx,
 
             /* Assume a full array result is required, then prove otherwise. */
             test = JS_FALSE;
-            if (fp) {
-                JS_ASSERT(*fp->regs->pc == JSOP_CALL ||
-                          *fp->regs->pc == JSOP_NEW);
+            if (fp && (*fp->regs->pc == JSOP_CALL || *fp->regs->pc == JSOP_NEW)) {
                 JS_ASSERT(js_CodeSpec[*fp->regs->pc].length == 3);
                 switch (fp->regs->pc[3]) {
                   case JSOP_POP:
@@ -1949,6 +1947,9 @@ str_concat(JSContext *cx, uintN argc, jsval *vp)
 
     NORMALIZE_THIS(cx, vp, str);
 
+    /* Set vp (aka rval) early to handle the argc == 0 case. */
+    *vp = STRING_TO_JSVAL(str);
+
     for (i = 0, argv = vp + 2; i < argc; i++) {
         str2 = js_ValueToString(cx, argv[i]);
         if (!str2)
@@ -1958,9 +1959,9 @@ str_concat(JSContext *cx, uintN argc, jsval *vp)
         str = js_ConcatStrings(cx, str, str2);
         if (!str)
             return JS_FALSE;
+        *vp = STRING_TO_JSVAL(str);
     }
 
-    *vp = STRING_TO_JSVAL(str);
     return JS_TRUE;
 }
 

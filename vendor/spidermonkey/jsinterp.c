@@ -80,17 +80,22 @@
 #ifdef js_invoke_c__
 
 uint32
-js_GenerateShape(JSContext *cx, JSBool gcLocked)
+js_GenerateShape(JSContext *cx, JSBool gcLocked, JSScopeProperty *sprop)
 {
     JSRuntime *rt;
     uint32 shape;
+    JSTempValueRooter tvr;
 
     rt = cx->runtime;
     shape = JS_ATOMIC_INCREMENT(&rt->shapeGen);
     JS_ASSERT(shape != 0);
     if (shape & SHAPE_OVERFLOW_BIT) {
         rt->gcPoke = JS_TRUE;
+        if (sprop)
+            JS_PUSH_TEMP_ROOT_SPROP(cx, sprop, &tvr);
         js_GC(cx, gcLocked ? GC_LOCK_HELD : GC_NORMAL);
+        if (sprop)
+            JS_POP_TEMP_ROOT(cx, &tvr);
         shape = JS_ATOMIC_INCREMENT(&rt->shapeGen);
         JS_ASSERT(shape != 0);
         JS_ASSERT_IF(shape & SHAPE_OVERFLOW_BIT,
@@ -825,8 +830,10 @@ ComputeThis(JSContext *cx, JSBool lazy, jsval *argv)
         thisp = JSVAL_TO_OBJECT(argv[-1]);
     } else {
         thisp = JSVAL_TO_OBJECT(argv[-1]);
-        if (OBJ_GET_CLASS(cx, thisp) == &js_CallClass)
+        if (OBJ_GET_CLASS(cx, thisp) == &js_CallClass ||
+            OBJ_GET_CLASS(cx, thisp) == &js_BlockClass) {
             return js_ComputeGlobalThis(cx, lazy, argv);
+        }
 
         if (thisp->map->ops->thisObject) {
             /* Some objects (e.g., With) delegate 'this' to another object. */
@@ -1473,12 +1480,6 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
         frame.callee = NULL;
         frame.fun = NULL;
         frame.thisp = chain;
-        OBJ_TO_OUTER_OBJECT(cx, frame.thisp);
-        if (!frame.thisp) {
-            ok = JS_FALSE;
-            goto out;
-        }
-        flags |= JSFRAME_COMPUTED_THIS;
         frame.argc = 0;
         frame.argv = NULL;
         frame.nvars = script->ngvars;
@@ -1528,6 +1529,15 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
     }
 
     cx->fp = &frame;
+    if (!down) {
+        OBJ_TO_OUTER_OBJECT(cx, frame.thisp);
+        if (!frame.thisp) {
+            ok = JS_FALSE;
+            goto out2;
+        }
+        frame.flags |= JSFRAME_COMPUTED_THIS;
+    }
+
     if (hook) {
         hookData = hook(cx, &frame, JS_TRUE, 0,
                         cx->debugHooks->executeHookData);
@@ -1541,6 +1551,8 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
         if (hook)
             hook(cx, &frame, JS_FALSE, &ok, hookData);
     }
+
+out2:
     if (mark)
         js_FreeRawStack(cx, mark);
     cx->fp = oldfp;
@@ -1677,63 +1689,84 @@ js_CheckRedeclaration(JSContext *cx, JSObject *obj, jsid id, uintN attrs,
     jsval value;
     const char *type, *name;
 
+    /*
+     * Both objp and propp must be either null or given. When given, *propp
+     * must be null. This way we avoid an extra "if (propp) *propp = NULL" for
+     * the common case of a non-existing property.
+     */
+    JS_ASSERT(!objp == !propp);
+    JS_ASSERT_IF(propp, !*propp);
+
+    /* The JSPROP_INITIALIZER case below may generate a warning. Since we must
+     * drop the property before reporting it, we insists on !propp to avoid
+     * looking up the property again after the reporting is done.
+     */
+    JS_ASSERT_IF(attrs & JSPROP_INITIALIZER, attrs == JSPROP_INITIALIZER);
+    JS_ASSERT_IF(attrs == JSPROP_INITIALIZER, !propp);
+
     if (!OBJ_LOOKUP_PROPERTY(cx, obj, id, &obj2, &prop))
         return JS_FALSE;
-    if (propp) {
-        *objp = obj2;
-        *propp = prop;
-    }
     if (!prop)
         return JS_TRUE;
 
-    /*
-     * Use prop as a speedup hint to OBJ_GET_ATTRIBUTES, but drop it on error.
-     * An assertion at label bad: will insist that it is null.
-     */
+    /* Use prop as a speedup hint to OBJ_GET_ATTRIBUTES. */
     if (!OBJ_GET_ATTRIBUTES(cx, obj2, id, prop, &oldAttrs)) {
         OBJ_DROP_PROPERTY(cx, obj2, prop);
-#ifdef DEBUG
-        prop = NULL;
-#endif
-        goto bad;
+        return JS_FALSE;
     }
 
     /*
-     * From here, return true, or else goto bad on failure to null out params.
      * If our caller doesn't want prop, drop it (we don't need it any longer).
      */
     if (!propp) {
         OBJ_DROP_PROPERTY(cx, obj2, prop);
         prop = NULL;
+    } else {
+        *objp = obj2;
+        *propp = prop;
     }
 
     if (attrs == JSPROP_INITIALIZER) {
         /* Allow the new object to override properties. */
         if (obj2 != obj)
             return JS_TRUE;
+
+        /* The property must be dropped already. */
+        JS_ASSERT(!prop);
         report = JSREPORT_WARNING | JSREPORT_STRICT;
     } else {
         /* We allow redeclaring some non-readonly properties. */
         if (((oldAttrs | attrs) & JSPROP_READONLY) == 0) {
-            /*
-             * Allow redeclaration of variables and functions, but insist that
-             * the new value is not a getter if the old value was, ditto for
-             * setters -- unless prop is impermanent (in which case anyone
-             * could delete it and redefine it, willy-nilly).
-             */
+            /* Allow redeclaration of variables and functions. */
             if (!(attrs & (JSPROP_GETTER | JSPROP_SETTER)))
                 return JS_TRUE;
+
+            /*
+             * Allow adding a getter only if a property already has a setter
+             * but no getter and similarly for adding a setter. That is, we
+             * allow only the following transitions:
+             *
+             *   no-property --> getter --> getter + setter
+             *   no-property --> setter --> getter + setter
+             */
             if ((~(oldAttrs ^ attrs) & (JSPROP_GETTER | JSPROP_SETTER)) == 0)
                 return JS_TRUE;
+
+            /*
+             * Allow redeclaration of an impermanent property (in which case
+             * anyone could delete it and redefine it, willy-nilly).
+             */
             if (!(oldAttrs & JSPROP_PERMANENT))
                 return JS_TRUE;
         }
+        if (prop)
+            OBJ_DROP_PROPERTY(cx, obj2, prop);
 
         report = JSREPORT_ERROR;
         isFunction = (oldAttrs & (JSPROP_GETTER | JSPROP_SETTER)) != 0;
         if (!isFunction) {
             if (!OBJ_GET_PROPERTY(cx, obj, id, &value))
-                goto bad;
+                return JS_FALSE;
             isFunction = VALUE_IS_FUNCTION(cx, value);
         }
     }
@@ -1751,19 +1784,11 @@ js_CheckRedeclaration(JSContext *cx, JSObject *obj, jsid id, uintN attrs,
            : js_var_str;
     name = js_ValueToPrintableString(cx, ID_TO_VALUE(id));
     if (!name)
-        goto bad;
+        return JS_FALSE;
     return JS_ReportErrorFlagsAndNumber(cx, report,
                                         js_GetErrorMessage, NULL,
                                         JSMSG_REDECLARED_VAR,
                                         type, name);
-
-bad:
-    if (propp) {
-        *objp = NULL;
-        *propp = NULL;
-    }
-    JS_ASSERT(!prop);
-    return JS_FALSE;
 }
 
 JSBool
@@ -4743,16 +4768,6 @@ interrupt:
                     newifp->frame.regs = NULL;
                     newifp->frame.spbase = NULL;
 
-                    /* Call the debugger hook if present. */
-                    hook = cx->debugHooks->callHook;
-                    if (hook) {
-                        newifp->hookData = hook(cx, &newifp->frame, JS_TRUE, 0,
-                                                cx->debugHooks->callHookData);
-                        LOAD_INTERRUPT_HANDLER(cx);
-                    } else {
-                        newifp->hookData = NULL;
-                    }
-
                     /* Scope with a call object parented by callee's parent. */
                     if (JSFUN_HEAVYWEIGHT_TEST(fun->flags) &&
                         !js_GetCallObject(cx, &newifp->frame, parent)) {
@@ -4774,6 +4789,16 @@ interrupt:
                     regs.pc = script->code;
                     newifp->frame.regs = &regs;
                     cx->fp = fp = &newifp->frame;
+
+                    /* Call the debugger hook if present. */
+                    hook = cx->debugHooks->callHook;
+                    if (hook) {
+                        newifp->hookData = hook(cx, &newifp->frame, JS_TRUE, 0,
+                                                cx->debugHooks->callHookData);
+                        LOAD_INTERRUPT_HANDLER(cx);
+                    } else {
+                        newifp->hookData = NULL;
+                    }
 
                     inlineCallCount++;
                     JS_RUNTIME_METER(rt, inlineCalls);
@@ -5093,7 +5118,7 @@ interrupt:
                 funobj = fp->callee;
                 slot += JSCLASS_RESERVED_SLOTS(&js_FunctionClass);
                 if (!JS_GetReservedSlot(cx, funobj, slot, &rval))
-                    return JS_FALSE;
+                    goto error;
                 if (JSVAL_IS_VOID(rval))
                     rval = JSVAL_NULL;
             } else {
@@ -5151,7 +5176,7 @@ interrupt:
                 /* Store the regexp object value in its cloneIndex slot. */
                 if (fp->fun) {
                     if (!JS_SetReservedSlot(cx, funobj, slot, rval))
-                        return JS_FALSE;
+                        goto error;
                 } else {
                     fp->vars[slot] = rval;
                 }
@@ -5524,6 +5549,7 @@ interrupt:
 
             /* Lookup id in order to check for redeclaration problems. */
             id = ATOM_TO_JSID(atom);
+            prop = NULL;
             if (!js_CheckRedeclaration(cx, obj, id, attrs, &obj2, &prop))
                 goto error;
 
@@ -5545,11 +5571,11 @@ interrupt:
              * by the JSOP_*GVAR opcodes.
              */
             if (index < script->ngvars &&
-                (attrs & JSPROP_PERMANENT) &&
                 obj2 == obj &&
                 OBJ_IS_NATIVE(obj)) {
                 sprop = (JSScopeProperty *) prop;
-                if (SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(obj)) &&
+                if ((sprop->attrs & JSPROP_PERMANENT) &&
+                    SPROP_HAS_VALID_SLOT(sprop, OBJ_SCOPE(obj)) &&
                     SPROP_HAS_STUB_GETTER(sprop) &&
                     SPROP_HAS_STUB_SETTER(sprop)) {
                     /*

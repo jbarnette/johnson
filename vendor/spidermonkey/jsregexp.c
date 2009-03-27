@@ -3622,12 +3622,17 @@ regexp_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
     if (!JSVAL_IS_INT(id))
         return JS_TRUE;
+    while (OBJ_GET_CLASS(cx, obj) != &js_RegExpClass) {
+        obj = OBJ_GET_PROTO(cx, obj);
+        if (!obj)
+            return JS_TRUE;
+    }
     slot = JSVAL_TO_INT(id);
     if (slot == REGEXP_LAST_INDEX)
         return JS_GetReservedSlot(cx, obj, 0, vp);
 
     JS_LOCK_OBJ(cx, obj);
-    re = (JSRegExp *) JS_GetInstancePrivate(cx, obj, &js_RegExpClass, NULL);
+    re = (JSRegExp *) JS_GetPrivate(cx, obj);
     if (re) {
         switch (slot) {
           case REGEXP_SOURCE:
@@ -3661,6 +3666,11 @@ regexp_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     ok = JS_TRUE;
     if (!JSVAL_IS_INT(id))
         return ok;
+    while (OBJ_GET_CLASS(cx, obj) != &js_RegExpClass) {
+        obj = OBJ_GET_PROTO(cx, obj);
+        if (!obj)
+            return JS_TRUE;
+    }
     slot = JSVAL_TO_INT(id);
     if (slot == REGEXP_LAST_INDEX) {
         if (!JS_ValueToNumber(cx, *vp, &lastIndex))
@@ -4298,10 +4308,12 @@ js_NewRegExpObject(JSContext *cx, JSTokenStream *ts,
     str = js_NewStringCopyN(cx, chars, length);
     if (!str)
         return NULL;
-    re = js_NewRegExp(cx, ts,  str, flags, JS_FALSE);
-    if (!re)
-        return NULL;
     JS_PUSH_TEMP_ROOT_STRING(cx, str, &tvr);
+    re = js_NewRegExp(cx, ts,  str, flags, JS_FALSE);
+    if (!re) {
+        JS_POP_TEMP_ROOT(cx, &tvr);
+        return NULL;
+    }
     obj = js_NewObject(cx, &js_RegExpClass, NULL, NULL, 0);
     if (!obj || !JS_SetPrivate(cx, obj, re)) {
         js_DestroyRegExp(cx, re);
