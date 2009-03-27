@@ -21,6 +21,7 @@ HOE = Hoe.new "johnson", Johnson::VERSION do |p|
   p.clean_globs     << "lib/johnson/spidermonkey.bundle"
   p.clean_globs     << "tmp"
   p.clean_globs     << "vendor/spidermonkey/**/*.OBJ"
+  p.clean_globs     << "ext/**/*.{o,so,bundle,a,log}"
 
   p.extra_deps      << "rake"
   p.extra_dev_deps  << "rake-compiler"
