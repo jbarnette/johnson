@@ -185,27 +185,28 @@ respond_to_p(int argc, const VALUE* argv, VALUE self)
 static VALUE
 native_call(int argc, VALUE* argv, VALUE self)
 {
-  // FIXME: This should really call super#native_call.
   if (!function_p(self))
-    rb_raise(rb_eRuntimeError, "This Johnson::SpiderMonkey::RubyLandProxy isn't a function.");
+    rb_raise(rb_eRuntimeError,
+      "This Johnson::SpiderMonkey::RubyLandProxy isn't a function.");
 
   if (argc < 1)
     rb_raise(rb_eArgError, "Target object required");
 
   RubyLandProxy* proxy;
   Data_Get_Struct(self, RubyLandProxy, proxy);
-  JSContext * context = johnson_get_current_context(proxy->runtime);
-  
-  PREPARE_RUBY_JROOTS(context, 1);
-  
+
   jsval proxy_value;
-  JCHECK(get_jsval_for_proxy(proxy, &proxy_value));
-  JROOT(proxy_value);
+
+  if (!get_jsval_for_proxy(proxy, &proxy_value))
+    raise_js_error_in_ruby(proxy->runtime);
 
   jsval global;
-  JCHECK(convert_to_js(proxy->runtime, argv[0], &global));
 
-  JRETURN_RUBY(call_js_function_value(proxy->runtime, global, proxy_value, argc - 1, &(argv[1])));
+  if (!convert_to_js(proxy->runtime, argv[0], &global))
+    raise_js_error_in_ruby(proxy->runtime);
+
+  return call_js_function_value(proxy->runtime, global, proxy_value,
+    argc - 1, &(argv[1]));
 }
 
 static void
