@@ -1,9 +1,10 @@
-=== 1.1.0 (pending)
+=== 1.1.0 "Segfault City" (2009-04-04)
 
-* First real/RubyForge release!
+* Enough delays. First real/RubyForge release!
 * Cleaned up the build.
 * Updated to a more recent SpiderMonkey.
 * Fixed allocation-during-GC bugs.
+* Added some new GC bugs.
 
 === 1.0.0 (2008-03-11)
 

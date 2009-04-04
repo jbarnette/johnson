@@ -17,9 +17,8 @@ Johnson wraps JavaScript in a loving Ruby embrace.
 == Installation
 
 We haven't rolled an official 1.x for Johnson, though we plan to Real
-Soon Now.  For the moment, follow the instructions in "Installing
-Development Versions".  Once we push a 1.0 to RubyForge, it'll be as
-easy as:
+Soon Now.  For the moment, follow the instructions in "Development
+Versions".  Once we push a 1.x to RubyForge, it'll be as easy as:
 
   [sudo] gem install johnson
 

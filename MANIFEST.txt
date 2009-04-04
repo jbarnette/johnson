@@ -1,10 +1,10 @@
 .autotest
 CHANGELOG.rdoc
-MINGW32.mk
 Manifest.txt
 README.rdoc
 Rakefile
 bin/johnson
+docs/MINGW32.mk
 docs/cross-compile.txt
 ext/spidermonkey/context.c
 ext/spidermonkey/context.h
@@ -138,7 +138,6 @@ vendor/spidermonkey/config/Darwin1.3.mk
 vendor/spidermonkey/config/Darwin1.4.mk
 vendor/spidermonkey/config/Darwin5.2.mk
 vendor/spidermonkey/config/Darwin5.3.mk
-vendor/spidermonkey/config/FreeBSD.mk
 vendor/spidermonkey/config/HP-UXB.10.10.mk
 vendor/spidermonkey/config/HP-UXB.10.20.mk
 vendor/spidermonkey/config/HP-UXB.11.00.mk
@@ -263,7 +262,6 @@ vendor/spidermonkey/fdlibm/w_sinh.c
 vendor/spidermonkey/fdlibm/w_sqrt.c
 vendor/spidermonkey/javascript-trace.d
 vendor/spidermonkey/js.c
-vendor/spidermonkey/js.mak
 vendor/spidermonkey/js.mdp
 vendor/spidermonkey/js.msg
 vendor/spidermonkey/js3240.rc
