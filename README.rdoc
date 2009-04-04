@@ -16,16 +16,14 @@ Johnson wraps JavaScript in a loving Ruby embrace.
 
 == Installation
 
-We haven't rolled an official 1.x for Johnson, though we plan to Real
-Soon Now.  For the moment, follow the instructions in "Development
-Versions".  Once we push a 1.x to RubyForge, it'll be as easy as:
-
   [sudo] gem install johnson
 
 === Restrictions
 
 Johnson is currently developed and tested on Mac OS X with Ruby
 1.8.6. We'd like to widen our support: contributions are very welcome!
+
+It's also kinda segfaulty at the moment. GC is hard.
 
 === Development Versions
 
