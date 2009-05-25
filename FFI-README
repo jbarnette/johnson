@@ -1,0 +1,4 @@
+To work with FFI first do:
+
+$ export JOHNSON_FFI=1
+
