@@ -4,24 +4,37 @@ require "johnson/version"
 # the command-line option parser and support libs
 require "johnson/cli"
 
-# the native SpiderMonkey extension
-require "johnson/spidermonkey"
+unless ENV['JOHNSON_FFI']
+  # the native SpiderMonkey extension
+  require "johnson/spidermonkey"
 
-# visitable module and visitors
-require "johnson/visitable"
-require "johnson/visitors"
+  # visitable module and visitors
+  require "johnson/visitable"
+  require "johnson/visitors"
 
-# parse tree nodes
-require "johnson/nodes"
+  # parse tree nodes
+  require "johnson/nodes"
+end
 
 # the SpiderMonkey bits written in Ruby
-require "johnson/spidermonkey/runtime"
-require "johnson/spidermonkey/context"
-require "johnson/spidermonkey/js_land_proxy"
-require "johnson/spidermonkey/ruby_land_proxy"
-require "johnson/spidermonkey/mutable_tree_visitor"
-require "johnson/spidermonkey/debugger"
-require "johnson/spidermonkey/immutable_node"
+
+unless ENV['JOHNSON_FFI']
+  require "johnson/spidermonkey/runtime"
+  require "johnson/spidermonkey/context"
+  require "johnson/spidermonkey/js_land_proxy"
+  require "johnson/spidermonkey/ruby_land_proxy"
+  require "johnson/spidermonkey/mutable_tree_visitor"
+  require "johnson/spidermonkey/debugger"
+  require "johnson/spidermonkey/immutable_node"
+else
+  require "johnson/spidermonkey/ffi/ffi-spidermonkey"
+  require "johnson/spidermonkey/ffi/has_pointer.rb"
+  require "johnson/spidermonkey/ffi/value.rb"
+  require "johnson/spidermonkey/ffi/global.rb"
+  require "johnson/spidermonkey/ffi/runtime"
+  require "johnson/spidermonkey/ffi/context"
+  require "johnson/spidermonkey/ffi/ruby_land_proxy"
+end
 
 # the 'public' interface
 require "johnson/error"

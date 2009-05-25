@@ -5,7 +5,7 @@ module Johnson
     def initialize(delegate=Johnson::SpiderMonkey::Runtime)
       @delegate = delegate.is_a?(Class) ? delegate.new : delegate
       evaluate(Johnson::PRELUDE, "Johnson::PRELUDE", 1)
-      global.Johnson.runtime = self
+#      global.Johnson.runtime = self
     end
     
     def [](key)

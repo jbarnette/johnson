@@ -35,21 +35,24 @@ module Johnson
     end
   end
 
-  class NodeTestCase < Test::Unit::TestCase
-    include Johnson::Nodes
-  
-    undef :default_test if method_defined? :default_test
-    
-    def setup
-      @parser = Johnson::Parser
-    end
-  
-    def assert_sexp(expected, actual)
-      assert_equal(expected, actual.to_sexp)
-    end
+  unless ENV['JOHNSON_FFI']
+    class NodeTestCase < Test::Unit::TestCase
+      include Johnson::Nodes
+      
+      undef :default_test if method_defined? :default_test
+      
+      def setup
+        @parser = Johnson::Parser
+      end
+      
+      def assert_sexp(expected, actual)
+        assert_equal(expected, actual.to_sexp)
+      end
 
-    def assert_ecma(expected, actual)
-      assert_equal(expected, actual.to_ecma)
+      def assert_ecma(expected, actual)
+        assert_equal(expected, actual.to_ecma)
+      end
     end
   end
+
 end
