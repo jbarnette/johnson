@@ -20,6 +20,10 @@ module Johnson
 
       class << self
         
+        def finalize(id)
+          SpiderMonkey.runtimes[id]
+        end
+
         def raise_js_exception(jsex)
 
           raise jsex if Exception === jsex
@@ -42,13 +46,11 @@ module Johnson
       end
 
       def initialize
-
         @ptr = SpiderMonkey.JS_NewRuntime(0x100000)
         @global = SpiderMonkey.JS_GetGlobalObject(context)
         @gc_zeal = 0
 
         SpiderMonkey.runtimes << self
-        
       end
 
       def destroy

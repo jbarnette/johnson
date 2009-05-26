@@ -419,7 +419,7 @@ module Johnson
         v & ~JSVAL_TAGMASK
       end
       def JSVAL_TO_GCTHING(v)
-        JSVAL_CLRTAG(v)
+        FFI::Pointer.new(JSVAL_CLRTAG(v))
       end
       def JSVAL_SETTAG(v, t)
         v | t
@@ -441,6 +441,13 @@ module Johnson
       end
       def OBJECT_TO_JSVAL(obj)
         FFI::MemoryPointer.new(:pointer).write_pointer(obj).read_long
+      end
+      def STRING_TO_JSVAL(str)
+        str_cast = FFI::MemoryPointer.new(:pointer).write_pointer(str).read_long
+        JSVAL_SETTAG(str_cast, JSVAL_STRING)
+      end
+      def JSVAL_TO_STRING(v)
+        JSVAL_TO_GCTHING(v)
       end
       def BOOLEAN_TO_JSVAL(b)
         JSVAL_SETTAG(b << JSVAL_TAGBITS, JSVAL_BOOLEAN)

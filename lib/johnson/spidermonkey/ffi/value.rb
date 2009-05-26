@@ -11,9 +11,24 @@ module Johnson
         
         case @value
 
+        when NilClass
+          SpiderMonkey::JSValue.new(@context, JSVAL_NULL)
+
+        when TrueClass
+          SpiderMonkey::JSValue.new(@context, JSVAL_TRUE)
+
+        when FalseClass
+          SpiderMonkey::JSValue.new(@context, JSVAL_FALSE)
+
+        when String
+          SpiderMonkey::JSValue.new(@context, convert_ruby_string_to_js)
+
         when Fixnum
           SpiderMonkey::JSValue.new(@context, SpiderMonkey.INT_TO_JSVAL(@value))
-          
+
+        when Float, Bignum
+          SpiderMonkey::JSValue.new(@context, convert_float_or_bignum_to_js)
+
         when Class, Hash, Module, File, Struct, Object, Array
           if @value.kind_of?(SpiderMonkey::RubyLandProxy)
             @value.js_value
@@ -26,6 +41,20 @@ module Johnson
 
       end
 
+      private
+
+      def convert_ruby_string_to_js
+        js_string = SpiderMonkey.JS_NewStringCopyN(@context, @value, @value.size)
+        js_value = SpiderMonkey.STRING_TO_JSVAL(js_string)
+#        FFI::MemoryPointer.new(:long).write_long(js_value)
+      end
+
+      def convert_float_or_bignum_to_js
+        retval = FFI::MemoryPointer.new(:long)
+        SpiderMonkey.JS_NewNumberValue(@context, @value.to_f, retval)
+        retval
+      end
+
     end
   end
 end
@@ -33,9 +62,7 @@ end
 module Johnson
   module SpiderMonkey
 
-    class JSValue
-
-      include HasPointer
+    class JSValue < JSRootable
 
       attr_reader :value, :context
 
@@ -45,30 +72,14 @@ module Johnson
 
         if pointer_or_value.kind_of?(FFI::Pointer)
           @value = pointer_or_value.read_long
-          @ptr = pointer_or_value
+          @ptr = @ptr_to_be_rooted = pointer_or_value
         elsif pointer_or_value.kind_of?(Fixnum) or pointer_or_value.kind_of?(Bignum)
           @value = pointer_or_value
-          @ptr = FFI::MemoryPointer.new(:long).write_long(@value)
+          @ptr = @ptr_to_be_rooted = FFI::MemoryPointer.new(:long).write_long(@value)
         else
           raise "Invalid initialization value for SpiderMonkey::JSValue"
         end
 
-      end
-
-      def root_rt(name = 'RubyLandProxy')
-        SpiderMonkey.JS_AddNamedRootRT(@context.runtime, @ptr, name)
-      end
-
-      def unroot_rt
-        SpiderMonkey.JS_RemoveRootRT(@context.runtime, @ptr)
-      end
-
-      def root(name = "")
-        SpiderMonkey.JS_AddNamedRoot(@context, @ptr, name)
-      end
-
-      def unroot
-        SpiderMonkey.JS_RemoveRoot(@context, @ptr)
       end
 
       def to_object
@@ -78,6 +89,12 @@ module Johnson
       end
 
       def to_ruby
+
+        if @value == JSVAL_NULL
+          unroot
+          return nil
+        end
+
         case SpiderMonkey.JS_TypeOfValue(@context, @value)
           
         when SpiderMonkey::JSTYPE_VOID
@@ -87,6 +104,10 @@ module Johnson
         when SpiderMonkey::JSTYPE_BOOLEAN
           unroot
           return @value == SpiderMonkey::JSVAL_TRUE ? true : false
+
+        when SpiderMonkey::JSTYPE_STRING
+          unroot
+          return to_ruby_string
           
         when SpiderMonkey::JSTYPE_NUMBER
           if SpiderMonkey.JSVAL_IS_INT(@value)
@@ -121,6 +142,14 @@ module Johnson
         rvalue = FFI::MemoryPointer.new(:double)
         SpiderMonkey.JS_ValueToNumber(@context, @value, rvalue)
         rvalue.get_double(0)
+      end
+
+      def to_ruby_string
+        js_string = JSRootable.new(@context, SpiderMonkey.JSVAL_TO_STRING(@value))
+        js_string.root
+        result = SpiderMonkey.JS_GetStringBytes(js_string)
+        js_string.unroot
+        result
       end
 
     end

@@ -16,7 +16,12 @@ HOE = Hoe.new "johnson", Johnson::VERSION do |p|
   p.url              = "http://github.com/jbarnette/johnson/wikis"
 
   p.extra_rdoc_files = [p.readme_file]
-  p.test_globs       = %w(test/**/*_test.rb)
+
+  unless ENV['JOHNSON_FFI']
+    p.test_globs       = %w(test/**/*_test.rb)
+  else
+    p.test_globs       = %w(test/johnson/spidermonkey/ffi/*_test.rb)
+  end
 
   p.clean_globs     << "lib/johnson/spidermonkey.bundle"
   p.clean_globs     << "tmp"
@@ -32,7 +37,7 @@ Rake::ExtensionTask.new "spidermonkey", HOE.spec do |ext|
   ext.lib_dir = "lib/johnson"
 end
 
-task :test => :compile
+task :test => :compile unless ENV['JOHNSON_FFI']
 
 Dir["lib/tasks/*.rake"].each { |f| load f }
 

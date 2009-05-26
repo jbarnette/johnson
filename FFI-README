@@ -2,12 +2,14 @@ To work with FFI first do:
 
 $ export JOHNSON_FFI=1
 
-To run tests:
+To run tests/autotest:
 
 # with MRI Ruby
 
+$ rake test
 $ autotest
 
 # with JRuby
 
+$ jruby -S rake test
 $ jruby -S autotest
