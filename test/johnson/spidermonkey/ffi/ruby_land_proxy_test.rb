@@ -37,21 +37,21 @@ module Johnson
         assert_js_equal(10, 'x[0]')
       end
       
-      # def test_hash_indexable
-      #   proxy = @runtime.evaluate("var x = { 0: 1, 1: 2, 2: 3 }; x")
-      #   assert_equal(1, proxy[0])
-      #   assert_equal(1, proxy['0'])
+      def test_hash_indexable
+        proxy = @runtime.evaluate("var x = { 0: 1, 1: 2, 2: 3 }; x")
+        assert_equal(1, proxy[0])
+        assert_equal(1, proxy['0'])
 
-      #   proxy[0] = 10
-      #   assert_js_equal(10, 'x[0]')
-      # end
+        proxy[0] = 10
+        assert_js_equal(10, 'x[0]')
+      end
 
-      # def test_functions_get_wrapped_as_proxies
-      #   f = @runtime.evaluate("function() {}")
-      #   assert_kind_of(Johnson::SpiderMonkey::RubyLandProxy, f)
-      #   assert(f.function?)
-      # end
-
+      def test_functions_get_wrapped_as_proxies
+        f = @runtime.evaluate("function() {}")
+        assert_kind_of(Johnson::SpiderMonkey::RubyLandProxy, f)
+        assert(f.function?)
+      end
+      
       # def test_function?
       #   f = @runtime.evaluate("function() {}")
       #   assert_kind_of(Johnson::SpiderMonkey::RubyLandProxy, f)

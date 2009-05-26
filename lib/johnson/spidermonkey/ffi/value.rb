@@ -45,8 +45,7 @@ module Johnson
 
       def convert_ruby_string_to_js
         js_string = SpiderMonkey.JS_NewStringCopyN(@context, @value, @value.size)
-        js_value = SpiderMonkey.STRING_TO_JSVAL(js_string)
-#        FFI::MemoryPointer.new(:long).write_long(js_value)
+        SpiderMonkey.STRING_TO_JSVAL(js_string)
       end
 
       def convert_float_or_bignum_to_js

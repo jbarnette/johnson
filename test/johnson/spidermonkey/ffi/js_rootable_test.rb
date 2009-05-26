@@ -10,6 +10,10 @@ module Johnson
         @context = @runtime.delegate.context
       end
 
+      def teardown
+        @runtime.delegate.destroy
+      end
+
       def test_can_be_initialized_with_a_pointer
         js_object = JSRootable.new(@context, SpiderMonkey.JS_NewObject(@context, nil, nil, nil))
       end
@@ -18,14 +22,12 @@ module Johnson
         js_string = JSRootable.new(@context, SpiderMonkey.JS_NewStringCopyN(@context, "hola", "hola".size))
         js_string.root
         js_string.unroot
-        @runtime.delegate.destroy
       end
 
       def test_can_do_named_root
         js_string = JSRootable.new(@context, SpiderMonkey.JS_NewStringCopyN(@context, "hola", "hola".size))
         js_string.root(binding, 'string')
-#        js_string.unroot
-        @runtime.delegate.destroy
+        js_string.unroot
       end
 
       def test_pointer_equals
