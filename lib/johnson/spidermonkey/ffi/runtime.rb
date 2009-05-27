@@ -84,38 +84,14 @@ module Johnson
         compile_and_evaluate(script, filename, linenum)
       end
 
-      def evaluate_and_return_jsval(script, filename = nil, linenum = nil)
-
-        filename ||= 'none'
-        linenum  ||= 1
-        rval = FFI::MemoryPointer.new(:long)
-        ok = SpiderMonkey.JS_EvaluateScript(context, global, script, script.size, filename, linenum, rval)
-
-        if ok == JS_FALSE
-
-          if SpiderMonkey.JS_IsExceptionPending(context) == JS_TRUE
-            SpiderMonkey.JS_GetPendingException(context, context.exception);
-            SpiderMonkey.JS_ClearPendingException(context)
-          end
-
-          if context.has_exception?
-            self.class.raise_js_exception(convert_to_ruby(context.exception.read_long))
-          end
-          
-        end
-
-        rval
-
-      end
-
       private
 
       def destroy_contexts
-        iterator = FFI::MemoryPointer.new(:pointer).write_pointer(FFI::Pointer.new(0))
+        iterator = FFI::MemoryPointer.new(:pointer).write_pointer(FFI::Pointer::NULL)
 
         while !(SpiderMonkey.JS_ContextIterator(self, iterator)).null?
           SpiderMonkey.JS_DestroyContext(iterator.read_pointer)
-          iterator = FFI::MemoryPointer.new(:pointer).write_pointer(FFI::Pointer.new(0))
+          iterator = FFI::MemoryPointer.new(:pointer).write_pointer(FFI::Pointer::NULL)
         end
       end
 
