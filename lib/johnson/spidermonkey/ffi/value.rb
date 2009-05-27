@@ -123,9 +123,14 @@ module Johnson
             unroot
             return SpiderMonkey::RubyLandProxy.make(@context, @value, 'GlobalProxy')
           end  
+
+          if RubyLandProxy.has_proxy?(@context.runtime, self)
+            unroot
+            return RubyLandProxy.unwrap_js_land_proxy(@context.runtime, self)
+          end
           
           unroot
-          return SpiderMonkey::RubyLandProxy.make(@context, @value)
+          return SpiderMonkey::RubyLandProxy.make(@context, @value, 'RubyLandProxy')
 
         end      
 
@@ -145,7 +150,7 @@ module Johnson
 
       def to_ruby_string
         js_string = JSRootable.new(@context, SpiderMonkey.JSVAL_TO_STRING(@value))
-        js_string.root
+        js_string.root(binding)
         result = SpiderMonkey.JS_GetStringBytes(js_string)
         js_string.unroot
         result

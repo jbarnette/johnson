@@ -23,6 +23,7 @@ puts @rt.evaluate('foo')
 ## Use multiple runtimes
 
 @rt_2 = Runtime.new
-@rt_2[:foo] = 'Ola'
+@rt_2[:foo_2] = 'Ola'
+@rt_2[:foo] = @rt[:foo]
 
-puts @rt_2.evaluate('foo')
+puts @rt_2.evaluate('foo_2 + foo')

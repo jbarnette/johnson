@@ -20,9 +20,10 @@ module Johnson
         proxy = @runtime.evaluate("x = {}")
         @runtime["y"] = proxy
         assert(@runtime.evaluate("x === y"))
+        assert(proxy === @runtime['y'])
       end
 
-      def test_reponds_to?
+      def test_responds_to?
         proxy = @runtime.evaluate("x = {}")
         assert ! proxy.respond_to?(:foo)
         assert ! proxy.respond_to?("foo")

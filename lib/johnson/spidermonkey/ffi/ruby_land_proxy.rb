@@ -5,6 +5,7 @@ module Johnson
       attr_reader :js_value
 
       @roots = {}
+      @proxies = {}
 
       class << self
         protected :new
@@ -13,12 +14,28 @@ module Johnson
           self.new(context, value, name)
         end
 
-        def add_proxy_to_roots(id, js_value)
-          @roots[id] = js_value
+        def root_by_runtime_id(runtime_id, js_value)
+          (@roots[runtime_id] ||= []) << js_value
         end
 
-        def finalize_proxy_in_roots
-          @roots.each_value { |js_value| js_value.unroot }
+        def finalize_by_runtime_id(runtime_id)
+          unless @roots[runtime_id].nil?
+            @roots[runtime_id].each { |js_value| js_value.unroot_rt }
+            @roots[runtime_id].clear
+            @proxies[runtime].clear
+          end
+        end
+
+        def add_proxy_by_runtime_id(runtime_id, value, proxy)
+          (@proxies[runtime_id] ||= {})[value] = proxy
+        end
+
+        def has_proxy?(runtime, jsvalue)
+          @proxies.has_key?(runtime.object_id) && @proxies[runtime.object_id].has_key?(jsvalue.value)
+        end
+
+        def unwrap_js_land_proxy(runtime, jsvalue)
+          @proxies[runtime.object_id][jsvalue.value]
         end
       end
 
@@ -27,8 +44,10 @@ module Johnson
         @runtime = context.runtime
         @js_value = JSValue.new(@context, value)
 
-        @js_value.root_rt
-        self.class.add_proxy_to_roots(object_id, @js_value)
+        @js_value.root_rt(binding, name)
+
+        self.class.root_by_runtime_id(@runtime.object_id, @js_value)
+        self.class.add_proxy_by_runtime_id(@runtime.object_id, @js_value.value, self)
       end
 
       def [](name)

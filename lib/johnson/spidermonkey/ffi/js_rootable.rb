@@ -9,16 +9,16 @@ module Johnson
         @ptr_to_be_rooted = FFI::MemoryPointer.new(:pointer).write_pointer(value)
         @ptr = value
       end
-      def root_rt(bind = nil, name = 'RubyLandProxy')
-        SpiderMonkey.JS_AddNamedRootRT(@context.runtime, @ptr_to_be_rooted, format_name(bind, name))
+      def root_rt(bind = nil, name = '')
+        SpiderMonkey.JS_AddNamedRootRT(@context.runtime, @ptr_to_be_rooted, format_root_string(bind, name))
       end
 
       def unroot_rt
         SpiderMonkey.JS_RemoveRootRT(@context.runtime, @ptr_to_be_rooted)
       end
 
-      def root(bind = nil, name = "")
-        SpiderMonkey.JS_AddNamedRoot(@context, @ptr_to_be_rooted, format_name(bind, name))
+      def root(bind = nil, name = '')
+        SpiderMonkey.JS_AddNamedRoot(@context, @ptr_to_be_rooted, format_root_string(bind, name))
       end
 
       def unroot
@@ -27,8 +27,8 @@ module Johnson
 
       private
 
-      def format_name(bind, name)
-        format_name = @value.inspect if name.empty?
+      def format_root_string(bind, name)
+        format_name = name.empty? ? @value.inspect : name
         format_binding = bind if bind
         unless format_binding
           format_name

@@ -54,12 +54,8 @@ module Johnson
       end
 
       def destroy
-        contexts = (Thread.current[CONTEXT_MAP_KEY] ||= {})
-        cx = contexts[self.object_id]
-
-        RubyLandProxy.finalize_proxy_in_roots
-
-        SpiderMonkey.JS_DestroyContext(cx)
+        RubyLandProxy.finalize_by_runtime_id(self.object_id)
+        destroy_contexts
         SpiderMonkey.JS_DestroyRuntime(self)
       end
 
@@ -113,6 +109,15 @@ module Johnson
       end
 
       private
+
+      def destroy_contexts
+        iterator = FFI::MemoryPointer.new(:pointer).write_pointer(FFI::Pointer.new(0))
+
+        while !(SpiderMonkey.JS_ContextIterator(self, iterator)).null?
+          SpiderMonkey.JS_DestroyContext(iterator.read_pointer)
+          iterator = FFI::MemoryPointer.new(:pointer).write_pointer(FFI::Pointer.new(0))
+        end
+      end
 
       def compile_and_evaluate(script, filename, linenum)
 
