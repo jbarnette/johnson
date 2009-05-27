@@ -71,10 +71,9 @@ module Johnson
       end
 
       def function?
-        @js_value.root(binding)
-        result = SpiderMonkey.JS_TypeOfValue(@context, @js_value.value) == JSTYPE_FUNCTION ? true : false
-        @js_value.unroot
-        result
+        @js_value.root(binding) do |js_value|
+          result = SpiderMonkey.JS_TypeOfValue(@context, js_value.value) == JSTYPE_FUNCTION ? true : false
+        end
       end
 
       private

@@ -10,15 +10,17 @@ module Johnson
         @ptr = value
         @rooted = false
       end
+
       def root_rt(bind = nil, name = '')
         if add_root_rt(bind, name)
           @rooted = true
+          retval = self
         end
         if block_given?
-          yield self
+          retval = yield self
           unroot
         end
-        self
+        retval
       end
 
       def unroot_rt
@@ -30,12 +32,13 @@ module Johnson
       def root(bind = nil, name = '', &blk)
         if add_root(bind, name)
           @rooted = true
+          retval = self
         end
         if block_given?
-          yield self
+          retval = yield self
           unroot
         end
-        self
+        retval
       end
 
       def unroot
