@@ -52,19 +52,19 @@ module Johnson
         assert(f.function?)
       end
       
-      # def test_function?
-      #   f = @runtime.evaluate("function() {}")
-      #   assert_kind_of(Johnson::SpiderMonkey::RubyLandProxy, f)
-      #   assert(f.function?)
+      def test_function?
+        f = @runtime.evaluate("function() {}")
+        assert_kind_of(Johnson::SpiderMonkey::RubyLandProxy, f)
+        assert(f.function?)
 
-      #   f = @runtime.evaluate("new Object()")
-      #   assert_kind_of(Johnson::SpiderMonkey::RubyLandProxy, f)
-      #   assert(!f.function?)
-      # end
+        f = @runtime.evaluate("new Object()")
+        assert_kind_of(Johnson::SpiderMonkey::RubyLandProxy, f)
+        assert(!f.function?)
+      end
       
-      # def test_calling_non_functions_complains
-      #   assert_raise(RuntimeError) { @runtime.evaluate("new Object()").call }
-      # end
+      def test_calling_non_functions_complains
+        assert_raise(RuntimeError) { @runtime.evaluate("new Object()").call }
+      end
       
       # def test_functions_can_be_called
       #   f = @runtime.evaluate("function() { return 42; }")

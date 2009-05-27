@@ -135,7 +135,7 @@ module Johnson
           
         end
 
-        JSValue.new(context, rval).to_ruby # convert_to_ruby(rval.read_long)
+        JSValue.new(context, rval).to_ruby
       end
 
     end

@@ -17,6 +17,12 @@ puts @rt.evaluate('foo == same_foo')
 
 ## Inject ruby objects in js land
 
-@rt[:foo] = "Hola"
+@rt[:foo] = 'Hola'
 puts @rt.evaluate('foo')
 
+## Use multiple runtimes
+
+@rt_2 = Runtime.new
+@rt_2[:foo] = 'Ola'
+
+puts @rt_2.evaluate('foo')

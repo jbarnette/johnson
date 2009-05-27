@@ -53,7 +53,7 @@ module Johnson
         begin
           eval('__method__', bind)
         rescue NameError
-          warn('WARNING: You must run jruby with --1.9 option in order to use Kernel#__method__')
+          warn 'You should pass --1.9 option to jruby in order to use Kernel#__method__'
           'nomethod'
         end
       end
