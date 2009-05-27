@@ -29,7 +29,7 @@ unless ENV['JOHNSON_FFI']
 else
   require "johnson/spidermonkey/ffi/ffi-spidermonkey"
   require "johnson/spidermonkey/ffi/has_pointer.rb"
-  require "johnson/spidermonkey/ffi/js_rootable.rb"
+  require "johnson/spidermonkey/ffi/js_gc_thing.rb"
   require "johnson/spidermonkey/ffi/value.rb"
   require "johnson/spidermonkey/ffi/global.rb"
   require "johnson/spidermonkey/ffi/runtime"

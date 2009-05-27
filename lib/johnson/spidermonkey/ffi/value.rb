@@ -61,7 +61,7 @@ end
 module Johnson
   module SpiderMonkey
 
-    class JSValue < JSRootable
+    class JSValue < JSGCThing
 
       attr_reader :value, :context
 
@@ -149,7 +149,7 @@ module Johnson
       end
 
       def to_ruby_string
-        js_string = JSRootable.new(@context, SpiderMonkey.JSVAL_TO_STRING(@value))
+        js_string = JSGCThing.new(@context, SpiderMonkey.JSVAL_TO_STRING(@value))
         js_string.root(binding)
         result = SpiderMonkey.JS_GetStringBytes(js_string)
         js_string.unroot
