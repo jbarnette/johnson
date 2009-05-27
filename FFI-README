@@ -1,3 +1,30 @@
+= DESCRIPTION
+
+FFI port of Johnson.
+
+= REQUIREMENTS
+
+* Latest ruby-ffi from kenai repo
+
+$ hg clone https://kenai.com/hg/ruby-ffi~mercurial 
+
+* Latest jruby from kenai repo
+
+$ git clone git://kenai.com/jruby~main jruby
+$ cd jruby
+$ ant
+$ ant jar-complete
+
+* Latest jsapi from mozilla repo
+
+$ hg clone http://hg.mozilla.org/mozilla-central/file/tip mozilla-src
+$ cd mozilla-src/js/src
+$ ./configure  --enable-debug --enable-gczeal
+$ make
+$ [sudo] make install
+
+= USAGE
+
 To work with FFI first do:
 
 $ export JOHNSON_FFI=1
