@@ -29,6 +29,7 @@ unless ENV['JOHNSON_FFI']
 else
   require "johnson/spidermonkey/ffi/ffi-spidermonkey"
   require "johnson/spidermonkey/ffi/has_pointer.rb"
+  require "johnson/spidermonkey/ffi/convert.rb"
   require "johnson/spidermonkey/ffi/js_gc_thing.rb"
   require "johnson/spidermonkey/ffi/value.rb"
   require "johnson/spidermonkey/ffi/native_global.rb"

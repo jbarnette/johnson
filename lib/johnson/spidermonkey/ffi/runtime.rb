@@ -90,7 +90,7 @@ module Johnson
       end
 
       def global
-        JSValue.new(context, SpiderMonkey.OBJECT_TO_JSVAL(@native_global)).to_ruby
+        JSValue.new(self, SpiderMonkey.OBJECT_TO_JSVAL(@native_global)).to_ruby
       end
 
       def evaluate(script, filename = nil, linenum = nil)
@@ -129,7 +129,7 @@ module Johnson
           
         end
 
-        JSValue.new(context, rval).to_ruby
+        JSValue.new(self, rval).to_ruby
       end
 
     end

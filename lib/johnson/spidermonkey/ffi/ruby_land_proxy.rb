@@ -10,20 +10,20 @@ module Johnson
       class << self
         protected :new
 
-        def make(context, value, name = '')
-          if context.runtime.send(:jsids).has_key?(value)
-            context.runtime.send(:jsids)[value]
+        def make(runtime, value, name = '')
+          if runtime.send(:jsids).has_key?(value)
+            runtime.send(:jsids)[value]
           else
-            self.new(context, value, name)
+            self.new(runtime, value, name)
           end
         end
         
       end
 
-      def initialize(context, value, name)
-        @context = context
-        @runtime = context.runtime
-        @js_value = JSValue.new(@context, value)
+      def initialize(runtime, value, name)
+        @runtime = runtime
+        @context = runtime.context
+        @js_value = JSValue.new(@runtime, value)
 
         @js_value.root_rt(binding, name)
         
@@ -69,13 +69,13 @@ module Johnson
           SpiderMonkey.JS_GetProperty(@context, @js_value.to_object, name, retval)
         end
         
-        JSValue.new(@context, retval).to_ruby
+        JSValue.new(@runtime, retval).to_ruby
 
       end
 
       def set(name, value)
 
-        ruby_value = RubyValue.new(@context, value)
+        ruby_value = RubyValue.new(@runtime, value)
 
         case name
           
@@ -95,15 +95,15 @@ module Johnson
           raise "This Johnson::SpiderMonkey::RubyLandProxy isn't a function."
         end
 
-        global = JSValue.new(@context, this)
+        global = JSValue.new(@runtime, this)
         call_js_function_value(global.to_js, @js_value, *args)
 
       end
 
       def call_js_function_value(target, function, *args)
 
-        target_value = JSValue.new(@context, target)
-        function_value = JSValue.new(@context, function)
+        target_value = JSValue.new(@runtime, target)
+        function_value = JSValue.new(@runtime, function)
 
         target_value.root(binding)
         function_value.root(binding)
@@ -113,7 +113,7 @@ module Johnson
         end
         
         js_args = args.map do |arg|
-          arg_value = RubyValue.new(@context, arg).to_js
+          arg_value = RubyValue.new(@runtime, arg).to_js
           arg_value.root(binding)
           arg_value
         end
@@ -127,7 +127,7 @@ module Johnson
         target_value.unroot
         function_value.unroot
 
-        JSValue.new(@context, result).to_js
+        JSValue.new(@runtime, result).to_js
       end
 
     end
