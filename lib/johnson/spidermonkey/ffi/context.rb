@@ -5,7 +5,7 @@ module Johnson
 
       include HasPointer
 
-      attr_reader :runtime, :global
+      attr_reader :runtime
       attr_accessor :pending_js_ex_message, :root_names
 
       def initialize(runtime, options={})
@@ -19,6 +19,10 @@ module Johnson
 
       def exception
         @exception ||= FFI::MemoryPointer.new(:long) 
+      end
+
+      def global
+        @runtime.global
       end
 
       private
@@ -38,10 +42,10 @@ module Johnson
       end
 
       def init_global
-        if @runtime.has_global?
-          @global = @runtime.global
+        if @runtime.has_native_global?
+          @native_global = @runtime.native_global
         else
-          @global = Global.new(self)
+          @native_global = NativeGlobal.new(self)
         end
       end
 
@@ -59,7 +63,7 @@ module Johnson
         object = FFI::MemoryPointer.new(:long)
         object_ptr = FFI::MemoryPointer.new(:pointer)
 
-        SpiderMonkey.JS_GetProperty(self, @global, "Object", object)
+        SpiderMonkey.JS_GetProperty(self, @native_global, "Object", object)
 
         SpiderMonkey.JS_ValueToObject(self, object.read_long , object_ptr)
 

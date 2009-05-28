@@ -14,7 +14,8 @@ module Johnson
 
       CONTEXT_MAP_KEY = :johnson_context_map
 
-      attr_reader :global, :gc_zeal
+      attr_reader :native_global, :gc_zeal
+      attr_reader :roots, :jsids, :rbids
 
       include HasPointer
 
@@ -47,14 +48,21 @@ module Johnson
 
       def initialize
         @ptr = SpiderMonkey.JS_NewRuntime(0x100000)
-        @global = SpiderMonkey.JS_GetGlobalObject(context)
+        @native_global = SpiderMonkey.JS_GetGlobalObject(context)
         @gc_zeal = 0
+
+        @jsids = {}
+        @rbids = {}
+        @roots = []
 
         SpiderMonkey.runtimes << self
       end
 
       def destroy
-        RubyLandProxy.finalize_by_runtime_id(self.object_id)
+        @roots.each { |js_value| js_value.unroot_rt }
+        @roots.clear
+        @jsids.clear
+
         destroy_contexts
         SpiderMonkey.JS_DestroyRuntime(self)
       end
@@ -68,16 +76,20 @@ module Johnson
         contexts[self.object_id] ||= Context.new(self)
       end
 
-      def has_global?
-        not (@global.nil? or global.null?)
+      def has_native_global?
+        not (@native_global.nil? or @native_global.null?)
       end
       
       def [](key)
-        JSValue.new(context, SpiderMonkey.OBJECT_TO_JSVAL(@global)).to_ruby[key]
+        global[key]
       end
       
       def []=(key, value)
-        JSValue.new(context, SpiderMonkey.OBJECT_TO_JSVAL(@global)).to_ruby[key] = value
+        global[key] = value
+      end
+
+      def global
+        JSValue.new(context, SpiderMonkey.OBJECT_TO_JSVAL(@native_global)).to_ruby
       end
 
       def evaluate(script, filename = nil, linenum = nil)
@@ -101,7 +113,7 @@ module Johnson
         linenum  ||= 1
 
         rval = FFI::MemoryPointer.new(:long)
-        ok = SpiderMonkey.JS_EvaluateScript(context, global, script, script.size, filename, linenum, rval)
+        ok = SpiderMonkey.JS_EvaluateScript(context, native_global, script, script.size, filename, linenum, rval)
 
         if ok == JS_FALSE
 

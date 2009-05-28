@@ -12,6 +12,11 @@ module Johnson
           Johnson::SpiderMonkey::Runtime.new
         }
       end
+
+      def test_global_is_a_ruby_proxy
+        assert(RubyLandProxy === @runtime.global)
+      end
+
     end
   end
 end

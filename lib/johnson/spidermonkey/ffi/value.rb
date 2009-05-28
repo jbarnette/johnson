@@ -119,15 +119,15 @@ module Johnson
 
         when SpiderMonkey::JSTYPE_OBJECT, SpiderMonkey::JSTYPE_FUNCTION
 
-          if SpiderMonkey.OBJECT_TO_JSVAL(@context.runtime.global) == @value
+          if SpiderMonkey.OBJECT_TO_JSVAL(@context.runtime.native_global) == @value
             unroot
             return SpiderMonkey::RubyLandProxy.make(@context, @value, 'GlobalProxy')
           end  
 
-          if RubyLandProxy.has_proxy?(@context.runtime, self)
-            unroot
-            return RubyLandProxy.unwrap_js_land_proxy(@context.runtime, self)
-          end
+          # if RubyLandProxy.has_proxy?(@context.runtime, self)
+          #   unroot
+          #   return RubyLandProxy.unwrap_js_land_proxy(@context.runtime, self)
+          # end
           
           unroot
           return SpiderMonkey::RubyLandProxy.make(@context, @value, 'RubyLandProxy')

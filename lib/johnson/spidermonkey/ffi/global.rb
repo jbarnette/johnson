@@ -1,7 +1,7 @@
 module Johnson
   module SpiderMonkey
 
-    class Global
+    class NativeGlobal
       
       include HasPointer
 
