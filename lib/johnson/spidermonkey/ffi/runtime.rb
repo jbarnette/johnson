@@ -16,7 +16,8 @@ module Johnson
 
       attr_reader :native_global, :gc_zeal
       attr_reader :roots, :jsids, :rbids
-
+      private :roots, :jsids, :rbids
+      
       include HasPointer
 
       class << self

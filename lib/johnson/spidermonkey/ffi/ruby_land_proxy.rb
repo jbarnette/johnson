@@ -11,7 +11,11 @@ module Johnson
         protected :new
 
         def make(context, value, name = '')
-          context.runtime.jsids.has_key?(value) ? context.runtime.jsids[value] : self.new(context, value, name)
+          if context.runtime.send(:jsids).has_key?(value)
+            context.runtime.send(:jsids)[value]
+          else
+            self.new(context, value, name)
+          end
         end
         
       end
@@ -23,8 +27,8 @@ module Johnson
 
         @js_value.root_rt(binding, name)
         
-        @runtime.roots << @js_value
-        @runtime.jsids[@js_value.value] = self
+        @runtime.send(:roots) << @js_value
+        @runtime.send(:jsids)[@js_value.value] = self
       end
 
       def [](name)

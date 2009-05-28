@@ -17,6 +17,11 @@ module Johnson
         assert(RubyLandProxy === @runtime.global)
       end
 
+      def test_hashes_are_private
+        assert_raise(NoMethodError) { @runtime.jsids }
+        assert_raise(NoMethodError) { @runtime.rbids }
+        assert_raise(NoMethodError) { @runtime.roots }
+      end
     end
   end
 end
