@@ -1,11 +1,10 @@
 module Johnson
   module SpiderMonkey
     class RubyLandProxy
+      
+      include Convert
 
       attr_reader :js_value
-
-      # @roots = {}
-      # @proxies = {}
 
       class << self
         protected :new
@@ -75,17 +74,18 @@ module Johnson
 
       def set(name, value)
 
-        ruby_value = RubyValue.new(@runtime, value)
+        convert_to_js(value).root do |js_value|
 
-        case name
+          case name
           
-        when Fixnum
-          SpiderMonkey.JS_SetElement(@context, @js_value.to_object, name, ruby_value.to_js)
-        else
-          SpiderMonkey.JS_SetProperty(@context, @js_value.to_object, name, ruby_value.to_js)
-        end
+          when Fixnum
+            SpiderMonkey.JS_SetElement(@context, @js_value.to_object, name, js_value)
+          else
+            SpiderMonkey.JS_SetProperty(@context, @js_value.to_object, name, js_value)
+          end
 
-        value
+          value
+        end
 
       end
 
