@@ -115,15 +115,15 @@ module Johnson
         assert(proxy.respond_to?(:foo))
       end
       
-      # def test_respond_to_always_returns_true_for_assignment
-      #   proxy = @runtime.evaluate("x = {}")
-      #   assert(proxy.respond_to?(:bar=))
-      # end
+      def test_respond_to_always_returns_true_for_assignment
+        proxy = @runtime.evaluate("x = {}")
+        assert(proxy.respond_to?(:bar=))
+      end
       
-      # def test_accessor
-      #   proxy = @runtime.evaluate("x = { foo: 42 }")
-      #   assert_equal(42, proxy.foo)
-      # end
+      def test_accessor
+        proxy = @runtime.evaluate("x = { foo: 42 }")
+        assert_equal(42, proxy.foo)
+      end
       
       # def test_mutator
       #   proxy = @runtime.evaluate("x = {}")

@@ -116,10 +116,10 @@ module Johnson
       end
 
       def format_method(bind)
-        begin
+        unless RUBY_PLATFORM =~ /java/
           eval('__method__', bind)
-        rescue NameError
-          '[cannotresolvemethod]'
+        else
+          RUBY_VERSION =~ /1\.9/ ? eval('__method__', bind) : '[cannotresolvemethod]'
         end
       end
 

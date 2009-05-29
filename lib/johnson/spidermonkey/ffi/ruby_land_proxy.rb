@@ -72,10 +72,71 @@ module Johnson
         js_object.unroot
 
         found.read_int == JS_TRUE ? true : super 
+      end
 
+      def method_missing(sym, *args, &block)
+        args << block if block_given?
+        
+        name = sym.to_s
+        assignment = "=" == name[-1, 1]
+
+        # default behavior if the slot's not there
+
+        return super unless assignment || respond_to?(sym)
+
+        unless function_property?(name)
+          # for arity 0, treat it as a get
+          return self[name] if args.empty?
+
+          # arity 1 and quacking like an assignment, treat it as a set
+          return self[name[0..-2]] = args[0] if assignment && 1 == args.size
+        end        
+        
+        # okay, must really be a function
+        call_function_property(name, *args)
       end
 
       private
+
+      def call_function_property(name, *args)
+
+        @proxy_js_value.root(binding)
+        js_object = @proxy_js_value.to_object.root(binding)
+
+        function = FFI::MemoryPointer.new(:long)
+          
+        SpiderMonkey.JS_GetProperty(@context, js_object, name, function)
+        
+        function_value = JSValue(@runtime, function).root
+
+        funtype = SpiderMonkey.JS_TypeOfValue(@context, function_value.value)
+
+        # FIXME: should raise an error if the property is not a function
+        if (funtype == JSTYPE_FUNCTION)
+          result = call_using(@proxy_js_value, *args)
+        end
+
+        @proxy_js_value.unroot
+        js_object.unroot
+        function_value.unroot
+
+        result
+      end
+
+      def function_property?(name)
+        property = FFI::MemoryPointer.new(:pointer)
+        js_object = @proxy_js_value.to_object.root(binding)
+
+        SpiderMonkey.JS_GetProperty(@context, js_object, name, property)
+        property_value = JSValue.new(@runtime, property).root(binding)
+
+        type = SpiderMonkey.JS_TypeOfValue(@context, property_value.value)
+
+        js_object.unroot
+        property_value.unroot
+       
+        type == SpiderMonkey::JSTYPE_FUNCTION ? true : false
+      end
 
       def get(name)
         @proxy_js_value.root(binding) do |proxy_value|
