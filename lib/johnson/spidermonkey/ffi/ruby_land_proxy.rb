@@ -56,6 +56,25 @@ module Johnson
         end
       end
 
+      def respond_to?(sym)
+        name = sym.to_s
+
+        return true if name.match(/=$/)
+
+        found = FFI::MemoryPointer.new(:pointer)
+
+        @proxy_js_value.root(binding)
+        js_object = @proxy_js_value.to_object.root
+
+        SpiderMonkey.JS_HasProperty(@context, js_object, name, found)
+
+        @proxy_js_value.unroot
+        js_object.unroot
+
+        found.read_int == JS_TRUE ? true : super 
+
+      end
+
       private
 
       def get(name)

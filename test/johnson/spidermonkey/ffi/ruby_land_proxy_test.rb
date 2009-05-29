@@ -89,31 +89,31 @@ module Johnson
         assert_equal(42, f.call)
       end
       
-      # def test_can_be_indexed_by_string
-      #   proxy = @runtime.evaluate("x = { foo: 42 }")
-      #   assert_kind_of(Johnson::SpiderMonkey::RubyLandProxy, proxy)
+      def test_can_be_indexed_by_string
+        proxy = @runtime.evaluate("x = { foo: 42 }")
+        assert_kind_of(Johnson::SpiderMonkey::RubyLandProxy, proxy)
         
-      #   assert_equal(42, proxy["foo"])
+        assert_equal(42, proxy["foo"])
         
-      #   proxy["foo"] = 99
-      #   proxy["bar"] = 42
+        proxy["foo"] = 99
+        proxy["bar"] = 42
         
-      #   assert_js_equal(99, "x.foo")
-      #   assert_equal(99, proxy["foo"])
-      #   assert_equal(42, proxy["bar"])
-      # end
+        assert_js_equal(99, "x.foo")
+        assert_equal(99, proxy["foo"])
+        assert_equal(42, proxy["bar"])
+      end
       
-      # def test_multilevel_indexing_works
-      #   proxy = @runtime.evaluate("x = { foo: { bar: 42 , baz: function() { return 42 } } }")
-      #   assert_equal(42, proxy["foo"]["bar"])
-      #   assert_equal(42, proxy["foo"]["baz"].call)
-      # end
+      def test_multilevel_indexing_works
+        proxy = @runtime.evaluate("x = { foo: { bar: 42 , baz: function() { return 42 } } }")
+        assert_equal(42, proxy["foo"]["bar"])
+        assert_equal(42, proxy["foo"]["baz"].call)
+      end
       
-      # def test_respond_to_works
-      #   proxy = @runtime.evaluate("x = { foo: 42 }")
-      #   assert(!proxy.respond_to?(:bar))
-      #   assert(proxy.respond_to?(:foo))
-      # end
+      def test_respond_to_works
+        proxy = @runtime.evaluate("x = { foo: 42 }")
+        assert(!proxy.respond_to?(:bar))
+        assert(proxy.respond_to?(:foo))
+      end
       
       # def test_respond_to_always_returns_true_for_assignment
       #   proxy = @runtime.evaluate("x = {}")

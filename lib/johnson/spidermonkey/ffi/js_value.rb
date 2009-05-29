@@ -25,7 +25,7 @@ module Johnson
       end
 
       def to_object
-        SpiderMonkey.JSVAL_TO_OBJECT(@value)
+        JSGCThing.new(@runtime, SpiderMonkey.JSVAL_TO_OBJECT(@value))
       end
 
       def to_ruby
