@@ -1,27 +1,6 @@
 module Johnson
   module SpiderMonkey
 
-    class RubyValue
-
-      include Convert
-
-      def initialize(runtime, value)
-        @runtime = runtime
-        @context = runtime.context
-        @value = value
-      end
-
-      def to_js
-        convert_to_js(@value)
-      end
-
-    end
-  end
-end
-
-module Johnson
-  module SpiderMonkey
-
     class JSValue < JSGCThing
 
       include Convert
