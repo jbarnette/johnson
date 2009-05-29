@@ -79,7 +79,7 @@ module Johnson
 
         when Class, Hash, Module, File, Struct, Object, Array
           if value.kind_of?(SpiderMonkey::RubyLandProxy)
-            value.js_value
+            value.proxy_js_value
           else
             SpiderMonkey::JSValue.new(@runtime, SpiderMonkey::JSLandProxy.make(value))
           end

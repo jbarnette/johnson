@@ -124,7 +124,8 @@ module Johnson
           end
 
           if context.has_exception?
-            self.class.raise_js_exception(convert_to_ruby(context.exception.read_long))
+            raise "Some error occoured."
+#            self.class.raise_js_exception(convert_to_ruby(context.exception.read_long))
           end
           
         end

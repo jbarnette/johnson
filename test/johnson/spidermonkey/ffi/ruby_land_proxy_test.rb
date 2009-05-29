@@ -67,15 +67,15 @@ module Johnson
         assert_raise(RuntimeError) { @runtime.evaluate("new Object()").call }
       end
       
-      # def test_functions_can_be_called
-      #   f = @runtime.evaluate("function() { return 42; }")
-      #   assert_equal(42, f.call)
-      # end
+      def test_functions_can_be_called
+        f = @runtime.evaluate("function() { return 42; }")
+        assert_equal(42, f.call)
+      end
       
-      # def test_functions_can_be_called_with_args
-      #   f = @runtime.evaluate("function(x) { return x * 2; }")
-      #   assert_equal(84, f.call(42))
-      # end
+      def test_functions_can_be_called_with_args
+        f = @runtime.evaluate("function(x) { return x * 2; }")
+        assert_equal(84, f.call(42))
+      end
       
       # def test_functions_can_be_used_as_procs
       #   f = @runtime.evaluate("function(x) { return x * 2; }")

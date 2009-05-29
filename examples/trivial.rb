@@ -27,3 +27,8 @@ puts @rt.evaluate('foo')
 @rt_2[:foo] = @rt[:foo]
 
 puts @rt_2.evaluate('foo_2 + foo')
+
+## Call function from RubyLand
+
+f = @rt.evaluate("function(x) { return x*2; }")
+puts "Result of f.call is #{f.call(42)}"
