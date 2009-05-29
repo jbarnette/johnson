@@ -4,7 +4,7 @@ module Johnson
     class JSGCThing
       class << self
         def root_names
-          @root_names ||= []
+          @root_names ||= {}
         end
       end
 
@@ -65,19 +65,31 @@ module Johnson
 
       private
 
+      def add_name(name)
+        self.class.root_names[@ptr_to_be_rooted] = FFI::MemoryPointer.from_string(name)
+      end
+
+      def remove_name
+        self.class.root_names.delete(@ptr_to_be_rooted)
+      end
+
       def add_root(bind, name)
+        add_name(name)
         SpiderMonkey.JS_AddNamedRoot(@context, @ptr_to_be_rooted, format_root_string(bind, name))
       end
 
       def add_root_rt(bind, name)
-        SpiderMonkey.JS_AddNamedRootRT(@context.runtime, @ptr_to_be_rooted, format_root_string(bind, name)) == SpiderMonkey::JS_TRUE
+        add_name(name)
+        SpiderMonkey.JS_AddNamedRootRT(@context.runtime, @ptr_to_be_rooted, format_root_string(bind, name))
       end
 
       def remove_root
+        remove_name
         SpiderMonkey.JS_RemoveRoot(@context, @ptr_to_be_rooted)
       end
 
       def remove_root_rt
+        remove_name
         SpiderMonkey.JS_RemoveRootRT(@context.runtime, @ptr_to_be_rooted)
       end
 
@@ -85,15 +97,13 @@ module Johnson
         format_name = name.empty? ? @value.inspect : name
         format_binding = bind if bind
         unless format_binding
-          self.class.root_names << FFI::MemoryPointer.from_string(format_name)
-          self.class.root_names.last
+          format_name
         else
-          self.class.root_names << FFI::MemoryPointer.from_string(sprintf("%s[%d]:%s: %s", 
-                                                                          format_file(format_binding), 
-                                                                          format_line(format_binding), 
-                                                                          format_method(format_binding), 
-                                                                          format_name))
-          self.class.root_names.last
+          sprintf("%s[%d]:%s: %s", 
+                  format_file(format_binding), 
+                  format_line(format_binding), 
+                  format_method(format_binding), 
+                  format_name)
         end
       end
 
