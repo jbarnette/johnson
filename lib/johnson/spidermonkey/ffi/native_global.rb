@@ -8,7 +8,7 @@ module Johnson
       def initialize(js_context)
         @js_context = js_context
 
-        @global_class = JSClassWithNewResolve.allocate
+        @global_class = SpiderMonkey.JSClass(:new_resolve).allocate
         @global_class.name = 'global'
         @global_class[:flags] = JSCLASS_NEW_RESOLVE | JSCLASS_GLOBAL_FLAGS
         @global_class.addProperty = SpiderMonkey.method(:JS_PropertyStub).to_proc

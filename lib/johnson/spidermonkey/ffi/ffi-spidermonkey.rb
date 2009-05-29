@@ -246,7 +246,7 @@ module Johnson
              :reserveSlots, :JSReserveSlotsOp
              )
 
-      def self.allocate 
+      def self.allocate
         new(SpiderMonkey.calloc(1, self.size))
       end
 
@@ -376,30 +376,52 @@ module Johnson
 
     end
 
-    # FIXME: Hum ... revisit this solution please ...
-
-    class JSClassWithNewResolve < JSClass
-      layout(
-             :name, :pointer,
-             :flags, :uint,
-             :addProperty, :JSPropertyOp,
-             :delProperty, :JSPropertyOp,
-             :getProperty, :JSPropertyOp,
-             :setProperty, :JSPropertyOp,
-             :enumerate, :JSEnumerateOp,
-             :resolve, :JSNewResolveOp,
-             :convert, :JSConvertOp,
-             :finalize, :JSFinalizeOp,
-             :getObjectOps, :JSGetObjectOps,
-             :checkAccess, :JSCheckAccessOp,
-             :call, :JSNative,
-             :construct, :JSNative,
-             :xdrObject, :JSXDRObjectOp,
-             :hasInstance, :JSHasInstanceOp,
-             :mark, :JSMarkOp,
-             :reserveSlots, :JSReserveSlotsOp
-             )
-
+    def self.JSClass(flag)
+      unless flag == :new_resolve
+        JSClass.layout(
+                       :name, :pointer,
+                       :flags, :uint,
+                       :addProperty, :JSPropertyOp,
+                       :delProperty, :JSPropertyOp,
+                       :getProperty, :JSPropertyOp,
+                       :setProperty, :JSPropertyOp,
+                       :enumerate, :JSEnumerateOp,
+                       :resolve, :JSResolveOp,
+                       :convert, :JSConvertOp,
+                       :finalize, :JSFinalizeOp,
+                       :getObjectOps, :JSGetObjectOps,
+                       :checkAccess, :JSCheckAccessOp,
+                       :call, :JSNative,
+                       :construct, :JSNative,
+                       :xdrObject, :JSXDRObjectOp,
+                       :hasInstance, :JSHasInstanceOp,
+                       :mark, :JSMarkOp,
+                       :reserveSlots, :JSReserveSlotsOp
+                       )
+        JSClass
+      else
+        JSClass.layout(
+                       :name, :pointer,
+                       :flags, :uint,
+                       :addProperty, :JSPropertyOp,
+                       :delProperty, :JSPropertyOp,
+                       :getProperty, :JSPropertyOp,
+                       :setProperty, :JSPropertyOp,
+                       :enumerate, :JSEnumerateOp,
+                       :resolve, :JSNewResolveOp,
+                       :convert, :JSConvertOp,
+                       :finalize, :JSFinalizeOp,
+                       :getObjectOps, :JSGetObjectOps,
+                       :checkAccess, :JSCheckAccessOp,
+                       :call, :JSNative,
+                       :construct, :JSNative,
+                       :xdrObject, :JSXDRObjectOp,
+                       :hasInstance, :JSHasInstanceOp,
+                       :mark, :JSMarkOp,
+                       :reserveSlots, :JSReserveSlotsOp
+                       )
+        JSClass
+      end
     end
 
     class JSIdArray < FFI::Struct

@@ -78,7 +78,7 @@ module Johnson
       end
 
       def has_native_global?
-        not (@native_global.nil? or @native_global.null?)
+        false unless defined?(@native_global) && !native_global.null?
       end
       
       def [](key)
