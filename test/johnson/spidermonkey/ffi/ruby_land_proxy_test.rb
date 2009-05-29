@@ -77,17 +77,17 @@ module Johnson
         assert_equal(84, f.call(42))
       end
       
-      # def test_functions_can_be_used_as_procs
-      #   f = @runtime.evaluate("function(x) { return x * 2; }")
-      #   a = [1, 2, 3]
+      def test_functions_can_be_used_as_procs
+        f = @runtime.evaluate("function(x) { return x * 2; }")
+        a = [1, 2, 3]
         
-      #   assert_equal([2, 4, 6], a.collect(&f))
-      # end
+        assert_equal([2, 4, 6], a.collect(&f))
+      end
       
-      # def test_function_proxies_are_called_with_a_global_this
-      #   f = @runtime.evaluate("x = 42; function() { return this.x; }")
-      #   assert_equal(42, f.call)
-      # end
+      def test_function_proxies_are_called_with_a_global_this
+        f = @runtime.evaluate("x = 42; function() { return this.x; }")
+        assert_equal(42, f.call)
+      end
       
       # def test_can_be_indexed_by_string
       #   proxy = @runtime.evaluate("x = { foo: 42 }")

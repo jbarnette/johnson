@@ -59,20 +59,23 @@ module Johnson
       private
 
       def get(name)
+        @proxy_js_value.root(binding) do |proxy_value|
 
-        retval = FFI::MemoryPointer.new(:long)
+          retval = FFI::MemoryPointer.new(:long)
 
-        if name.kind_of?(Fixnum)
-          SpiderMonkey.JS_GetElement(@context, @proxy_js_value.to_object, name, retval)
-        else
-          SpiderMonkey.JS_GetProperty(@context, @proxy_js_value.to_object, name, retval)
+          if name.kind_of?(Fixnum)
+            SpiderMonkey.JS_GetElement(@context, proxy_value.to_object, name, retval)
+          else
+            SpiderMonkey.JS_GetProperty(@context, proxy_value.to_object, name, retval)
+          end
+
+          JSValue.new(@runtime, retval).to_ruby
         end
-        
-        JSValue.new(@runtime, retval).to_ruby
-
       end
 
       def set(name, value)
+
+        @proxy_js_value.root(binding)
 
         convert_to_js(value).root do |js_value|
 
@@ -84,9 +87,10 @@ module Johnson
             SpiderMonkey.JS_SetProperty(@context, @proxy_js_value.to_object, name, js_value)
           end
 
-          value
         end
-        
+
+        @proxy_js_value.unroot
+        value
       end
 
       def native_call(this, *args)

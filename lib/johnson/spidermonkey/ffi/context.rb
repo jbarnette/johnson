@@ -50,40 +50,49 @@ module Johnson
       end
 
       def define_property(js_context, obj, argc, argv, retval)
+
+        raise 'argc must be > 1 in Context#define_property' unless argc > 1
+
         args = argv.get_array_of_int(0, argc)
+
+        name = SpiderMonkey.JS_GetStringBytes(SpiderMonkey.JSVAL_TO_STRING(args[1]))    
+
         flags = argc > 3 ? SpiderMonkey.JSVAL_TO_INT(args[3]) : 0
+
         retval.write_long(JSVAL_VOID)
-        name = SpiderMonkey.JS_GetStringBytes(SpiderMonkey.JS_ValueToString(js_context, args[1]))    
-        js_object = FFI::MemoryPointer.new(:pointer)
-        SpiderMonkey.JS_ValueToObject(js_context, args[0], js_object)
-        SpiderMonkey.JS_DefineProperty(js_context, js_object.read_pointer, name, argc > 2 ? args[2] : JSVAL_VOID, nil, nil, flags)
+
+        SpiderMonkey.JS_DefineProperty(js_context, 
+                                       SpiderMonkey.JSVAL_TO_OBJECT(args[0]), 
+                                       name, argc > 2 ? args[2] : JSVAL_VOID, 
+                                       nil, 
+                                       nil, 
+                                       flags)
+        JS_TRUE
       end
 
       def init_extensions
-        object = FFI::MemoryPointer.new(:long)
-        object_ptr = FFI::MemoryPointer.new(:pointer)
+        object_value = FFI::MemoryPointer.new(:long)
 
-        SpiderMonkey.JS_GetProperty(self, @native_global, "Object", object)
-
-        SpiderMonkey.JS_ValueToObject(self, object.read_long , object_ptr)
+        SpiderMonkey.JS_GetProperty(self, @native_global, "Object", object_value)
+        SpiderMonkey.JS_AddNamedRoot(self, object_value, 'Object')
 
         SpiderMonkey.JS_DefineFunction(self, 
-                                       object_ptr.read_pointer,
+                                       SpiderMonkey.JSVAL_TO_OBJECT(object_value.read_long),
                                        "defineProperty", 
                                        method(:define_property).to_proc, 
                                        4, 
                                        0)
         
         SpiderMonkey.JS_DefineProperty(self, 
-                                       object_ptr.read_pointer, 
+                                       SpiderMonkey.JSVAL_TO_OBJECT(object_value.read_long),
                                        "READ_ONLY",
                                        SpiderMonkey.INT_TO_JSVAL(0x02), 
                                        nil, 
                                        nil, 
                                        JSPROP_READONLY)
         
-        SpiderMonkey.JS_DefineProperty(self, 
-                                       object_ptr.read_pointer, 
+        SpiderMonkey.JS_DefineProperty(self,
+                                       SpiderMonkey.JSVAL_TO_OBJECT(object_value.read_long),
                                        "ITERABLE",
                                        SpiderMonkey.INT_TO_JSVAL(0x01), 
                                        nil, 
@@ -91,13 +100,14 @@ module Johnson
                                        JSPROP_READONLY)
         
         SpiderMonkey.JS_DefineProperty(self, 
-                                       object_ptr.read_pointer, 
+                                       SpiderMonkey.JSVAL_TO_OBJECT(object_value.read_long),
                                        "NON_DELETABLE",
                                        SpiderMonkey.INT_TO_JSVAL(0x04), 
                                        nil, 
                                        nil, 
                                        JSPROP_READONLY)
 
+        SpiderMonkey.JS_RemoveRoot(self, object_value)
       end
 
       def report_error(js_context, message, report)

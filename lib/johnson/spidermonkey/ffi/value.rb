@@ -46,9 +46,7 @@ module Johnson
       end
 
       def to_object
-        js_object = FFI::MemoryPointer.new(:pointer)
-        SpiderMonkey.JS_ValueToObject(@context, @value, js_object)
-        js_object.read_pointer
+        SpiderMonkey.JSVAL_TO_OBJECT(@value)
       end
 
       def to_ruby
