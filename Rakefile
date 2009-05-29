@@ -33,11 +33,15 @@ HOE = Hoe.new "johnson", Johnson::VERSION do |p|
   p.spec_extras      = { :extensions => %w(Rakefile) }
 end
 
-Rake::ExtensionTask.new "spidermonkey", HOE.spec do |ext|
-  ext.lib_dir = "lib/johnson"
+unless ENV['JOHNSON_FFI'] 
+  Rake::ExtensionTask.new "spidermonkey", HOE.spec do |ext|
+    ext.lib_dir = "lib/johnson"
+  end
+  
+  task :test => :compile
+else
+  task :compile
 end
-
-task :test => :compile unless ENV['JOHNSON_FFI']
 
 Dir["lib/tasks/*.rake"].each { |f| load f }
 
