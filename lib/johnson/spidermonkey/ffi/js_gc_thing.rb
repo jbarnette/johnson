@@ -2,6 +2,12 @@ module Johnson
   module SpiderMonkey
 
     class JSGCThing
+      class << self
+        def root_names
+          @root_names ||= []
+        end
+      end
+
       include HasPointer
 
       def initialize(runtime, value)
@@ -79,13 +85,15 @@ module Johnson
         format_name = name.empty? ? @value.inspect : name
         format_binding = bind if bind
         unless format_binding
-          format_name
+          self.class.root_names << FFI::MemoryPointer.from_string(format_name)
+          self.class.root_names.last
         else
-          sprintf("%s[%d]:%s: %s", 
-                  format_file(format_binding), 
-                  format_line(format_binding), 
-                  format_method(format_binding), 
-                  format_name)
+          self.class.root_names << FFI::MemoryPointer.from_string(sprintf("%s[%d]:%s: %s", 
+                                                                          format_file(format_binding), 
+                                                                          format_line(format_binding), 
+                                                                          format_method(format_binding), 
+                                                                          format_name))
+          self.class.root_names.last
         end
       end
 
@@ -101,8 +109,7 @@ module Johnson
         begin
           eval('__method__', bind)
         rescue NameError
-          warn 'WARNING: You should pass --1.9 option to jruby in order to use Kernel#__method__'
-          'nomethod'
+          '[cannotresolvemethod]'
         end
       end
 
