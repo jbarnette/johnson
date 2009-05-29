@@ -59,7 +59,7 @@ module Johnson
       def respond_to?(sym)
         name = sym.to_s
 
-        return true if name.match(/=$/)
+        return true if "=" == name[-1, 1]
 
         found = FFI::MemoryPointer.new(:pointer)
 
@@ -107,7 +107,7 @@ module Johnson
           
         SpiderMonkey.JS_GetProperty(@context, js_object, name, function)
         
-        function_value = JSValue(@runtime, function).root
+        function_value = JSValue(@runtime, function).root(binding)
 
         funtype = SpiderMonkey.JS_TypeOfValue(@context, function_value.value)
 
@@ -124,14 +124,18 @@ module Johnson
       end
 
       def function_property?(name)
-        property = FFI::MemoryPointer.new(:pointer)
+
+        @proxy_js_value.root(binding)
         js_object = @proxy_js_value.to_object.root(binding)
+
+        property = FFI::MemoryPointer.new(:long)
 
         SpiderMonkey.JS_GetProperty(@context, js_object, name, property)
         property_value = JSValue.new(@runtime, property).root(binding)
 
         type = SpiderMonkey.JS_TypeOfValue(@context, property_value.value)
 
+        @proxy_js_value.unroot
         js_object.unroot
         property_value.unroot
        

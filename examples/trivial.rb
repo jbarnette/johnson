@@ -32,3 +32,9 @@ puts @rt_2.evaluate('foo_2 + foo')
 
 f = @rt.evaluate("x = 42; function() { return this.x; }")
 puts "Result of f.call is #{f.call}"
+
+## Call js property from ruby
+
+a = @rt.evaluate('a = { foo: "42" }')
+puts "Call a.foo: #{a.foo}"
+
