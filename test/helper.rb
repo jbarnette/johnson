@@ -22,6 +22,10 @@ module Johnson
       @runtime.delegate.gc_zeal = 2
       # @runtime.delegate.debugger = Johnson::SpiderMonkey::Debugger.new(TestLogger.new)
     end
+
+    def teardown
+      @runtime.delegate.destroy
+    end
     
     def assert_js(expression, options={})
       runtime = options[:runtime] || @runtime

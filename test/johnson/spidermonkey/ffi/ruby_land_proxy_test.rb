@@ -138,15 +138,15 @@ module Johnson
         assert_equal(42, proxy.foo)
       end
       
-      # def test_method_with_one_argument
-      #   proxy = @runtime.evaluate("f = { f: function(x) { return x * 2 } }")
-      #   assert_equal(84, proxy.f(42))
-      # end
+      def test_method_with_one_argument
+        proxy = @runtime.evaluate("f = { f: function(x) { return x * 2 } }")
+        assert_equal(84, proxy.f(42))
+      end
       
-      # def test_method_with_multiple_arguments
-      #   proxy = @runtime.evaluate("x = { add: function(x, y) { return x + y } }")
-      #   assert_equal(42, proxy.add(40, 2))
-      # end
+      def test_method_with_multiple_arguments
+        proxy = @runtime.evaluate("x = { add: function(x, y) { return x + y } }")
+        assert_equal(42, proxy.add(40, 2))
+      end
       
       # def test_supports_each_on_arrays
       #   proxy = @runtime.evaluate("[1, 2, 3]")

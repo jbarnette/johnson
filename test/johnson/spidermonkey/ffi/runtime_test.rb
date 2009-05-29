@@ -6,7 +6,9 @@ module Johnson
       def setup
         @runtime = Johnson::SpiderMonkey::Runtime.new
       end
-      
+      def teardown
+        @runtime.destroy
+      end      
       def test_can_create_more_than_one_without_barfing
         assert_nothing_raised {
           Johnson::SpiderMonkey::Runtime.new
