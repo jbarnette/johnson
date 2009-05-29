@@ -52,7 +52,7 @@ module Johnson
 
       def function?
         @proxy_js_value.root(binding) do |js_value|
-          result = SpiderMonkey.JS_TypeOfValue(@context, js_value.value) == JSTYPE_FUNCTION ? true : false
+          SpiderMonkey.JS_TypeOfValue(@context, js_value.value) == JSTYPE_FUNCTION ? true : false
         end
       end
 
@@ -101,30 +101,27 @@ module Johnson
       def call_function_property(name, *args)
 
         @proxy_js_value.root(binding)
-        js_object = @proxy_js_value.to_object.root(binding)
 
         function = FFI::MemoryPointer.new(:long)
           
-        SpiderMonkey.JS_GetProperty(@context, js_object, name, function)
+        SpiderMonkey.JS_GetProperty(@context, @proxy_js_value.to_object, name, function)
         
-        function_value = JSValue(@runtime, function).root(binding)
+        function_value = JSValue.new(@runtime, function).root(binding)
 
         funtype = SpiderMonkey.JS_TypeOfValue(@context, function_value.value)
 
         # FIXME: should raise an error if the property is not a function
         if (funtype == JSTYPE_FUNCTION)
-          result = call_using(@proxy_js_value, *args)
+          result = call_js_function_value(@proxy_js_value, function_value, *args)
         end
 
         @proxy_js_value.unroot
-        js_object.unroot
         function_value.unroot
 
         result
       end
 
       def function_property?(name)
-
         @proxy_js_value.root(binding)
         js_object = @proxy_js_value.to_object.root(binding)
 
@@ -184,8 +181,7 @@ module Johnson
         end
 
         @proxy_js_value.root do |proxy_value|
-          global = convert_to_js(this)
-          call_js_function_value(global, proxy_value, *args)
+          call_js_function_value(convert_to_js(this), proxy_value, *args)
         end
       end
 

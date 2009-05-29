@@ -133,10 +133,10 @@ module Johnson
        assert_equal(42, proxy.foo)
       end
       
-      # def test_method_with_no_arguments
-      #   proxy = @runtime.evaluate("x = { foo: function() { return 42 } }")
-      #   assert_equal(42, proxy.foo)
-      # end
+      def test_method_with_no_arguments
+        proxy = @runtime.evaluate("x = { foo: function() { return 42 } }")
+        assert_equal(42, proxy.foo)
+      end
       
       # def test_method_with_one_argument
       #   proxy = @runtime.evaluate("f = { f: function(x) { return x * 2 } }")
