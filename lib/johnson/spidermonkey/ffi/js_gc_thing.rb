@@ -4,8 +4,10 @@ module Johnson
     class JSGCThing
       include HasPointer
 
-      def initialize(context, value)
-        @context, @value = context, value
+      def initialize(runtime, value)
+        @runtime = runtime
+        @context = runtime.context
+        @value = value
         @ptr_to_be_rooted = FFI::MemoryPointer.new(:pointer).write_pointer(value)
         @ptr = value
         @rooted = false

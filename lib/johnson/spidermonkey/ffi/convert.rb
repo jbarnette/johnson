@@ -113,7 +113,7 @@ module Johnson
       end
 
       def to_ruby_string(value)
-        js_string = JSGCThing.new(@context, SpiderMonkey.JSVAL_TO_STRING(value))
+        js_string = JSGCThing.new(@runtime, SpiderMonkey.JSVAL_TO_STRING(value))
         js_string.root(binding)
         result = SpiderMonkey.JS_GetStringBytes(js_string)
         js_string.unroot
