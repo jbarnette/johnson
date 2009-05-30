@@ -5,6 +5,7 @@ module Johnson
       include Enumerable, Convert
 
       attr_reader :proxy_js_value
+      alias_method :to_ary, :to_a
 
       class << self
         protected :new
