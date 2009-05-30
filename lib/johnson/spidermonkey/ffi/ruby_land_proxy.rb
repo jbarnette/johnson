@@ -99,27 +99,27 @@ module Johnson
       def each
 
         @proxy_js_value.root(binding)
-        value = @proxy_js_value.to_object.root(binding)
+        js_object = @proxy_js_value.to_object.root(binding)
 
-        if SpiderMonkey.JS_IsArrayObject(@context, value) == JS_TRUE
+        if SpiderMonkey.JS_IsArrayObject(@context, js_object) == JS_TRUE
 
           length = FFI::MemoryPointer.new(:uint)
           
-          SpiderMonkey.JS_GetArrayLength(@context, value, length)
+          SpiderMonkey.JS_GetArrayLength(@context, js_object, length)
 
           length.read_int.times do |i|
             element = FFI::MemoryPointer.new(:long)
-            SpiderMonkey.JS_GetElement(@context, value, i, element)
+            SpiderMonkey.JS_GetElement(@context, js_object, i, element)
 
             @proxy_js_value.unroot
-            value.unroot
+            js_object.unroot
 
             yield JSValue.new(@runtime, element).to_ruby
           end
           
         else
           
-          ids = JSIdArray.new(SpiderMonkey.JS_Enumerate(@context, value))
+          ids = JSIdArray.new(SpiderMonkey.JS_Enumerate(@context, js_object))
           ids_ptr = ids.to_ptr
           property = FFI::MemoryPointer.new(:long)
 
@@ -132,34 +132,35 @@ module Johnson
             js_key_value = JSValue.new(@runtime, js_key).root(binding)
             
             if SpiderMonkey.JSVAL_IS_STRING(js_key.read_long)
-              
-              SpiderMonkey.JS_GetProperty(@context, value,
+
+              SpiderMonkey.JS_GetProperty(@context, js_object,
                                           SpiderMonkey.JS_GetStringBytes(SpiderMonkey.JSVAL_TO_STRING(js_key_value.value)), 
                                           property)
 
             else
 
               SpiderMonkey.JS_GetElement(@context, 
-                                         value,
+                                         js_object,
                                          SpiderMonkey.JSVAL_TO_INT(js_key_value.value), 
                                          property)
             end
 
-          end
-            
-          property_value = JSValue.new(@runtime, property).root(binding)
+            property_value = JSValue.new(@runtime, property).root(binding)
 
-          key = js_key_value.to_ruby
-          value = property_value.to_ruby
-          
-          yield key, value
+            key = js_key_value.to_ruby
+            value = property_value.to_ruby
 
-          js_key_value.unroot
-          property_value.unroot
+            @proxy_js_value.unroot
+            js_object.unroot
+            js_key_value.unroot
+            property_value.unroot
+
+            yield key, value
+
+          end            
+
         end
 
-        @proxy_js_value.unroot
-        value.unroot
       end
 
       private

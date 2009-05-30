@@ -68,6 +68,16 @@ module Johnson
         assert_equal(js_string, js_string.unroot)
       end
 
+      def test_unroot_with_block
+        js_string = JSGCThing.new(@runtime.delegate, SpiderMonkey.JS_NewStringCopyN(@context, "hola", "hola".size))
+        js_string.root(binding)
+        js_string.unroot do |ptr|
+          @called = true
+          SpiderMonkey.JS_RemoveRoot(@context, ptr)
+        end
+        assert(@called)
+      end
+
       def test_pointer_equals
         value_ptr = SpiderMonkey.JS_NewStringCopyN(@context, "hola", "hola".size)
         js_rootable = JSGCThing.new(@runtime.delegate, value_ptr)

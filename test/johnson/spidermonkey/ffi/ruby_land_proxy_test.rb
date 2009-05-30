@@ -156,26 +156,26 @@ module Johnson
         assert_equal([1, 2, 3], values)
       end
       
-      # def test_supports_each_on_things_that_arent_arrays
-      #   proxy = @runtime.evaluate("x = { foo: 'fooval', bar: 'barval' }; x[0] = 42; x")
-      #   values = {}
+      def test_supports_each_on_things_that_arent_arrays
+        proxy = @runtime.evaluate("x = { foo: 'fooval', bar: 'barval' }; x[0] = 42; x")
+        values = {}
         
-      #   proxy.each { |k, v| values[k] = v }
-      #   assert_equal({ 'foo' => 'fooval', 'bar' => 'barval', 0 => 42 }, values)
-      # end
+        proxy.each { |k, v| values[k] = v }
+        assert_equal({ 'foo' => 'fooval', 'bar' => 'barval', 0 => 42 }, values)
+      end
       
-      # def test_each_passes_an_exception
-      #   proxy = @runtime.evaluate("x = { foo: 'fooval', bar: 'barval' }; x[0] = 42; x")
-      #   values = {}
+      def test_each_passes_an_exception
+        proxy = @runtime.evaluate("x = { foo: 'fooval', bar: 'barval' }; x[0] = 42; x")
+        values = {}
         
-      #   assert_raise(RuntimeError) do
-      #     proxy.each do |k, v|
-      #       values[k] = v
-      #       raise "splat" if values.keys.size == 2
-      #     end
-      #   end
-      #   assert_equal({ 'foo' => 'fooval', 'bar' => 'barval' }, values)
-      # end
+        assert_raise(RuntimeError) do
+          proxy.each do |k, v|
+            values[k] = v
+            raise "splat" if values.keys.size == 2
+          end
+        end
+        assert_equal({ 'foo' => 'fooval', 'bar' => 'barval' }, values)
+      end
       
       # def test_is_enumerable
       #   proxy = @runtime.evaluate("[1, 2, 3]")

@@ -199,7 +199,6 @@ module Johnson
 
     attach_function :JS_CallFunctionValue, [ :pointer, :pointer, :long, :uint, :pointer, :pointer ], :int
     attach_function :JS_CallFunctionName, [ :pointer, :pointer, :string, :uint, :pointer, :pointer ], :int
-    # attach_function :JS_ArgvCallee, [ :pointer ], :long
 
     # Array
     

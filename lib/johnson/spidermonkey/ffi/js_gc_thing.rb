@@ -31,12 +31,6 @@ module Johnson
         retval
       end
 
-      def unroot_rt
-        remove_root_rt
-        @rooted = false
-        self
-      end
-
       def root(bind = nil, name = '', &blk)
         if add_root(bind, name)
           @rooted = true
@@ -49,8 +43,22 @@ module Johnson
         retval
       end
 
-      def unroot
-        remove_root
+      def unroot(&blk)
+        unless block_given?
+          remove_root
+        else
+          blk.call(@ptr_to_be_rooted)
+        end
+        @rooted = false
+        self
+      end
+
+      def unroot_rt
+        unless block_given?
+          remove_root_rt
+        else
+          blk.call(@ptr_to_be_rooted)
+        end
         @rooted = false
         self
       end

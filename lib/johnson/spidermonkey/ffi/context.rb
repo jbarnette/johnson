@@ -71,7 +71,9 @@ module Johnson
       end
 
       def init_extensions
+
         object_value = FFI::MemoryPointer.new(:long)
+        @define_property_cb = method(:define_property).to_proc
 
         SpiderMonkey.JS_GetProperty(self, @native_global, "Object", object_value)
         SpiderMonkey.JS_AddNamedRoot(self, object_value, 'Object')
@@ -79,7 +81,7 @@ module Johnson
         SpiderMonkey.JS_DefineFunction(self, 
                                        SpiderMonkey.JSVAL_TO_OBJECT(object_value.read_long),
                                        "defineProperty", 
-                                       method(:define_property).to_proc, 
+                                       @define_property_cb, 
                                        4, 
                                        0)
         

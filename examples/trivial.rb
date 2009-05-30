@@ -38,3 +38,9 @@ puts "Result of f.call is #{f.call}"
 a = @rt.evaluate('a = { foo: "42" }')
 puts "Call a.foo: #{a.foo}"
 
+## JS arrays and hashes are enumerable on the ruby side.
+
+array = @rt.evaluate('[1, 2, 3]')
+array.each { |elem| puts "Element #{elem}" }
+array = @rt.evaluate('x= {foo: 1, bar: 2}; x;')
+array.each { |k, v| puts "#{k}=>#{v}" }
