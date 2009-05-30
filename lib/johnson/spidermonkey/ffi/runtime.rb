@@ -110,11 +110,24 @@ module Johnson
 
       def compile_and_evaluate(script, filename, linenum)
 
-        filename ||= 'none'
-        linenum  ||= 1
+        unless filename
+          @current_filename = FFI::MemoryPointer.from_string('none')
+        else
+          @current_filename = FFI::MemoryPointer.from_string(filename)
+        end
 
-        rval = FFI::MemoryPointer.new(:long)
-        ok = SpiderMonkey.JS_EvaluateScript(context, native_global, script, script.size, filename, linenum, rval)
+        @linenum = linenum || 1
+
+        @current_script = FFI::MemoryPointer.from_string(script)
+        @current_script_size = script.size
+        @retval = FFI::MemoryPointer.new(:long)
+
+        ok = SpiderMonkey.JS_EvaluateScript(context,
+                                            native_global, 
+                                            @current_script, 
+                                            @current_script_size,
+                                            @current_filename,
+                                            @linenum, @retval)
 
         if ok == JS_FALSE
 
@@ -130,7 +143,7 @@ module Johnson
           
         end
 
-        JSValue.new(self, rval).to_ruby
+        JSValue.new(self, @retval).to_ruby
       end
 
     end

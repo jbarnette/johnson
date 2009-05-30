@@ -148,13 +148,13 @@ module Johnson
         assert_equal(42, proxy.add(40, 2))
       end
       
-      # def test_supports_each_on_arrays
-      #   proxy = @runtime.evaluate("[1, 2, 3]")
-      #   values = []
+      def test_supports_each_on_arrays
+        proxy = @runtime.evaluate("[1, 2, 3]")
+        values = []
         
-      #   proxy.each { |n| values << n }
-      #   assert_equal([1, 2, 3], values)
-      # end
+        proxy.each { |n| values << n }
+        assert_equal([1, 2, 3], values)
+      end
       
       # def test_supports_each_on_things_that_arent_arrays
       #   proxy = @runtime.evaluate("x = { foo: 'fooval', bar: 'barval' }; x[0] = 42; x")

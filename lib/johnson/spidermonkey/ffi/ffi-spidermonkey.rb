@@ -136,7 +136,7 @@ module Johnson
 
     attach_function :JS_CompileScript, [ :pointer, :pointer, :string, :uint, :string, :uint ], :pointer
     attach_function :JS_ExecuteScript, [ :pointer, :pointer, :pointer, :pointer ], :int
-    attach_function :JS_EvaluateScript, [ :pointer, :pointer, :string, :uint, :string, :uint, :pointer ], :int
+    attach_function :JS_EvaluateScript, [ :pointer, :pointer, :pointer, :uint, :pointer, :uint, :pointer ], :int
 
     # Standard classes
 
