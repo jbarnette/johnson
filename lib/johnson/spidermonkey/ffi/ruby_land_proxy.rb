@@ -96,6 +96,10 @@ module Johnson
         call_function_property(name, *args)
       end
 
+      def size
+        length
+      end
+
       def each
 
         @proxy_js_value.root(binding)
@@ -159,6 +163,34 @@ module Johnson
 
           end            
 
+          SpiderMonkey.JS_DestroyIdArray(@context, ids)
+
+        end
+
+      end
+
+      def length
+        @proxy_js_value.root(binding)
+        js_object = @proxy_js_value.to_object.root(binding)
+
+        length = FFI::MemoryPointer.new(:uint)
+
+        if SpiderMonkey.JS_IsArrayObject(@context, js_object) == JS_TRUE
+          SpiderMonkey.JS_GetArrayLength(@context, js_object, length)
+
+          @proxy_js_value.unroot
+          js_object.unroot
+
+          return length.read_int
+        else
+          ids = JSIdArray.new(SpiderMonkey.JS_Enumerate(@context, js_object))
+          length = ids[:length]
+          SpiderMonkey.JS_DestroyIdArray(@context, ids)
+
+          @proxy_js_value.unroot
+          js_object.unroot
+
+          return length
         end
 
       end
