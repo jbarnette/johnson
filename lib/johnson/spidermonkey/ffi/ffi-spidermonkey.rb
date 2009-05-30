@@ -38,6 +38,11 @@ module Johnson
     attach_function :JS_MaybeGC, [ :pointer ], :void
     attach_function :JS_GC, [ :pointer ], :void
 
+    # Data
+
+    attach_function :JS_SetPrivate, [ :pointer, :pointer, :pointer ], :int
+    attach_function :JS_GetInstancePrivate, [ :pointer, :pointer, :pointer, :pointer ], :pointer
+
     # callback(:JSBranchCallback, [ :pointer, :pointer ], :int)
     # attach_function :JS_SetBranchCallback, [ :pointer, :JSBranchCallback ], :JSBranchCallback
 
@@ -222,6 +227,10 @@ module Johnson
     # Version
 
     attach_function :JS_GetImplementationVersion, [  ], :string
+
+    # Class
+
+    attach_function :JS_GetClass, [ :pointer, :pointer ], :pointer
 
     class JSClass < FFI::ManagedStruct
       layout(

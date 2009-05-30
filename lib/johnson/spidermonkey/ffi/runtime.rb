@@ -22,10 +22,6 @@ module Johnson
 
       class << self
         
-        def finalize(id)
-          SpiderMonkey.runtimes[id]
-        end
-
         def raise_js_exception(jsex)
 
           raise jsex if Exception === jsex
@@ -55,6 +51,8 @@ module Johnson
         @jsids = {}
         @rbids = {}
         @roots = []
+
+        self["Ruby"] = Object
 
         SpiderMonkey.runtimes << self
       end

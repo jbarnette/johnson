@@ -81,7 +81,7 @@ module Johnson
           if value.kind_of?(SpiderMonkey::RubyLandProxy)
             value.proxy_js_value
           else
-            SpiderMonkey::JSValue.new(@runtime, SpiderMonkey::JSLandProxy.make(value))
+            SpiderMonkey::JSLandProxy.make(@runtime, value)
           end
         else
           raise 'Unknown ruby type in switch'

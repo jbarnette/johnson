@@ -178,19 +178,15 @@ module Johnson
 
         if SpiderMonkey.JS_IsArrayObject(@context, js_object) == JS_TRUE
           SpiderMonkey.JS_GetArrayLength(@context, js_object, length)
-
           @proxy_js_value.unroot
           js_object.unroot
-
-          return length.read_int
+          return length.read_int          
         else
           ids = JSIdArray.new(SpiderMonkey.JS_Enumerate(@context, js_object))
           length = ids[:length]
           SpiderMonkey.JS_DestroyIdArray(@context, ids)
-
           @proxy_js_value.unroot
           js_object.unroot
-
           return length
         end
 

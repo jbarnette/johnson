@@ -1,69 +1,69 @@
-# require File.expand_path(File.join(File.dirname(__FILE__), "/../../../helper"))
+require File.expand_path(File.join(File.dirname(__FILE__), "/../../../helper"))
 
-# module Johnson
-#   module SpiderMonkey
-#     class JSLandProxyTest < Johnson::TestCase
-#       module AModule
-#       end
+module Johnson
+  module SpiderMonkey
+    class JSLandProxyTest < Johnson::TestCase
+      module AModule
+      end
       
-#       class AClass
-#         attr_reader :args
+      class AClass
+        attr_reader :args
         
-#         def initialize(*args)
-#           @args = args
-#         end
-#       end
+        def initialize(*args)
+          @args = args
+        end
+      end
       
-#       class Foo
-#         class Inner
-#         end
+      class Foo
+        class Inner
+        end
         
-#         def self.bar; 10; end
+        def self.bar; 10; end
 
-#         attr_accessor :bar
+        attr_accessor :bar
         
-#         def initialize
-#           @bar = 10
-#         end
+        def initialize
+          @bar = 10
+        end
         
-#         def x2(x)
-#           x * 2
-#         end
+        def x2(x)
+          x * 2
+        end
         
-#         def add(*args)
-#           args.inject { |m,n| m += n }
-#         end
+        def add(*args)
+          args.inject { |m,n| m += n }
+        end
         
-#         def xform(arg)
-#           yield(arg)          
-#         end
-#       end
+        def xform(arg)
+          yield(arg)          
+        end
+      end
       
-#       class Indexable
-#         def initialize
-#           @store = {}
-#         end
+      class Indexable
+        def initialize
+          @store = {}
+        end
         
-#         def [](key)
-#           @store[key]
-#         end
+        def [](key)
+          @store[key]
+        end
         
-#         def []=(key, value)
-#           @store[key] = value
-#         end
+        def []=(key, value)
+          @store[key] = value
+        end
         
-#         def key?(key)
-#           @store.key?(key)
-#         end
-#       end
+        def key?(key)
+          @store.key?(key)
+        end
+      end
 
-#       def setup
-#         @runtime = Johnson::Runtime.new(Johnson::SpiderMonkey::Runtime)
-#       end
+      def setup
+        @runtime = Johnson::Runtime.new(Johnson::SpiderMonkey::Runtime)
+      end
 
-#       def test_find_constants
-#         assert_js_equal($LOAD_PATH, "Ruby['$LOAD_PATH']")
-#       end
+      def test_find_constants
+        assert_js_equal($LOAD_PATH, "Ruby['$LOAD_PATH']")
+      end
 
 #       def test_proxies_get_reused
 #         @runtime["foo"] = @runtime["bar"] = Foo.new
@@ -231,6 +231,6 @@
 #       def test_raises_exception_to_ruby
 #         assert_raise(Johnson::Error) { @runtime.evaluate("undefinedValue();") }
 #       end
-#     end
-#   end
-# end
+    end
+  end
+end

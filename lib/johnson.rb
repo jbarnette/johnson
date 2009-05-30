@@ -33,6 +33,7 @@ else
   require "johnson/spidermonkey/ffi/js_gc_thing.rb"
   require "johnson/spidermonkey/ffi/js_value.rb"
   require "johnson/spidermonkey/ffi/native_global.rb"
+  require "johnson/spidermonkey/ffi/js_land_proxy"
   require "johnson/spidermonkey/ffi/runtime"
   require "johnson/spidermonkey/ffi/context"
   require "johnson/spidermonkey/ffi/ruby_land_proxy"
