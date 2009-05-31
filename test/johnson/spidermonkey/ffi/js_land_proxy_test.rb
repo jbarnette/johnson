@@ -105,25 +105,25 @@ module Johnson
         assert_equal(4, func.call_using(foo, 2))
       end
       
-#       def test_proxies_roundtrip
-#         @runtime["foo"] = foo = Foo.new
-#         assert_same(foo, @runtime.evaluate("foo"))
-#       end
+      def test_proxies_roundtrip
+        @runtime["foo"] = foo = Foo.new
+        assert_same(foo, @runtime.evaluate("foo"))
+      end
       
-#       def test_proxies_classes
-#         @runtime["Foo"] = Foo
-#         assert_same(Foo, @runtime.evaluate("Foo"))
-#       end
+      def test_proxies_classes
+        @runtime["Foo"] = Foo
+        assert_same(Foo, @runtime.evaluate("Foo"))
+      end
       
-#       def test_proxies_modules
-#         @runtime["AModule"] = AModule
-#         assert_same(AModule, @runtime.evaluate("AModule"))
-#       end
+      def test_proxies_modules
+        @runtime["AModule"] = AModule
+        assert_same(AModule, @runtime.evaluate("AModule"))
+      end
       
-#       def test_proxies_hashes
-#         @runtime["beatles"] = { "george" => "guitar" }
-#         assert_equal("guitar", @runtime.evaluate("beatles['george']"))
-#       end
+      def test_proxies_hashes
+        @runtime["beatles"] = { "george" => "guitar" }
+        assert_equal("guitar", @runtime.evaluate("beatles['george']"))
+      end
       
 #       def test_getter_calls_0_arity_method
 #         @runtime["foo"] = Foo.new

@@ -28,18 +28,19 @@ module Johnson
             js_object.root(binding)
             js_value = JSValue.new(runtime, SpiderMonkey.OBJECT_TO_JSVAL(js_object.to_ptr))
 
-            @method_missing = method(:method_missing).to_proc
+            @js_method_missing = method(:js_method_missing).to_proc
             @toArray = method(:to_array).to_proc
             @toString = method(:to_string).to_proc
 
-            SpiderMonkey.JS_DefineFunction(context, js_object, "__noSuchMethod__", @method_missing, 2, 0)
+            SpiderMonkey.JS_DefineFunction(context, js_object, "__noSuchMethod__", @js_method_missing, 2, 0)
             SpiderMonkey.JS_DefineFunction(context, js_object, "toArray", @toArray, 0, 0)
             SpiderMonkey.JS_DefineFunction(context, js_object, "toString", @toString, 0, 0)
 
-            SpiderMonkey.JS_SetPrivate(context, js_object, FFI::MemoryPointer.new(:int).write_int(value.object_id))
-
             runtime.send(:rbids)[value.object_id] = js_value.value
-            runtime.add_gcthing(value)
+            private_data = FFI::MemoryPointer.new(:long).write_long(value.object_id)
+            runtime.add_gcthing(value.object_id, [value, private_data])
+
+            SpiderMonkey.JS_SetPrivate(context, js_object, private_data)
 
             js_object.unroot
             js_value
@@ -123,7 +124,7 @@ module Johnson
         end
 
         def get_ruby_object(context, js_object)
-          ruby_id = SpiderMonkey.JS_GetInstancePrivate(context, js_object, SpiderMonkey.JS_GetClass(js_object), nil).read_int
+          ruby_id = SpiderMonkey.JS_GetInstancePrivate(context, js_object, SpiderMonkey.JS_GetClass(js_object), nil).read_long
           ObjectSpace._id2ref(ruby_id)
         end
 
@@ -169,7 +170,7 @@ module Johnson
 
             elsif ruby_object.respond_to?(:key?) && ruby_object.respond_to?(:[])
               if ruby_object.key?(name)
-                retval.write_long(Convert.to_js(runtime, ruby_object[name]).read_long)
+                retval.write_long(Convert.to_js(runtime, ruby_object[name]).value)
               end
             end
           end
@@ -226,7 +227,11 @@ module Johnson
 
         def finalize(js_context, obj)
           runtime = SpiderMonkey.runtimes[SpiderMonkey.JS_GetRuntime(js_context).address]
+          ruby_object = get_ruby_object(js_context, obj)
+
           runtime.send(:rbids).delete(object_id)
+          runtime.remove_gcthing(ruby_object.object_id)
+
           JS_TRUE
         end
 
@@ -240,7 +245,7 @@ module Johnson
           self_id = SpiderMonkey.JS_GetInstancePrivate(js_context, 
                                                        SpiderMonkey.JSVAL_TO_OBJECT(SpiderMonkey.JS_ARGV_CALLEE(argv)), 
                                                        JSLandCallableProxyClass(), nil).read_int
-          self_value = id2ref(self_id)
+          self_value = ObjectSpace._id2ref(self_id)
 
           args = argv.read_array_of_int(argc).collect do |js_value|
             JSValue.new(runtime, js_value).to_ruby
@@ -252,26 +257,19 @@ module Johnson
         end
 
         def resolve(js_context, obj, id, flags, objp)
-
-          # context.root do |r|
-
-          #   r.jroot { id }
-
-          #   name = SpiderMonkey.JS_GetStringBytes(SpiderMonkey.JS_ValueToString(js_context, id))
-
-          #   if js_respond_to?(js_context, obj, name)
-          #     r.jcheck do 
-          #       SpiderMonkey.JS_DefineProperty(js_context, obj, name, JSVAL_VOID, method(:get_and_destroy_resolved_property).to_proc, 
-          #                                      method(:set).to_proc, JSPROP_ENUMERATE)
-          #     end
-          #   end
           
-          #   objp.write_pointer(obj)
-          
-          #   JS_TRUE
+          runtime = get_runtime(js_context)
 
-          # end
-          JS_TRUE
+          JSValue.new(runtime, id).root(binding) do |id_value|
+            name = SpiderMonkey.JS_GetStringBytes(SpiderMonkey.JSVAL_TO_STRING(id_value.value))
+            if js_respond_to?(js_context, obj, name)
+              SpiderMonkey.JS_DefineProperty(js_context, obj, name, JSVAL_VOID, method(:get_and_destroy_resolved_property).to_proc, 
+                                             method(:set).to_proc, JSPROP_ENUMERATE)
+            end
+            objp.write_pointer(obj)
+            JS_TRUE
+          end
+
         end
 
         def to_array
@@ -280,7 +278,54 @@ module Johnson
         def to_string
         end
         
-        def js_method_missing
+        def js_method_missing(js_context, obj, argc, argv, retval)
+
+          ruby_object = get_ruby_object(js_context, obj)
+
+          args = argv.read_array_of_int(argc)
+          args.collect! do |js_value|
+            JSValue.new(runtime, js_value).to_ruby
+          end
+          method_name = args[0]
+          params = args[1].to_a
+          send_with_possible_block(ruby_object, method_name, params)
+          JS_TRUE
+        end
+
+        def js_respond_to?(js_context, obj, name)
+          ruby_object = get_ruby_object(js_context, obj)
+
+          autovivified?(ruby_object, name) || \
+          constant?(ruby_object, name)     || \
+          global?(name)                    || \
+          attribute?(ruby_object, name)    || \
+          method?(ruby_object, name)       || \
+          has_key?(ruby_object, name)
+        end
+
+        def get_and_destroy_resolved_property(js_context, obj, id, retval)
+          JSValue.new(get_runtime(js_context), id).root(binding) do |id_value|
+            name = SpiderMonkey.JS_GetStringBytes(SpiderMonkey.JSVAL_TO_STRING(id_value.value))
+            SpiderMonkey.JS_DeleteProperty(js_context, obj, name)
+            get(js_context, obj, id, retval)
+            JS_TRUE
+          end
+        end
+
+        def global?(name)
+          name.match(/^\$/) && global_variables.include?(name)
+        end
+
+        def constant?(target, name)
+          target.kind_of?(Class) && target.constants.include?(name)
+        end
+
+        def method?(target, name)
+          target.respond_to?(name.to_sym)          
+        end
+        
+        def has_key?(target, name)
+          target.respond_to?(:key?) or target.respond_to?(:[])
         end
 
         def send_with_possible_block(target, symbol, args)
@@ -307,11 +352,7 @@ module Johnson
         def call_proc_by_oid(oid, *args)
           id2ref(oid).call(*args)
         end
-        
-        def id2ref(oid)
-          ObjectSpace._id2ref(oid)
-        end
-        
+                
         def autovivified(target, attribute)
           target.send(:__johnson_js_properties)[attribute]
         end

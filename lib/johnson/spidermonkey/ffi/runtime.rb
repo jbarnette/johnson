@@ -97,13 +97,13 @@ module Johnson
         compile_and_evaluate(script, filename, linenum)
       end
 
-      def add_gcthing(thing)
-        @gcthings[thing.object_id] = thing
+      def add_gcthing(id, thing)
+        @gcthings[id] = thing
       end
       
       # called from js_land_proxy.c:finalize
-      def remove_gcthing(object_id)
-        @gcthings.delete(object_id) if defined? @gcthings
+      def remove_gcthing(id)
+        @gcthings.delete(id) if defined? @gcthings
       end
 
       private
