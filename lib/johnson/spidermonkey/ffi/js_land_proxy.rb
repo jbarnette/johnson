@@ -233,7 +233,22 @@ module Johnson
         def construct
         end
 
-        def call
+        def call(js_context, obj, argc, argv, retval)
+
+          runtime = get_runtime(js_context)
+
+          self_id = SpiderMonkey.JS_GetInstancePrivate(js_context, 
+                                                       SpiderMonkey.JSVAL_TO_OBJECT(SpiderMonkey.JS_ARGV_CALLEE(argv)), 
+                                                       JSLandCallableProxyClass(), nil).read_int
+          self_value = id2ref(self_id)
+
+          args = argv.read_array_of_int(argc).collect do |js_value|
+            JSValue.new(runtime, js_value).to_ruby
+          end
+          
+          retval.write_long(Convert.to_js(runtime, send_with_possible_block(self_value, :call, args)).value)
+
+          JS_TRUE
         end
 
         def resolve(js_context, obj, id, flags, objp)

@@ -525,6 +525,9 @@ module Johnson
       def JSCLASS_HAS_RESERVED_SLOTS(n)   
         (((n) & JSCLASS_RESERVED_SLOTS_MASK) << JSCLASS_RESERVED_SLOTS_SHIFT)
       end
+      def JS_ARGV_CALLEE(argv)
+        FFI::Pointer.new(argv.address - 2 * 4).read_long
+      end
     end
 
   end

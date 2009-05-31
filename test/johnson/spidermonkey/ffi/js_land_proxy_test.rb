@@ -91,19 +91,19 @@ module Johnson
         assert !Foo.new.respond_to?(:johnson)
       end
 
-#       def test_assign_function_as_attribute_with_this
-#         foo = @runtime["foo"] = Foo.new
-#         @runtime.evaluate("foo.ex_squared = function(x) { return this.x2(x); }")
-#         assert_equal(4, foo.ex_squared(2))
-#         @runtime.evaluate("foo.ex_squared = 20;")
-#         assert_equal(20, foo.ex_squared)
-#       end
+      def test_assign_function_as_attribute_with_this
+        foo = @runtime["foo"] = Foo.new
+        @runtime.evaluate("foo.ex_squared = function(x) { return this.x2(x); }")
+        assert_equal(4, foo.ex_squared(2))
+        @runtime.evaluate("foo.ex_squared = 20;")
+        assert_equal(20, foo.ex_squared)
+      end
 
-#       def test_use_ruby_global_object
-#         func = @runtime.evaluate("function(x) { return this.x2(x); }")
-#         foo  = Foo.new
-#         assert_equal(4, func.call_using(foo, 2))
-#       end
+      def test_use_ruby_global_object
+        func = @runtime.evaluate("function(x) { return this.x2(x); }")
+        foo  = Foo.new
+        assert_equal(4, func.call_using(foo, 2))
+      end
       
 #       def test_proxies_roundtrip
 #         @runtime["foo"] = foo = Foo.new
