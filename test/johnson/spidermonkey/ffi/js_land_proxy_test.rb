@@ -125,28 +125,28 @@ module Johnson
         assert_equal("guitar", @runtime.evaluate("beatles['george']"))
       end
       
-#       def test_getter_calls_0_arity_method
-#         @runtime["foo"] = Foo.new
-#         assert_js_equal(10, "foo.bar")
-#       end
+      def test_getter_calls_0_arity_method
+        @runtime["foo"] = Foo.new
+        assert_js_equal(10, "foo.bar")
+      end
       
-#       def test_getter_calls_indexer
-#         @runtime["foo"] = indexable = Indexable.new
-#         indexable["bar"] = 10
+      def test_getter_calls_indexer
+        @runtime["foo"] = indexable = Indexable.new
+        indexable["bar"] = 10
         
-#         assert_js_equal(10, "foo.bar")
-#       end
+        assert_js_equal(10, "foo.bar")
+      end
       
-#       def test_getter_returns_nil_for_unknown_properties
-#         @runtime["foo"] = Foo.new
-#         assert_js_equal(nil, "foo.quux")
-#       end
+      def test_getter_returns_nil_for_unknown_properties
+        @runtime["foo"] = Foo.new
+        assert_js_equal(nil, "foo.quux")
+      end
 
-#       def test_setter_calls_key=
-#         @runtime["foo"] = foo = Foo.new
-#         assert_js_equal(42, "foo.bar = 42")
-#         assert_equal(42, foo.bar)
-#       end
+      def test_setter_calls_key=
+        @runtime["foo"] = foo = Foo.new
+        assert_js_equal(42, "foo.bar = 42")
+        assert_equal(42, foo.bar)
+      end
       
 #       def test_setter_calls_indexer
 #         @runtime["foo"] = indexable = Indexable.new

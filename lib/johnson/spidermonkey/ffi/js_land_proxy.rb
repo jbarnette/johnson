@@ -163,7 +163,7 @@ module Johnson
               retval.write_long(Convert.to_js(runtime, eval(name)).value)
 
             elsif attribute?(ruby_object, name)
-              retval.write_long(convert_to_js(ruby_object.send(name.to_sym)).value)
+              retval.write_long(Convert.to_js(runtime, ruby_object.send(name.to_sym)).value)
 
             elsif ruby_object.respond_to?(name.to_sym)
               retval.write_long(Convert.to_js(runtime, ruby_object.method(name.to_sym)).value)
@@ -209,10 +209,18 @@ module Johnson
           if settable
             setter_method = ruby_object.method(setter)
             setter_arity = setter_method.arity
-            if setter_arity == 1
-              # FIXME: why not use call_ruby_from_js?
+
+            # FIXME: Accessors arity in JRuby is -1 instead of 1. The
+            # problem was submitted to the author in the meanwhile we
+            # fix the issue with a conditional branch.
+            unless RUBY_PLATFORM =~ /java/
+              if setter_arity == 1
+                ruby_object.send(setter, ruby_value)
+              end
+            else
               ruby_object.send(setter, ruby_value)
             end
+
           elsif indexable
             ruby_object.send(:[]=, name, Convert.to_ruby(runtime, vp_value))
           else
@@ -280,6 +288,7 @@ module Johnson
         
         def js_method_missing(js_context, obj, argc, argv, retval)
 
+          runtime = get_runtime(js_context)
           ruby_object = get_ruby_object(js_context, obj)
 
           args = argv.read_array_of_int(argc)
