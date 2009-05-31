@@ -70,15 +70,15 @@ module Johnson
         assert_js_equal(true, "foo === bar")
       end
 
-#       def test_attributes_get_added_to_ruby
-#         foo = @runtime["foo"] = Foo.new
-#         assert !foo.respond_to?(:johnson)
-#         @runtime.evaluate("foo.johnson = 'explode';")
-#         assert foo.respond_to?(:johnson)
-#         assert_equal('explode', foo.johnson)
-#         assert_js_equal('explode', 'foo.johnson')
-#         assert !Foo.new.respond_to?(:johnson)
-#       end
+      def test_attributes_get_added_to_ruby
+        foo = @runtime["foo"] = Foo.new
+        assert !foo.respond_to?(:johnson)
+        @runtime.evaluate("foo.johnson = 'explode';")
+        assert foo.respond_to?(:johnson)
+        assert_equal('explode', foo.johnson)
+        assert_js_equal('explode', 'foo.johnson')
+        assert !Foo.new.respond_to?(:johnson)
+      end
 
 #       def test_assign_function_as_attribute
 #         foo = @runtime["foo"] = Foo.new

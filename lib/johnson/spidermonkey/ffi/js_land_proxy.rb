@@ -143,7 +143,7 @@ module Johnson
             if SpiderMonkey.JSVAL_IS_INT(id.value)
               idx = name.to_i
               if ruby_object.respond_to?(:[])
-                retval.write_long(Convert.to_js(runtime, ruby_object[idx]).read_long)
+                retval.write_long(Convert.to_js(runtime, ruby_object[idx]).value)
                 id.unroot
                 return JS_TRUE
               end
@@ -152,21 +152,20 @@ module Johnson
             if name == '__iterator__'
               evaluate_js_property_expression("Johnson.Generator.create", retval)
               
-              # elsif autovivified?(ruby, name)
-              #   retval.write_long(convert_to_js(autovivified(ruby, name)).read_long)
+            elsif autovivified?(ruby_object, name)
+              retval.write_long(Convert.to_js(runtime, autovivified(ruby_object, name)).value)
 
             elsif ruby_object.kind_of?(Class) && ruby_object.constants.include?(name)
-              retval.write_long(Convert.to_js(runtime, ruby_object.const_get(name)).read_long)
+              retval.write_long(Convert.to_js(runtime, ruby_object.const_get(name)).value)
 
             elsif name.match(/^\$/) && global_variables.include?(name)
               retval.write_long(Convert.to_js(runtime, eval(name)).value)
 
-
-              # elsif attribute?(@value, name)
-              #   retval.write_long(convert_to_js(@value.send(name.to_sym)).read_long)
+            elsif attribute?(ruby_object, name)
+              retval.write_long(convert_to_js(ruby_object.send(name.to_sym)).value)
 
             elsif ruby_object.respond_to?(name.to_sym)
-              retval.write_long(Convert.to_js(runtime, ruby_object.method(name.to_sym)).read_long)
+              retval.write_long(Convert.to_js(runtime, ruby_object.method(name.to_sym)).value)
 
             elsif ruby_object.respond_to?(:key?) && ruby_object.respond_to?(:[])
               if ruby_object.key?(name)
@@ -177,7 +176,52 @@ module Johnson
           JS_TRUE
         end
 
-        def set
+        def set(js_context, obj, id, vp)
+          
+          ruby_object = get_ruby_object(js_context, obj)
+          runtime = get_runtime(js_context)
+          
+          id_value = JSValue.new(runtime, id).root(binding)
+          vp_value = JSValue.new(runtime, vp).root(binding)
+
+          name = SpiderMonkey.JS_GetStringBytes(SpiderMonkey.JSVAL_TO_STRING(id))
+          
+          if SpiderMonkey::JSVAL_IS_INT(id)
+            idx = name.to_i
+            if ruby_object.respond_to?(:[]=)
+              ruby_object[idx] = Convert.to_ruby(runtime, vp_value.value) 
+            end
+
+            id_value.unroot
+            vp_value.unroot
+
+            return JS_TRUE
+          end
+          
+          ruby_key = Convert.to_ruby(runtime, id_value)
+          ruby_value = Convert.to_ruby(runtime, vp_value)
+
+          setter = "#{ruby_key}=".to_sym
+          settable = ruby_object.respond_to?(setter)
+          indexable = ruby_object.respond_to?(:[]=)
+
+          if settable
+            setter_method = ruby_object.method(setter)
+            setter_arity = setter_method.arity
+            if setter_arity == 1
+              # FIXME: why not use call_ruby_from_js?
+              ruby_object.send(setter, ruby_value)
+            end
+          elsif indexable
+            ruby_object.send(:[]=, name, Convert.to_ruby(runtime, vp_value))
+          else
+            autovivify(ruby_object, name, Convert.to_ruby(runtime, vp_value))
+          end
+
+          id_value.unroot
+          vp_value.unroot
+
+          JS_TRUE
         end
 
         def finalize(js_context, obj)
@@ -222,6 +266,68 @@ module Johnson
         end
         
         def js_method_missing
+        end
+
+        def send_with_possible_block(target, symbol, args)
+          block = args.pop if args.last.is_a?(RubyLandProxy) && args.last.function?
+          target.__send__(symbol, *args, &block)
+        end
+        
+        def treat_all_properties_as_methods(target)
+          def target.js_property?(name); true; end
+        end
+
+        def attribute?(target, name)
+          if target.respond_to?(name.to_sym)
+            target.instance_variables.include?("@#{name}")
+          end
+        end      
+
+        def js_property?(target, name)
+          # FIXME: that rescue is gross; handles, e.g., "name?"
+          (target.send(:instance_variable_defined?, "@#{name}") rescue false) ||
+          (target.respond_to?(:js_property?) && target.__send__(:js_property?, name))
+        end
+        
+        def call_proc_by_oid(oid, *args)
+          id2ref(oid).call(*args)
+        end
+        
+        def id2ref(oid)
+          ObjectSpace._id2ref(oid)
+        end
+        
+        def autovivified(target, attribute)
+          target.send(:__johnson_js_properties)[attribute]
+        end
+
+        def autovivified?(target, attribute)
+          target.respond_to?(:__johnson_js_properties) &&
+            target.send(:__johnson_js_properties).key?(attribute)
+        end
+
+        def autovivify(target, attribute, value)
+          (class << target; self; end).instance_eval do
+            unless target.respond_to?(:__johnson_js_properties)
+              define_method(:__johnson_js_properties) do
+                @__johnson_js_properties ||= {}
+              end
+            end
+            
+            define_method(:"#{attribute}=") do |arg|
+              send(:__johnson_js_properties)[attribute] = arg
+            end
+      
+            define_method(:"#{attribute}") do |*args|
+            js_prop = send(:__johnson_js_properties)[attribute]
+              if js_prop.is_a?(RubyLandProxy) && js_prop.function?
+                js_prop.call_using(self, *args)
+              else
+                js_prop
+              end
+            end
+          end
+          target.send(:"#{attribute}=", value)
         end
 
       end
