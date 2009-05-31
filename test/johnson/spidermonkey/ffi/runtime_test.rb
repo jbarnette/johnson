@@ -5,6 +5,7 @@ module Johnson
     class RuntimeTest < Johnson::TestCase
       def setup
         @runtime = Johnson::SpiderMonkey::Runtime.new
+        @runtime.gc_zeal = 2
       end
       def teardown
         @runtime.destroy

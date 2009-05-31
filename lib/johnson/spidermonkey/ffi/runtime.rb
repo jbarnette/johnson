@@ -2,12 +2,12 @@ module Johnson
   module SpiderMonkey
 
     at_exit do
-      runtimes.each { |rt| rt.destroy }
+      runtimes.each_value { |rt| rt.destroy }
       SpiderMonkey.JS_ShutDown
     end
 
     def self.runtimes
-      @runtimes ||= []
+      @runtimes ||= {}
     end
 
     class Runtime
@@ -50,11 +50,12 @@ module Johnson
 
         @jsids = {}
         @rbids = {}
+        @gcthings = {}
         @roots = []
 
         self["Ruby"] = Object
 
-        SpiderMonkey.runtimes << self
+        SpiderMonkey.runtimes[@ptr.address] = self
       end
 
       def destroy
@@ -68,6 +69,7 @@ module Johnson
 
       def gc_zeal=(value)
         SpiderMonkey.JS_SetGCZeal(context, value)
+        @gc_zeal = value
       end
 
       def context
@@ -93,6 +95,15 @@ module Johnson
 
       def evaluate(script, filename = nil, linenum = nil)
         compile_and_evaluate(script, filename, linenum)
+      end
+
+      def add_gcthing(thing)
+        @gcthings[thing.object_id] = thing
+      end
+      
+      # called from js_land_proxy.c:finalize
+      def remove_gcthing(object_id)
+        @gcthings.delete(object_id) if defined? @gcthings
       end
 
       private

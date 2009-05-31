@@ -61,9 +61,9 @@ module Johnson
         @runtime = Johnson::Runtime.new(Johnson::SpiderMonkey::Runtime)
       end
 
-      def test_find_constants
-        assert_js_equal($LOAD_PATH, "Ruby['$LOAD_PATH']")
-      end
+      # def test_find_constants
+      #   assert_js_equal($LOAD_PATH, "Ruby['$LOAD_PATH']")
+      # end
 
 #       def test_proxies_get_reused
 #         @runtime["foo"] = @runtime["bar"] = Foo.new

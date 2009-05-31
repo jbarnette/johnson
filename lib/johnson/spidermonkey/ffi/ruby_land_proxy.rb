@@ -2,7 +2,7 @@ module Johnson
   module SpiderMonkey
     class RubyLandProxy
       
-      include Enumerable, Convert
+      include Enumerable
 
       attr_reader :proxy_js_value
       alias_method :to_ary, :to_a
@@ -185,8 +185,10 @@ module Johnson
           ids = JSIdArray.new(SpiderMonkey.JS_Enumerate(@context, js_object))
           length = ids[:length]
           SpiderMonkey.JS_DestroyIdArray(@context, ids)
+
           @proxy_js_value.unroot
           js_object.unroot
+
           return length
         end
 
@@ -254,7 +256,7 @@ module Johnson
 
         @proxy_js_value.root(binding)
 
-        convert_to_js(value).root do |js_value|
+        Convert.to_js(@runtime, value).root do |js_value|
 
           case name
           
@@ -277,7 +279,7 @@ module Johnson
         end
 
         @proxy_js_value.root do |proxy_value|
-          call_js_function_value(convert_to_js(this), proxy_value, *args)
+          call_js_function_value(Convert.to_js(@runtime, this), proxy_value, *args)
         end
       end
 
@@ -290,7 +292,7 @@ module Johnson
           raise "Target must be an object!"
         end
         
-        js_value_args = args.map { |arg| convert_to_js(arg).root(binding) }
+        js_value_args = args.map { |arg| Convert.to_js(@runtime, arg).root(binding) }
         
         js_args_ptr = FFI::MemoryPointer.new(:long, args.size).write_array_of_int(js_value_args.map { |js_value| js_value.value } )
 

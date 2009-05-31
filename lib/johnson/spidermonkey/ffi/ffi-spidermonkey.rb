@@ -24,6 +24,7 @@ module Johnson
     attach_function :JS_DestroyContext, [ :pointer ], :void
     attach_function :JS_ContextIterator, [ :pointer, :pointer ], :pointer
     attach_function :JS_SetContextPrivate, [ :pointer, :pointer ], :void
+    attach_function :JS_GetRuntime, [ :pointer ], :pointer
 
     # Global
     attach_function :JS_GetGlobalObject, [ :pointer ], :pointer

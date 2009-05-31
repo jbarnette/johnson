@@ -3,8 +3,6 @@ module Johnson
 
     class JSValue < JSGCThing
 
-      include Convert
-
       attr_reader :value, :context
 
       def initialize(runtime, pointer_or_value)
@@ -29,7 +27,7 @@ module Johnson
       end
 
       def to_ruby
-        convert_to_ruby(self)
+        Convert.convert_to_ruby(@runtime, self)
       end
 
 
