@@ -80,16 +80,16 @@ module Johnson
         assert !Foo.new.respond_to?(:johnson)
       end
 
-#       def test_assign_function_as_attribute
-#         foo = @runtime["foo"] = Foo.new
-#         assert !foo.respond_to?(:johnson)
-#         f = @runtime.evaluate("foo.johnson = function() { return 'explode'; }")
-#         assert foo.respond_to?(:johnson)
-#         assert_equal('explode', foo.johnson)
-#         assert_js_equal('explode', 'foo.johnson()')
-#         assert_js_equal(f, 'foo.johnson')
-#         assert !Foo.new.respond_to?(:johnson)
-#       end
+      def test_assign_function_as_attribute
+        foo = @runtime["foo"] = Foo.new
+        assert !foo.respond_to?(:johnson)
+        f = @runtime.evaluate("foo.johnson = function() { return 'explode'; }")
+        assert foo.respond_to?(:johnson)
+        assert_equal('explode', foo.johnson)
+        assert_js_equal('explode', 'foo.johnson()')
+        assert_js_equal(f, 'foo.johnson')
+        assert !Foo.new.respond_to?(:johnson)
+      end
 
 #       def test_assign_function_as_attribute_with_this
 #         foo = @runtime["foo"] = Foo.new
