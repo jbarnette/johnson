@@ -230,8 +230,30 @@ module Johnson
 
     # Class
 
-    attach_function :JS_GetClass, [ :pointer, :pointer ], :pointer
+    attach_function :JS_GetClass, [ :pointer ], :pointer
 
+    class JSClassReadOnly < FFI::Struct
+      layout(
+             :name, :pointer,
+             :flags, :uint,
+             :addProperty, :JSPropertyOp,
+             :delProperty, :JSPropertyOp,
+             :getProperty, :JSPropertyOp,
+             :setProperty, :JSPropertyOp,
+             :enumerate, :JSEnumerateOp,
+             :resolve, :JSResolveOp,
+             :convert, :JSConvertOp,
+             :finalize, :JSFinalizeOp,
+             :getObjectOps, :JSGetObjectOps,
+             :checkAccess, :JSCheckAccessOp,
+             :call, :JSNative,
+             :construct, :JSNative,
+             :xdrObject, :JSXDRObjectOp,
+             :hasInstance, :JSHasInstanceOp,
+             :mark, :JSMarkOp,
+             :reserveSlots, :JSReserveSlotsOp
+             )
+    end
     class JSClass < FFI::ManagedStruct
       layout(
              :name, :pointer,
@@ -384,7 +406,7 @@ module Johnson
 
     end
 
-    def self.JSClass(flag)
+    def self.JSClass(flag = nil)
       unless flag == :new_resolve
         JSClass.layout(
                        :name, :pointer,

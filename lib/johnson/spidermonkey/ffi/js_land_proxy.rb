@@ -3,6 +3,8 @@ module Johnson
 
     class JSLandProxy
 
+      include Convert
+
       attr_reader :js_value
 
       class << self
@@ -17,6 +19,16 @@ module Johnson
           end
         end
 
+        def js_value_is_proxy?(js_value)
+          js_class = SpiderMonkey::JSClassReadOnly.new(SpiderMonkey.JS_GetClass(js_value.to_object))
+          js_class[:name].read_string == 'JSLandClassProxy'    || \
+          js_class[:name].read_string == 'JSLandProxy'         || \
+          js_class[:name].read_string == 'JSLandCallableProxy'
+        end
+
+        def unwrap_js_land_proxy(runtime, js_value)
+          runtime.send(:jsids)[js_value.value]
+        end
       end
 
       def initialize(runtime, value)
@@ -50,9 +62,7 @@ module Johnson
         SpiderMonkey.JS_DefineFunction(@context, @js_object, "toArray", @toArray, 0, 0)
         SpiderMonkey.JS_DefineFunction(@context, @js_object, "toString", @toString, 0, 0)
 
-        @Object_id_data = FFI::MemoryPointer.new(:long_long).put_long_long(0, object_id)
-
-        @runtime.send(:rbids)[object_id] = @js_value
+        @runtime.send(:rbids)[object_id] = self
 
         @js_object.unroot
       end
@@ -60,7 +70,7 @@ module Johnson
       private
 
       def js_land_class_proxy_class
-        @js_land_class_proxy_class = JSClass.allocate
+        @js_land_class_proxy_class = SpiderMonkey.JSClass.allocate
         @js_land_class_proxy_class.name = 'JSLandClassProxy'
         @js_land_class_proxy_class.addProperty = SpiderMonkey.method(:JS_PropertyStub).to_proc
         @js_land_class_proxy_class.delProperty = SpiderMonkey.method(:JS_PropertyStub).to_proc
@@ -76,7 +86,7 @@ module Johnson
       end
 
       def js_land_proxy_class
-        @js_land_proxy_class = JSClass(:new_resolve).allocate
+        @js_land_proxy_class = SpiderMonkey.JSClass(:new_resolve).allocate
         @js_land_proxy_class.name = 'JSLandProxy'
         @js_land_proxy_class.addProperty = SpiderMonkey.method(:JS_PropertyStub).to_proc
         @js_land_proxy_class.delProperty = SpiderMonkey.method(:JS_PropertyStub).to_proc
@@ -93,7 +103,7 @@ module Johnson
       end
 
       def js_land_callable_proxy_class
-        @js_land_callable_proxy_class = JSClass.allocate
+        @js_land_callable_proxy_class = SpiderMonkey.JSClass.allocate
         @js_land_callable_proxy_class.name = 'JSLandCallableProxy'
         @js_land_callable_proxy_class.addProperty = SpiderMonkey.method(:JS_PropertyStub).to_proc
         @js_land_callable_proxy_class.delProperty = SpiderMonkey.method(:JS_PropertyStub).to_proc
@@ -108,14 +118,54 @@ module Johnson
         @js_land_callable_proxy_class
       end
       
-      def get
+      def get(js_context, obj, id, retval)
+
+        JSValue.new(@runtime, id).root(binding) do |id|
+
+          name = SpiderMonkey.JS_GetStringBytes(SpiderMonkey.JSVAL_TO_STRING(id.value))
+
+          if SpiderMonkey.JSVAL_IS_INT(id.value)
+            idx = name.to_i
+            if @value.respond_to?(:[])
+              retval.write_long(convert_to_js(@value[idx]).read_long)
+              id.unroot
+              return JS_TRUE
+            end
+          end
+
+          if name == '__iterator__'
+            evaluate_js_property_expression("Johnson.Generator.create", retval)
+            
+          # elsif autovivified?(ruby, name)
+          #   retval.write_long(convert_to_js(autovivified(ruby, name)).read_long)
+
+          elsif @value.kind_of?(Class) && @value.constants.include?(name)
+            retval.write_long(convert_to_js(@value.const_get(name)).read_long)
+
+          elsif name.match(/^\$/) && global_variables.include?(name)
+            retval.write_long(convert_to_js(eval(name)).value)
+
+
+          # elsif attribute?(@value, name)
+          #   retval.write_long(convert_to_js(@value.send(name.to_sym)).read_long)
+
+          elsif @value.respond_to?(name.to_sym)
+            retval.write_long(convert_to_js(@value.method(name.to_sym)).read_long)
+
+          elsif @value.respond_to?(:key?) && @value.respond_to?(:[])
+            if @value.key?(name)
+              retval.write_long(convert_to_js(@value[name]).read_long)
+            end
+          end
+        end
+        JS_TRUE
       end
 
       def set
       end
 
       def finalize(js_context, obj)
-
+        @runtime.send(:rbids).delete(object_id)
         JS_TRUE
       end
 
@@ -125,7 +175,27 @@ module Johnson
       def call
       end
 
-      def resolve
+      def resolve(js_context, obj, id, flags, objp)
+
+        # context.root do |r|
+
+        #   r.jroot { id }
+
+        #   name = SpiderMonkey.JS_GetStringBytes(SpiderMonkey.JS_ValueToString(js_context, id))
+
+        #   if js_respond_to?(js_context, obj, name)
+        #     r.jcheck do 
+        #       SpiderMonkey.JS_DefineProperty(js_context, obj, name, JSVAL_VOID, method(:get_and_destroy_resolved_property).to_proc, 
+        #                                      method(:set).to_proc, JSPROP_ENUMERATE)
+        #     end
+        #   end
+          
+        #   objp.write_pointer(obj)
+          
+        #   JS_TRUE
+
+        # end
+        JS_TRUE
       end
 
       def to_array

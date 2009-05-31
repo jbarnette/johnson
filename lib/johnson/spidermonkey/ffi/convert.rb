@@ -43,10 +43,10 @@ module Johnson
             return SpiderMonkey::RubyLandProxy.make(@runtime, value, 'GlobalProxy')
           end  
 
-          # if RubyLandProxy.has_proxy?(@context.runtime, self)
-          #   unroot
-          #   return RubyLandProxy.unwrap_js_land_proxy(@context.runtime, self)
-          # end
+          if JSLandProxy.js_value_is_proxy?(js_value)
+            unroot
+            return JSLandProxy.unwrap_js_land_proxy(@runtime, js_value)
+          end
           
           js_value.unroot
           return SpiderMonkey::RubyLandProxy.make(@runtime, value, 'RubyLandProxy')
