@@ -16,7 +16,7 @@ module Johnson
         assert_kind_of(Johnson::SpiderMonkey::RubyLandProxy, @runtime.evaluate("new Object()"))
       end
       
-      def test_proxies_get_unwrapped_when_roundtripping
+      def test_proxies_get_reused # WAS: test_proxies_get_unwrapped_when_roundtripping
         proxy = @runtime.evaluate("x = {}")
         @runtime["y"] = proxy
         assert(@runtime.evaluate("x === y"))

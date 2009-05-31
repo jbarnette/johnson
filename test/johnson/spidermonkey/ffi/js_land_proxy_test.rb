@@ -65,10 +65,10 @@ module Johnson
         assert_js_equal($LOAD_PATH, "Ruby['$LOAD_PATH']")
       end
 
-#       def test_proxies_get_reused
-#         @runtime["foo"] = @runtime["bar"] = Foo.new
-#         assert_js_equal(true, "foo === bar")
-#       end
+      def test_proxies_get_reused
+        @runtime["foo"] = @runtime["bar"] = Foo.new
+        assert_js_equal(true, "foo === bar")
+      end
 
 #       def test_attributes_get_added_to_ruby
 #         foo = @runtime["foo"] = Foo.new

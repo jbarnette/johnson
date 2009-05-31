@@ -6,8 +6,8 @@ module Johnson
       class << self
         
         def make(runtime, value)          
-          if runtime.send(:rbids).has_key?(value)
-            runtime.send(:rbids)[value].js_value
+          if runtime.send(:rbids).has_key?(value.object_id)
+            JSValue.new(runtime, runtime.send(:rbids)[value.object_id])
           else
             context = runtime.context
 
