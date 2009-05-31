@@ -3,8 +3,6 @@ module Johnson
 
     class JSLandProxy
 
-      extend Convert
-
       class << self
         
         def make(runtime, value)          
@@ -129,22 +127,23 @@ module Johnson
           ObjectSpace._id2ref(ruby_id)
         end
 
-        def runtime(js_context)
+        def get_runtime(js_context)
           SpiderMonkey.runtimes[SpiderMonkey.JS_GetRuntime(js_context).address]
         end
 
         def get(js_context, obj, id, retval)
           
           ruby_object = get_ruby_object(js_context, obj)
+          runtime = get_runtime(js_context)
 
-          JSValue.new(runtime(js_context), id).root(binding) do |id|
+          JSValue.new(runtime, id).root(binding) do |id|
 
             name = SpiderMonkey.JS_GetStringBytes(SpiderMonkey.JSVAL_TO_STRING(id.value))
 
             if SpiderMonkey.JSVAL_IS_INT(id.value)
               idx = name.to_i
               if ruby_object.respond_to?(:[])
-                retval.write_long(convert_to_js(ruby_object[idx]).read_long)
+                retval.write_long(Convert.to_js(runtime, ruby_object[idx]).read_long)
                 id.unroot
                 return JS_TRUE
               end
@@ -157,21 +156,21 @@ module Johnson
               #   retval.write_long(convert_to_js(autovivified(ruby, name)).read_long)
 
             elsif ruby_object.kind_of?(Class) && ruby_object.constants.include?(name)
-              retval.write_long(convert_to_js(ruby_object.const_get(name)).read_long)
+              retval.write_long(Convert.to_js(runtime, ruby_object.const_get(name)).read_long)
 
             elsif name.match(/^\$/) && global_variables.include?(name)
-              retval.write_long(convert_to_js(eval(name)).value)
+              retval.write_long(Convert.to_js(runtime, eval(name)).value)
 
 
               # elsif attribute?(@value, name)
               #   retval.write_long(convert_to_js(@value.send(name.to_sym)).read_long)
 
             elsif ruby_object.respond_to?(name.to_sym)
-              retval.write_long(convert_to_js(ruby_object.method(name.to_sym)).read_long)
+              retval.write_long(Convert.to_js(runtime, ruby_object.method(name.to_sym)).read_long)
 
             elsif ruby_object.respond_to?(:key?) && ruby_object.respond_to?(:[])
               if ruby_object.key?(name)
-                retval.write_long(convert_to_js(ruby_object[name]).read_long)
+                retval.write_long(Convert.to_js(runtime, ruby_object[name]).read_long)
               end
             end
           end

@@ -44,3 +44,8 @@ array = @rt.evaluate('[1, 2, 3]')
 array.each { |elem| puts "Element #{elem}" }
 array = @rt.evaluate('x= {foo: 1, bar: 2}; x;')
 array.each { |k, v| puts "#{k}=>#{v}" }
+
+## Access ruby land from JS
+
+p @rt.evaluate('Ruby["$LOAD_PATH"]')
+
