@@ -54,6 +54,7 @@ module Johnson
     # Object
 
     attach_function :JS_HasInstance, [ :pointer, :pointer, :long, :pointer ], :int
+    attach_function :JS_GetPrototype, [ :pointer, :pointer ], :pointer
 
     # Roots
 
@@ -134,6 +135,7 @@ module Johnson
     attach_function :JS_DeleteProperty, [ :pointer, :pointer, :string ], :int
     attach_function :JS_SetProperty, [ :pointer, :pointer, :string, :pointer ], :int
     attach_function :JS_HasProperty, [ :pointer, :pointer, :string, :pointer ], :int
+    attach_function :JS_LookupProperty, [ :pointer, :pointer, :string, :pointer ], :int
 
     attach_function :JS_GetElement, [ :pointer, :pointer, :int, :pointer ], :int
     attach_function :JS_SetElement, [ :pointer, :pointer, :int, :pointer ], :int

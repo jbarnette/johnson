@@ -39,9 +39,7 @@ module Johnson
             runtime.send(:rbids)[value.object_id] = js_value.value
             private_data = FFI::MemoryPointer.new(:long).write_long(value.object_id)
             runtime.add_gcthing(value.object_id, [value, private_data])
-
             SpiderMonkey.JS_SetPrivate(context, js_object, private_data)
-
             js_object.unroot
             js_value
           end
@@ -133,7 +131,7 @@ module Johnson
         end
 
         def get(js_context, obj, id, retval)
-          
+
           ruby_object = get_ruby_object(js_context, obj)
           runtime = get_runtime(js_context)
 
@@ -211,8 +209,8 @@ module Johnson
             setter_arity = setter_method.arity
 
             # FIXME: Accessors arity in JRuby is -1 instead of 1. The
-            # problem was submitted to the author in the meanwhile we
-            # fix the issue with a conditional branch.
+            # problem was submitted to the author meanwhile we fix the
+            # issue with a conditional branch.
             unless RUBY_PLATFORM =~ /java/
               if setter_arity == 1
                 ruby_object.send(setter, ruby_value)
@@ -243,7 +241,19 @@ module Johnson
           JS_TRUE
         end
 
-        def construct
+        def construct(js_context, obj, argc, argv, retval)
+
+          runtime = get_runtime(js_context)
+
+          klass = JSValue.new(runtime, SpiderMonkey.JS_ARGV_CALLEE(argv)).to_ruby
+
+          args = argv.read_array_of_int(argc).collect do |js_value|
+            JSValue.new(runtime, js_value).to_ruby
+          end
+
+          retval.write_long(Convert.to_js(runtime, send_with_possible_block(klass, :new, args)).value)
+
+          JS_TRUE
         end
 
         def call(js_context, obj, argc, argv, retval)
@@ -269,12 +279,12 @@ module Johnson
           runtime = get_runtime(js_context)
 
           JSValue.new(runtime, id).root(binding) do |id_value|
-            name = SpiderMonkey.JS_GetStringBytes(SpiderMonkey.JSVAL_TO_STRING(id_value.value))
+            name = SpiderMonkey.JS_GetStringBytes(SpiderMonkey.JS_ValueToString(js_context, id_value.value))
             if js_respond_to?(js_context, obj, name)
               SpiderMonkey.JS_DefineProperty(js_context, obj, name, JSVAL_VOID, method(:get_and_destroy_resolved_property).to_proc, 
                                              method(:set).to_proc, JSPROP_ENUMERATE)
+              objp.write_pointer(obj)
             end
-            objp.write_pointer(obj)
             JS_TRUE
           end
 
@@ -287,7 +297,6 @@ module Johnson
         end
         
         def js_method_missing(js_context, obj, argc, argv, retval)
-
           runtime = get_runtime(js_context)
           ruby_object = get_ruby_object(js_context, obj)
 
@@ -295,6 +304,7 @@ module Johnson
           args.collect! do |js_value|
             JSValue.new(runtime, js_value).to_ruby
           end
+
           method_name = args[0]
           params = args[1].to_a
           send_with_possible_block(ruby_object, method_name, params)
@@ -313,10 +323,18 @@ module Johnson
         end
 
         def get_and_destroy_resolved_property(js_context, obj, id, retval)
-          JSValue.new(get_runtime(js_context), id).root(binding) do |id_value|
+          runtime = get_runtime(js_context)
+
+          ruby_object = JSValue.new(runtime, SpiderMonkey.OBJECT_TO_JSVAL(obj)).to_ruby
+          
+          JSValue.new(runtime, id).root(binding) do |id_value|
             name = SpiderMonkey.JS_GetStringBytes(SpiderMonkey.JSVAL_TO_STRING(id_value.value))
             SpiderMonkey.JS_DeleteProperty(js_context, obj, name)
-            get(js_context, obj, id, retval)
+            if ruby_object.kind_of?(RubyLandProxy)
+              retval.write_long(Convert.to_js(runtime, ruby_object[name]).value)
+            else
+              get(js_context, obj, id, retval)
+            end
             JS_TRUE
           end
         end

@@ -148,89 +148,89 @@ module Johnson
         assert_equal(42, foo.bar)
       end
       
-#       def test_setter_calls_indexer
-#         @runtime["foo"] = indexable = Indexable.new
-#         assert_js_equal(42, "foo.monkey = 42")
-#         assert_equal(42, indexable["monkey"])
-#       end
+      def test_setter_calls_indexer
+        @runtime["foo"] = indexable = Indexable.new
+        assert_js_equal(42, "foo.monkey = 42")
+        assert_equal(42, indexable["monkey"])
+      end
       
-#       def test_calls_attr_reader
-#         @runtime["foo"] = Foo.new
-#         assert_js_equal(10, "foo.bar")
-#       end
+      def test_calls_attr_reader
+        @runtime["foo"] = Foo.new
+        assert_js_equal(10, "foo.bar")
+      end
       
-#       def test_calls_1_arity_method
-#         @runtime["foo"] = Foo.new
-#         assert_js_equal(10, "foo.x2(5)")
-#       end
+      def test_calls_1_arity_method
+        @runtime["foo"] = Foo.new
+        assert_js_equal(10, "foo.x2(5)")
+      end
       
-#       def test_calls_n_arity_method
-#         @runtime["foo"] = Foo.new
-#         assert_js_equal(10, "foo.add(4, 2, 2, 1, 1)")
-#       end
+      def test_calls_n_arity_method
+        @runtime["foo"] = Foo.new
+        assert_js_equal(10, "foo.add(4, 2, 2, 1, 1)")
+      end
       
-#       def test_calls_class_method
-#         @runtime["Foo"] = Foo
-#         assert_js_equal(Foo.bar, "Foo.bar()")
-#       end
+      def test_calls_class_method
+        @runtime["Foo"] = Foo
+        assert_js_equal(Foo.bar, "Foo.bar()")
+      end
       
-#       def test_accesses_consts
-#         @runtime["Foo"] = Foo
-#         assert_same(Foo::Inner, @runtime.evaluate("Foo.Inner"))
-#       end
+      def test_accesses_consts
+        @runtime["Foo"] = Foo
+        assert_same(Foo::Inner, @runtime.evaluate("Foo.Inner"))
+      end
             
-#       def test_can_create_new_instances_in_js
-#         @runtime["AClass"] = AClass
-#         foo = @runtime.evaluate("AClass.new()")
-#         assert_kind_of(AClass, foo)
-#       end
+      def test_can_create_new_instances_in_js
+        @runtime["AClass"] = AClass
+        foo = @runtime.evaluate("AClass.new()")
+        assert_kind_of(AClass, foo)
+      end
       
-#       def test_class_proxies_provide_a_ctor
-#         @runtime["AClass"] = AClass
-#         foo = @runtime.evaluate("new AClass()")
-#         assert_kind_of(AClass, foo)
+      def test_class_proxies_provide_a_ctor
+        @runtime["AClass"] = AClass
+        foo = @runtime.evaluate("new AClass()")
+        assert_kind_of(AClass, foo)
         
-#         bar = @runtime.evaluate("new AClass(1, 2, 3)")
-#         assert_equal([1, 2, 3], bar.args)
-#       end
+        bar = @runtime.evaluate("new AClass(1, 2, 3)")
+        assert_equal([1, 2, 3], bar.args)
+      end
       
-#       def test_dwims_blocks
-#         @runtime["foo"] = Foo.new
-#         assert_js_equal(4, "foo.xform(2, function(x) { return x * 2 })")
-#       end
+      def test_dwims_blocks
+        @runtime["foo"] = Foo.new
+        assert_js_equal(4, "foo.xform(2, function(x) { return x * 2 })")
+      end
       
-#       def test_dwims_blocks_for_0_arity_methods
-#         @runtime[:arr] = [1, 2, 3]
-#         assert_js_equal([2, 4, 6], "arr.collect(function(x) { return x * 2 })")
-#       end
+      def test_dwims_blocks_for_0_arity_methods
+        @runtime[:arr] = [1, 2, 3]
+        assert_js_equal([2, 4, 6], "arr.collect(function(x) { return x * 2 })")
+      end
       
-#       def test_scope_for_with
-#         assert_js_equal(84, "with (rb) { b + b }", :b => 1, :rb => { "b" => 42 })
-#       end
+      def test_scope_for_with
+        assert_js_equal(84, "with (rb) { b + b }", :b => 1, :rb => { "b" => 42 })
+      end
       
-#       def test_lambdas_for_with
-#         assert_js_equal(84, "with (rb) { b(42) }", :rb => { "b" => lambda { |x| x * 2 } })
-#       end
+      def test_lambdas_for_with
+        assert_js_equal(84, "with (rb) { b(42) }", :rb => { "b" => lambda { |x| x * 2 } })
+      end
       
-#       class MethodForWith
-#         def b(x); x * 2; end
-#       end
+      class MethodForWith
+        def b(x); x * 2; end
+      end
       
-#       def test_method_for_with
-#         assert_js_equal(84, "with (rb) { b(42) }", :rb => MethodForWith.new)
-#       end
+      def test_method_for_with
+        assert_js_equal(84, "with (rb) { b(42) }", :rb => MethodForWith.new)
+      end
 
-#       def test_raises_string_to_ruby
-#         assert_raise(Johnson::Error) { @runtime.evaluate("throw 'my string';") }
-#       end
+      def test_raises_string_to_ruby
+        assert_raise(Johnson::Error) { @runtime.evaluate("throw 'my string';") }
+      end
 
-#       def test_raises_object_to_ruby
-#         assert_raise(Johnson::Error) { @runtime.evaluate("throw { bad: true };") }
-#       end
+      def test_raises_object_to_ruby
+        assert_raise(Johnson::Error) { @runtime.evaluate("throw { bad: true };") }
+      end
 
-#       def test_raises_exception_to_ruby
-#         assert_raise(Johnson::Error) { @runtime.evaluate("undefinedValue();") }
-#       end
+      def test_raises_exception_to_ruby
+        assert_raise(Johnson::Error) { @runtime.evaluate("undefinedValue();") }
+      end
     end
   end
 end

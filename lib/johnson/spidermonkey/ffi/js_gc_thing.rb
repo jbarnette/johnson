@@ -9,7 +9,7 @@ module Johnson
       end
 
       include HasPointer
-
+      attr_reader :ptr_to_be_rooted
       def initialize(runtime, value)
         @runtime = runtime
         @context = runtime.context
