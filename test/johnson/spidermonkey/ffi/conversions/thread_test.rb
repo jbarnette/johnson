@@ -4,6 +4,9 @@ module Johnson
   module Conversions
     class ThreadTest < Johnson::TestCase
 
+      def teardown
+      end
+
       def test_manipulate_thread
         thread = Thread.new { }
         @runtime['thread'] = thread
@@ -15,11 +18,11 @@ module Johnson
         @runtime.evaluate('new Ruby.Thread(function() { testing(); })')
       end
 
-      # def test_js_thread_read_file
-      #   @runtime['filename'] = File.expand_path(__FILE__)
-      #   @runtime.evaluate('function testing() { Ruby.File.read(filename); }')
-      #   @runtime.evaluate('new Ruby.Thread(function() { testing(); })')
-      # end
+      def test_js_thread_read_file
+        @runtime['filename'] = File.expand_path(__FILE__)
+        @runtime.evaluate('function testing() { Ruby.File.read(filename); }')
+        @runtime.evaluate('new Ruby.Thread(function() { testing(); })')
+      end
     end
   end
 end

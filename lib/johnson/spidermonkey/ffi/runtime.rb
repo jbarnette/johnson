@@ -54,8 +54,9 @@ module Johnson
         @roots = []
 
         self["Ruby"] = Object
-
-        SpiderMonkey.JS_SetGCCallbackRT(self, method(:gc_callback).to_proc)
+        
+        @gc_callback_proc = method(:gc_callback).to_proc
+        SpiderMonkey.JS_SetGCCallbackRT(self, @gc_callback_proc)
 
         SpiderMonkey.runtimes[@ptr.address] = self
       end
@@ -128,9 +129,9 @@ module Johnson
       end
 
       def gc_callback(js_context, status)
-    #    if status == JSGC_BEGIN
-    #      return JS_TRUE if should_sm_gc?
-    #    end
+       if status == JSGC_BEGIN
+         return JS_TRUE if should_sm_gc?
+       end
         JS_FALSE
       end
 
