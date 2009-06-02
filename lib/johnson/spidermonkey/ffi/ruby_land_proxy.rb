@@ -42,6 +42,10 @@ module Johnson
         @proc ||= Proc.new { |*args| call(*args) }
       end
 
+      def inspect
+        toString
+      end
+
       def call(*args)
         call_using(@runtime.global, *args)
       end
