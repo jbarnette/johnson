@@ -39,6 +39,9 @@ module Johnson
     attach_function :JS_MaybeGC, [ :pointer ], :void
     attach_function :JS_GC, [ :pointer ], :void
 
+    callback(:JSGCCallback, [ :pointer, :int ], :int)
+    attach_function :JS_SetGCCallbackRT, [ :pointer, :JSGCCallback ], :JSGCCallback
+
     # Data
 
     attach_function :JS_SetPrivate, [ :pointer, :pointer, :pointer ], :int
@@ -602,6 +605,11 @@ module Johnson
     JSRESOLVE_DETECTING = 0x04
     JSRESOLVE_DECLARING = 0x08
     JSRESOLVE_CLASSNAME = 0x10
+
+    JSGC_BEGIN = 0
+    JSGC_END = 1
+    JSGC_MARK_END = 2
+    JSGC_FINALIZE_END = 3
 
     JSCLASS_HAS_PRIVATE = (1 << 0)
     JSCLASS_NEW_ENUMERATE = (1 << 1)

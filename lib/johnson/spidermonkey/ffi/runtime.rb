@@ -55,6 +55,8 @@ module Johnson
 
         self["Ruby"] = Object
 
+        SpiderMonkey.JS_SetGCCallbackRT(self, method(:gc_callback).to_proc)
+
         SpiderMonkey.runtimes[@ptr.address] = self
       end
 
@@ -78,7 +80,11 @@ module Johnson
       end
 
       def has_native_global?
-        false unless defined?(@native_global) && !native_global.null?
+        unless defined?(@native_global) && !@native_global.null?
+          false
+        else
+          true
+        end
       end
       
       def [](key)
@@ -111,6 +117,22 @@ module Johnson
       end
 
       private
+
+      # Called by SpiderMonkey's garbage collector to determine whether or
+      # not it should GC
+      def should_sm_gc?
+        return false if Thread.list.find_all { |t|
+          t.key?(CONTEXT_MAP_KEY)
+        }.length > 1
+        true
+      end
+
+      def gc_callback(js_context, status)
+    #    if status == JSGC_BEGIN
+    #      return JS_TRUE if should_sm_gc?
+    #    end
+        JS_FALSE
+      end
 
       def destroy_contexts
         iterator = FFI::MemoryPointer.new(:pointer).write_pointer(FFI::Pointer::NULL)

@@ -8,7 +8,6 @@ module Johnson
       def initialize(runtime, pointer_or_value)
         
         @runtime = runtime
-        @context = runtime.context
 
         if pointer_or_value.kind_of?(FFI::Pointer)
           @value = pointer_or_value.read_long

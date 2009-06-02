@@ -19,7 +19,7 @@ module Johnson
         @global_class.resolve = method(:resolve).to_proc
         @global_class.convert = SpiderMonkey.method(:JS_ConvertStub).to_proc
         @global_class.finalize = SpiderMonkey.method(:JS_FinalizeStub).to_proc
-        
+
         @ptr = SpiderMonkey.JS_NewObject(@js_context, @global_class, nil, nil)
       end
 

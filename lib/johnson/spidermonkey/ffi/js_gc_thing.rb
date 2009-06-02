@@ -12,7 +12,6 @@ module Johnson
       attr_reader :ptr_to_be_rooted
       def initialize(runtime, value)
         @runtime = runtime
-        @context = runtime.context
         @value = value
         @ptr_to_be_rooted = FFI::MemoryPointer.new(:pointer).write_pointer(value)
         @ptr = value
@@ -83,22 +82,22 @@ module Johnson
 
       def add_root(bind, name)
         add_name(name)
-        SpiderMonkey.JS_AddNamedRoot(@context, @ptr_to_be_rooted, format_root_string(bind, name))
+        SpiderMonkey.JS_AddNamedRoot(@runtime.context, @ptr_to_be_rooted, format_root_string(bind, name))
       end
 
       def add_root_rt(bind, name)
         add_name(name)
-        SpiderMonkey.JS_AddNamedRootRT(@context.runtime, @ptr_to_be_rooted, format_root_string(bind, name))
+        SpiderMonkey.JS_AddNamedRootRT(@runtime.context.runtime, @ptr_to_be_rooted, format_root_string(bind, name))
       end
 
       def remove_root
         remove_name
-        SpiderMonkey.JS_RemoveRoot(@context, @ptr_to_be_rooted)
+        SpiderMonkey.JS_RemoveRoot(@runtime.context, @ptr_to_be_rooted)
       end
 
       def remove_root_rt
         remove_name
-        SpiderMonkey.JS_RemoveRootRT(@context.runtime, @ptr_to_be_rooted)
+        SpiderMonkey.JS_RemoveRootRT(@runtime.context.runtime, @ptr_to_be_rooted)
       end
 
       def format_root_string(bind, name)
