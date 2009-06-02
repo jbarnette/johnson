@@ -150,7 +150,7 @@ module Johnson
             end
 
             name = SpiderMonkey.JS_GetStringBytes(SpiderMonkey.JSVAL_TO_STRING(id.value))
-
+            
             if name == '__iterator__'
               evaluate_js_property_expression(runtime, "Johnson.Generator.create", retval)
 
@@ -166,13 +166,11 @@ module Johnson
             elsif attribute?(ruby_object, name)
               retval.write_long(Convert.to_js(runtime, ruby_object.send(name.to_sym)).value)
 
+            elsif ruby_object.respond_to?(:key?) && ruby_object.respond_to?(:[]) && ruby_object.key?(name)
+              retval.write_long(Convert.to_js(runtime, ruby_object[name]).value)
+
             elsif ruby_object.respond_to?(name.to_sym)
               retval.write_long(Convert.to_js(runtime, ruby_object.method(name.to_sym)).value)
-
-            elsif ruby_object.respond_to?(:key?) && ruby_object.respond_to?(:[])
-              if ruby_object.key?(name)
-                retval.write_long(Convert.to_js(runtime, ruby_object[name]).value)
-              end
             end
           end
           JS_TRUE
@@ -316,8 +314,11 @@ module Johnson
           end
 
           method_name = args[0]
+
           params = args[1].to_a
-          send_with_possible_block(ruby_object, method_name, params)
+
+          retval.write_long(Convert.to_js(runtime, send_with_possible_block(ruby_object, method_name, params)).value)
+
           JS_TRUE
         end
 

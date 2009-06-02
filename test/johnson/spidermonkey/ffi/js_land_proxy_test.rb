@@ -231,6 +231,7 @@ module Johnson
       def test_raises_exception_to_ruby
         assert_raise(Johnson::Error) { @runtime.evaluate("undefinedValue();") }
       end
+
     end
   end
 end
