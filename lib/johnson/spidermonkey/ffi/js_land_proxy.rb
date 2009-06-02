@@ -121,9 +121,12 @@ module Johnson
           @js_land_callable_proxy_class
         end
 
+        def get_ruby_id(context, js_object)
+          SpiderMonkey.JS_GetInstancePrivate(context, js_object, SpiderMonkey.JS_GetClass(js_object), nil).read_long
+        end
+
         def get_ruby_object(context, js_object)
-          ruby_id = SpiderMonkey.JS_GetInstancePrivate(context, js_object, SpiderMonkey.JS_GetClass(js_object), nil).read_long
-          ObjectSpace._id2ref(ruby_id)
+          ObjectSpace._id2ref(get_ruby_id(context, js_object))
         end
 
         def get_runtime(js_context)
@@ -341,7 +344,12 @@ module Johnson
 
         def get_and_destroy_resolved_property(js_context, obj, id, retval)
           runtime = get_runtime(js_context)
-          ruby_object = JSValue.new(runtime, SpiderMonkey.OBJECT_TO_JSVAL(obj)).to_ruby
+
+          ruby_object = unless runtime.gc_thing?(get_ruby_id(runtime, obj))
+                          JSValue.new(runtime, SpiderMonkey.OBJECT_TO_JSVAL(obj)).to_ruby
+                        else
+                          get_ruby_object(runtime, obj)
+                        end
 
           JSValue.new(runtime, id).root(binding) do |id_value|
 

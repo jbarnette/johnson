@@ -97,6 +97,10 @@ module Johnson
         compile_and_evaluate(script, filename, linenum)
       end
 
+      def gc_thing?(id)
+        @gcthing.key?(id) if defined? @gcthing
+      end
+
       def add_gcthing(id, thing)
         @gcthings[id] = thing
       end
