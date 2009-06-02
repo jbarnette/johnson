@@ -6,13 +6,13 @@ module Johnson
       class << self
         
         def make(runtime, value)          
-          if runtime.send(:rbids).has_key?(value.object_id)
-            JSValue.new(runtime, runtime.send(:rbids)[value.object_id])
+          if runtime.send(:rbids).has_key?(value.__id__)
+            JSValue.new(runtime, runtime.send(:rbids)[value.__id__])
           else
             context = runtime.context
 
-            if runtime.send(:rbids).has_key?(value.object_id)
-              runtime.send(:rbids)[value.object_id]
+            if runtime.send(:rbids).has_key?(value.__id__)
+              runtime.send(:rbids)[value.__id__]
             else
               
               klass = if value.kind_of?(Class)
@@ -35,10 +35,10 @@ module Johnson
             SpiderMonkey.JS_DefineFunction(context, js_object, "__noSuchMethod__", @js_method_missing, 2, 0)
             SpiderMonkey.JS_DefineFunction(context, js_object, "toArray", @toArray, 0, 0)
             SpiderMonkey.JS_DefineFunction(context, js_object, "toString", @toString, 0, 0)
-
-            runtime.send(:rbids)[value.object_id] = js_value.value
-            private_data = FFI::MemoryPointer.new(:long).write_long(value.object_id)
-            runtime.add_gcthing(value.object_id, [value, private_data])
+            
+            runtime.send(:rbids)[value.__id__] = js_value.value
+            private_data = FFI::MemoryPointer.new(:long).write_long(value.__id__)
+            runtime.add_gcthing(value.__id__, [value, private_data])
             SpiderMonkey.JS_SetPrivate(context, js_object, private_data)
             js_object.unroot
             js_value
@@ -136,11 +136,9 @@ module Johnson
           runtime = get_runtime(js_context)
 
           JSValue.new(runtime, id).root(binding) do |id|
-
-            name = SpiderMonkey.JS_GetStringBytes(SpiderMonkey.JSVAL_TO_STRING(id.value))
-
+            
             if SpiderMonkey.JSVAL_IS_INT(id.value)
-              idx = name.to_i
+              idx = SpiderMonkey.JSVAL_TO_INT(id.value)
               if ruby_object.respond_to?(:[])
                 retval.write_long(Convert.to_js(runtime, ruby_object[idx]).value)
                 id.unroot
@@ -148,9 +146,11 @@ module Johnson
               end
             end
 
+            name = SpiderMonkey.JS_GetStringBytes(SpiderMonkey.JSVAL_TO_STRING(id.value))
+
             if name == '__iterator__'
-              evaluate_js_property_expression("Johnson.Generator.create", retval)
-              
+              evaluate_js_property_expression(runtime, "Johnson.Generator.create", retval)
+
             elsif autovivified?(ruby_object, name)
               retval.write_long(Convert.to_js(runtime, autovivified(ruby_object, name)).value)
 
@@ -182,13 +182,11 @@ module Johnson
           
           id_value = JSValue.new(runtime, id).root(binding)
           vp_value = JSValue.new(runtime, vp).root(binding)
-
-          name = SpiderMonkey.JS_GetStringBytes(SpiderMonkey.JSVAL_TO_STRING(id))
           
           if SpiderMonkey::JSVAL_IS_INT(id)
-            idx = name.to_i
+            idx = SpiderMonkey.JSVAL_TO_INT(id_value.value)
             if ruby_object.respond_to?(:[]=)
-              ruby_object[idx] = Convert.to_ruby(runtime, vp_value.value) 
+              ruby_object[idx] = vp_value.to_ruby
             end
 
             id_value.unroot
@@ -196,7 +194,9 @@ module Johnson
 
             return JS_TRUE
           end
-          
+
+          name = SpiderMonkey.JS_GetStringBytes(SpiderMonkey.JSVAL_TO_STRING(id))          
+
           ruby_key = Convert.to_ruby(runtime, id_value)
           ruby_value = Convert.to_ruby(runtime, vp_value)
 
@@ -235,8 +235,8 @@ module Johnson
           runtime = SpiderMonkey.runtimes[SpiderMonkey.JS_GetRuntime(js_context).address]
           ruby_object = get_ruby_object(js_context, obj)
 
-          runtime.send(:rbids).delete(object_id)
-          runtime.remove_gcthing(ruby_object.object_id)
+          runtime.send(:rbids).delete(ruby_object.__id__)
+          runtime.remove_gcthing(ruby_object.__id__)
 
           JS_TRUE
         end
@@ -290,10 +290,17 @@ module Johnson
 
         end
 
-        def to_array
+        def to_array(js_context, obj, argc, argv, retval)
+
+          runtime = get_runtime(js_context)
+          ruby_object = get_ruby_object(js_context, obj)
+
+          retval.write_long(Convert.to_js(runtime, ruby_object.to_a).value)
+          JS_TRUE
         end
 
         def to_string
+          
         end
         
         def js_method_missing(js_context, obj, argc, argv, retval)
@@ -322,12 +329,22 @@ module Johnson
           has_key?(ruby_object, name)
         end
 
+        def evaluate_js_property_expression(runtime, property, retval)
+
+          SpiderMonkey.JS_EvaluateScript(runtime.context, 
+                                         runtime.native_global,
+                                         property, 
+                                         property.size, 
+                                         "johnson:evaluate_js_property_expression", 1,
+                                         retval)
+        end
+
         def get_and_destroy_resolved_property(js_context, obj, id, retval)
           runtime = get_runtime(js_context)
-
           ruby_object = JSValue.new(runtime, SpiderMonkey.OBJECT_TO_JSVAL(obj)).to_ruby
-          
+
           JSValue.new(runtime, id).root(binding) do |id_value|
+
             name = SpiderMonkey.JS_GetStringBytes(SpiderMonkey.JSVAL_TO_STRING(id_value.value))
             SpiderMonkey.JS_DeleteProperty(js_context, obj, name)
             if ruby_object.kind_of?(RubyLandProxy)
@@ -352,7 +369,7 @@ module Johnson
         end
         
         def has_key?(target, name)
-          target.respond_to?(:key?) or target.respond_to?(:[])
+          target.respond_to?(:key?) and target.respond_to?(:[]) and target.key?(name)
         end
 
         def send_with_possible_block(target, symbol, args)
