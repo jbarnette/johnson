@@ -22,7 +22,6 @@ module Johnson
 
       def initialize(runtime, value, name)
         @runtime = runtime
-        @context = runtime.context
         @proxy_js_value = JSValue.new(@runtime, value)
 
         @proxy_js_value.root_rt(binding, name)
@@ -53,7 +52,7 @@ module Johnson
 
       def function?
         @proxy_js_value.root(binding) do |js_value|
-          SpiderMonkey.JS_TypeOfValue(@context, js_value.value) == JSTYPE_FUNCTION ? true : false
+          SpiderMonkey.JS_TypeOfValue(@runtime.context, js_value.value) == JSTYPE_FUNCTION ? true : false
         end
       end
 
@@ -67,7 +66,7 @@ module Johnson
         @proxy_js_value.root(binding)
         js_object = @proxy_js_value.to_object.root
 
-        SpiderMonkey.JS_HasProperty(@context, js_object, name, found)
+        SpiderMonkey.JS_HasProperty(@runtime.context, js_object, name, found)
 
         @proxy_js_value.unroot
         js_object.unroot
@@ -106,15 +105,15 @@ module Johnson
         @proxy_js_value.root(binding)
         js_object = @proxy_js_value.to_object.root(binding)
 
-        if SpiderMonkey.JS_IsArrayObject(@context, js_object) == JS_TRUE
+        if SpiderMonkey.JS_IsArrayObject(@runtime.context, js_object) == JS_TRUE
 
           length = FFI::MemoryPointer.new(:uint)
           
-          SpiderMonkey.JS_GetArrayLength(@context, js_object, length)
+          SpiderMonkey.JS_GetArrayLength(@runtime.context, js_object, length)
 
           length.read_int.times do |i|
             element = FFI::MemoryPointer.new(:long)
-            SpiderMonkey.JS_GetElement(@context, js_object, i, element)
+            SpiderMonkey.JS_GetElement(@runtime.context, js_object, i, element)
 
             @proxy_js_value.unroot
             js_object.unroot
@@ -124,7 +123,7 @@ module Johnson
           
         else
           
-          ids = JSIdArray.new(SpiderMonkey.JS_Enumerate(@context, js_object))
+          ids = JSIdArray.new(SpiderMonkey.JS_Enumerate(@runtime.context, js_object))
           ids_ptr = ids.to_ptr
           property = FFI::MemoryPointer.new(:long)
 
@@ -132,19 +131,19 @@ module Johnson
             
             js_key = FFI::MemoryPointer.new(:long)
             # FIXME: size of int must be retrieved in other way
-            SpiderMonkey.JS_IdToValue(@context, ids_ptr.get_int(4 + i*4) , js_key)
+            SpiderMonkey.JS_IdToValue(@runtime.context, ids_ptr.get_int(4 + i*4) , js_key)
 
             js_key_value = JSValue.new(@runtime, js_key).root(binding)
             
             if SpiderMonkey.JSVAL_IS_STRING(js_key.read_long)
 
-              SpiderMonkey.JS_GetProperty(@context, js_object,
+              SpiderMonkey.JS_GetProperty(@runtime.context, js_object,
                                           SpiderMonkey.JS_GetStringBytes(SpiderMonkey.JSVAL_TO_STRING(js_key_value.value)), 
                                           property)
 
             else
 
-              SpiderMonkey.JS_GetElement(@context, 
+              SpiderMonkey.JS_GetElement(@runtime.context, 
                                          js_object,
                                          SpiderMonkey.JSVAL_TO_INT(js_key_value.value), 
                                          property)
@@ -164,7 +163,7 @@ module Johnson
 
           end            
 
-          SpiderMonkey.JS_DestroyIdArray(@context, ids)
+          SpiderMonkey.JS_DestroyIdArray(@runtime.context, ids)
 
         end
 
@@ -176,15 +175,15 @@ module Johnson
 
         length = FFI::MemoryPointer.new(:uint)
 
-        if SpiderMonkey.JS_IsArrayObject(@context, js_object) == JS_TRUE
-          SpiderMonkey.JS_GetArrayLength(@context, js_object, length)
+        if SpiderMonkey.JS_IsArrayObject(@runtime.context, js_object) == JS_TRUE
+          SpiderMonkey.JS_GetArrayLength(@runtime.context, js_object, length)
           @proxy_js_value.unroot
           js_object.unroot
           return length.read_int          
         else
-          ids = JSIdArray.new(SpiderMonkey.JS_Enumerate(@context, js_object))
+          ids = JSIdArray.new(SpiderMonkey.JS_Enumerate(@runtime.context, js_object))
           length = ids[:length]
-          SpiderMonkey.JS_DestroyIdArray(@context, ids)
+          SpiderMonkey.JS_DestroyIdArray(@runtime.context, ids)
 
           @proxy_js_value.unroot
           js_object.unroot
@@ -202,11 +201,11 @@ module Johnson
 
         function = FFI::MemoryPointer.new(:long)
           
-        SpiderMonkey.JS_GetProperty(@context, @proxy_js_value.to_object, name, function)
+        SpiderMonkey.JS_GetProperty(@runtime.context, @proxy_js_value.to_object, name, function)
         
         function_value = JSValue.new(@runtime, function).root(binding)
 
-        funtype = SpiderMonkey.JS_TypeOfValue(@context, function_value.value)
+        funtype = SpiderMonkey.JS_TypeOfValue(@runtime.context, function_value.value)
 
         # FIXME: should raise an error if the property is not a function
         if (funtype == JSTYPE_FUNCTION)
@@ -225,10 +224,10 @@ module Johnson
 
         property = FFI::MemoryPointer.new(:long)
 
-        SpiderMonkey.JS_GetProperty(@context, js_object, name, property)
+        SpiderMonkey.JS_GetProperty(@runtime.context, js_object, name, property)
         property_value = JSValue.new(@runtime, property).root(binding)
 
-        type = SpiderMonkey.JS_TypeOfValue(@context, property_value.value)
+        type = SpiderMonkey.JS_TypeOfValue(@runtime.context, property_value.value)
 
         @proxy_js_value.unroot
         js_object.unroot
@@ -243,9 +242,9 @@ module Johnson
           retval = FFI::MemoryPointer.new(:long)
 
           if name.kind_of?(Fixnum)
-            SpiderMonkey.JS_GetElement(@context, proxy_value.to_object, name, retval)
+            SpiderMonkey.JS_GetElement(@runtime.context, proxy_value.to_object, name, retval)
           else
-            SpiderMonkey.JS_GetProperty(@context, proxy_value.to_object, name, retval)
+            SpiderMonkey.JS_GetProperty(@runtime.context, proxy_value.to_object, name, retval)
           end
 
           JSValue.new(@runtime, retval).to_ruby
@@ -261,9 +260,9 @@ module Johnson
           case name
           
           when Fixnum
-            SpiderMonkey.JS_SetElement(@context, @proxy_js_value.to_object, name, js_value)
+            SpiderMonkey.JS_SetElement(@runtime.context, @proxy_js_value.to_object, name, js_value)
           else
-            SpiderMonkey.JS_SetProperty(@context, @proxy_js_value.to_object, name, js_value)
+            SpiderMonkey.JS_SetProperty(@runtime.context, @proxy_js_value.to_object, name, js_value)
           end
 
         end
@@ -298,7 +297,7 @@ module Johnson
 
         result = FFI::MemoryPointer.new(:long)
 
-        SpiderMonkey.JS_CallFunctionValue(@context, target.to_object, function.value, args.size, js_args_ptr, result)
+        SpiderMonkey.JS_CallFunctionValue(@runtime.context, target.to_object, function.value, args.size, js_args_ptr, result)
 
         js_value_args.each { |arg| arg.unroot }
         target.unroot
