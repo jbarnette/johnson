@@ -80,6 +80,10 @@ module Johnson
         contexts[self.object_id] ||= Context.new(self)
       end
 
+      def contexts
+        Thread.current[CONTEXT_MAP_KEY]
+      end
+
       def has_native_global?
         unless defined?(@native_global) && !@native_global.null?
           false

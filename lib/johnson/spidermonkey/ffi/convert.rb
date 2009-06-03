@@ -51,7 +51,12 @@ module Johnson
               js_value.unroot
               return JSLandProxy.unwrap_js_land_proxy(runtime, js_value)
             end
-            
+
+            if js_value_is_regexp?(runtime, value)
+              js_value.unroot
+              return convert_regexp_to_ruby(runtime, value)
+            end
+
             js_value.unroot
             return SpiderMonkey::RubyLandProxy.make(runtime, value, 'RubyLandProxy')
 
@@ -82,6 +87,9 @@ module Johnson
 
           when Float, Bignum
             SpiderMonkey::JSValue.new(runtime, convert_float_or_bignum_to_js(runtime, value))
+            
+          when Regexp
+            SpiderMonkey::JSValue.new(runtime, convert_regexp_to_js(runtime, value))
 
           when Class, Hash, Module, File, Struct, Object, Array
             if value.kind_of?(SpiderMonkey::RubyLandProxy)
@@ -110,6 +118,10 @@ module Johnson
           retval
         end
 
+        def convert_regexp_to_js(runtime, value)
+          SpiderMonkey.OBJECT_TO_JSVAL(SpiderMonkey.JS_NewRegExpObject(runtime.context, value.source, value.source.size, value.options))
+        end
+
         def to_ruby_fixnum_or_bignum(runtime, value)
           SpiderMonkey.JSVAL_TO_INT(value)
         end
@@ -126,6 +138,21 @@ module Johnson
           result = SpiderMonkey.JS_GetStringBytes(js_string)
           js_string.unroot
           result
+        end
+        
+        def convert_regexp_to_ruby(runtime, value)
+          JSValue.new(runtime, value).root(binding) do |js_value|
+            re = SpiderMonkey::JSRegExp.new(SpiderMonkey.JS_GetPrivate(runtime.context, js_value.to_object))
+            Regexp.new(to_ruby_string(runtime, re[:source].address), re[:flags])
+          end
+        end
+
+        def js_value_is_regexp?(runtime, value)
+          JSValue.new(runtime, value).root(binding) do |js_value|
+            hack = "hack"
+            regexp_js_class = SpiderMonkey.JS_GetClass(SpiderMonkey.JS_NewRegExpObject(runtime.context, hack, hack.size, 0))
+            SpiderMonkey.JS_InstanceOf(runtime.context, js_value.to_object, regexp_js_class, nil) == JS_TRUE ? true : false
+          end
         end
 
       end

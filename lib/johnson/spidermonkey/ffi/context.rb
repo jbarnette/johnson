@@ -6,7 +6,6 @@ module Johnson
       include HasPointer
 
       attr_reader :runtime
-      attr_accessor :pending_js_ex_message, :root_names
 
       def initialize(runtime, options={})
         @runtime = runtime

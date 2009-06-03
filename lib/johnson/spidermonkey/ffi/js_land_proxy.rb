@@ -296,8 +296,11 @@ module Johnson
           JS_TRUE
         end
 
-        def to_string
-          
+        def to_string(js_context, obj, argc, argv, retval)
+          runtime = get_runtime(js_context)
+          ruby_object = get_ruby_object(js_context, obj)
+
+          retval.write_long(Convert.to_js(runtime, ruby_object.to_s).value)
         end
         
         def js_method_missing(js_context, obj, argc, argv, retval)

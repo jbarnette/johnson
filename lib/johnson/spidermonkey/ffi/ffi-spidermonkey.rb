@@ -56,6 +56,8 @@ module Johnson
 
     # Object
 
+    attach_function :JS_GetPrivate, [ :pointer, :pointer ], :pointer
+    attach_function :JS_InstanceOf, [ :pointer, :pointer, :pointer, :pointer ], :int
     attach_function :JS_HasInstance, [ :pointer, :pointer, :long, :pointer ], :int
     attach_function :JS_GetPrototype, [ :pointer, :pointer ], :pointer
 
@@ -66,12 +68,6 @@ module Johnson
     attach_function :JS_AddNamedRootRT, [ :pointer, :pointer, :pointer ], :int
     attach_function :JS_RemoveRoot, [ :pointer, :pointer ], :int
     attach_function :JS_RemoveRootRT, [ :pointer, :pointer ], :int
-
-    # Conversions
-
-    # The two functions below were added by me.
-    # attach_function :JS_StringToValue, [ :pointer, :pointer ], :long
-    # attach_function :JS_ObjectToValue, [ :pointer, :pointer ], :long
 
     attach_function :JS_ValueToString, [ :pointer, :long ], :pointer
     attach_function :JS_ValueToNumber, [ :pointer, :long, :pointer ], :int
@@ -467,6 +463,23 @@ module Johnson
              )
     end
 
+    # Regexp
+
+    class JSRegExp < FFI::Struct
+      layout(
+             :nrefs, :int,
+             :flags, :ushort,
+             :cloneIndex, :ushort,
+             :parenCount, :uint,
+             :classCount, :uint,
+             :classList, :pointer,
+             :source, :pointer,
+             :program, [:uchar, 1]
+             )
+    end
+
+#    attach_variable :js_RegExpClass, JSClass
+    attach_function :JS_NewRegExpObject, [ :pointer, :string, :uint, :uint ], :pointer
 
   end
 end
