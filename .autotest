@@ -30,6 +30,7 @@ else
     at.add_mapping(/^test\/johnson\/spidermonkey\/ffi\/.*_test\.rb$/) do |file, _|
       file
     end
+
   end
 
 end

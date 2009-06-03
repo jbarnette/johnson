@@ -52,6 +52,7 @@ module Johnson
         @rbids = {}
         @gcthings = {}
         @roots = []
+        @compiled_scripts = {}
 
         self["Ruby"] = Object
         
@@ -104,8 +105,20 @@ module Johnson
         JSValue.new(self, SpiderMonkey.OBJECT_TO_JSVAL(@native_global)).to_ruby
       end
 
+      ###
+      # Evaluate +script+ with +filename+ and +linenum+
       def evaluate(script, filename = nil, linenum = nil)
-        compile_and_evaluate(script, filename, linenum)
+        compiled_script = compile(script, filename, linenum)
+        evaluate_compiled_script(compiled_script)
+        # compile_and_evaluate(script, filename, linenum)
+      end
+
+      ###
+      # Compile +script+ with +filename+ and +linenum+
+      def compile(script, filename=nil, linenum=nil)
+        filename ||= 'none'
+        linenum  ||= 1
+        @compiled_scripts[filename] = native_compile(script, filename, linenum)
       end
 
       def gc_thing?(id)
@@ -146,6 +159,70 @@ module Johnson
           SpiderMonkey.JS_DestroyContext(iterator.read_pointer)
           iterator = FFI::MemoryPointer.new(:pointer).write_pointer(FFI::Pointer::NULL)
         end
+      end
+
+      def native_compile(script, filename, linenum)
+        unless filename
+          @current_filename = FFI::MemoryPointer.from_string('none')
+        else
+          @current_filename = FFI::MemoryPointer.from_string(filename)
+        end
+
+        @linenum = linenum || 1
+
+        @current_script = FFI::MemoryPointer.from_string(script)
+        @current_script_size = script.size
+        @retval = FFI::MemoryPointer.new(:long)
+
+        compiled_js = SpiderMonkey.JS_CompileScript(context,
+                                                    native_global, 
+                                                    @current_script, 
+                                                    @current_script_size,
+                                                    @current_filename,
+                                                    @linenum)
+
+        if compiled_js.null?
+
+          if SpiderMonkey.JS_IsExceptionPending(context) == JS_TRUE
+            SpiderMonkey.JS_GetPendingException(context, context.exception);
+            SpiderMonkey.JS_ClearPendingException(context)
+          end
+
+          if context.has_exception?
+            self.class.raise_js_exception(JSValue.new(self, context.exception).to_ruby)
+          end
+          
+        end
+
+        script_object = SpiderMonkey.JS_NewScriptObject(context, compiled_js)
+        
+        JSGCThing.new(self, script_object).root(binding) do |js_object|
+          RubyLandProxy.make(self, SpiderMonkey.OBJECT_TO_JSVAL(js_object.to_ptr), 'JSScriptProxy')
+        end
+
+      end
+
+      def evaluate_compiled_script(compiled_script)
+        compiled_js = Convert.to_js(self, compiled_script)
+        js_script = SpiderMonkey.JS_GetPrivate(context, SpiderMonkey.JSVAL_TO_OBJECT(compiled_js.value))
+
+        js = FFI::MemoryPointer.new(:long)
+        ok = SpiderMonkey.JS_ExecuteScript(context, native_global, js_script, js)
+
+        if ok == JS_FALSE
+
+          if SpiderMonkey.JS_IsExceptionPending(context) == JS_TRUE
+            SpiderMonkey.JS_GetPendingException(context, context.exception);
+            SpiderMonkey.JS_ClearPendingException(context)
+          end
+
+          if context.has_exception?
+            self.class.raise_js_exception(JSValue.new(self, context.exception).to_ruby)
+          end
+          
+        end
+        
+        JSValue.new(self, js).to_ruby
       end
 
       def compile_and_evaluate(script, filename, linenum)

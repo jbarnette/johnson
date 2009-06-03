@@ -23,6 +23,10 @@ module Johnson
                         JSLandProxyClass()
                       end
             end
+            
+            if value.kind_of?(Struct)
+              treat_all_properties_as_methods(value)
+            end
 
             js_object = JSGCThing.new(runtime, SpiderMonkey.JS_NewObject(context, klass, nil, nil))
             js_object.root(binding)
@@ -323,10 +327,10 @@ module Johnson
           ruby_object = get_ruby_object(js_context, obj)
 
           autovivified?(ruby_object, name) || \
-          constant?(ruby_object, name)     || \
-          global?(name)                    || \
-          attribute?(ruby_object, name)    || \
-          method?(ruby_object, name)       || \
+          constant?(ruby_object, name)     || 
+          global?(name)                    || 
+          attribute?(ruby_object, name)    || 
+          method?(ruby_object, name)       || 
           has_key?(ruby_object, name)
         end
 
@@ -398,9 +402,10 @@ module Johnson
         end
 
         def attribute?(target, name)
-          if target.respond_to?(name.to_sym)
-            target.instance_variables.include?("@#{name}")
-          end
+          # if target.respond_to?(name.to_sym)
+          #   target.instance_variables.include?("@#{name}")
+          # end
+          js_property?(target, name)
         end      
 
         def js_property?(target, name)
