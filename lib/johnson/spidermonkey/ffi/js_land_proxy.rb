@@ -252,9 +252,7 @@ module Johnson
             JSValue.new(runtime, js_value).to_ruby
           end
 
-          retval.write_long(Convert.to_js(runtime, send_with_possible_block(klass, :new, args)).value)
-
-          JS_TRUE
+          call_ruby_from_js(js_context, retval, klass, :new, args)
         end
 
         def call(js_context, obj, argc, argv, retval)
@@ -270,9 +268,7 @@ module Johnson
             JSValue.new(runtime, js_value).to_ruby
           end
           
-          retval.write_long(Convert.to_js(runtime, send_with_possible_block(self_value, :call, args)).value)
-
-          JS_TRUE
+          call_ruby_from_js(js_context, retval, self_value, :call, args)
         end
 
         def resolve(js_context, obj, id, flags, objp)
@@ -317,9 +313,7 @@ module Johnson
 
           params = args[1].to_a
 
-          retval.write_long(Convert.to_js(runtime, send_with_possible_block(ruby_object, method_name, params)).value)
-
-          JS_TRUE
+          call_ruby_from_js(js_context, retval, ruby_object, method_name, params)
         end
 
         def js_respond_to?(js_context, obj, name)
@@ -379,6 +373,16 @@ module Johnson
         
         def has_key?(target, name)
           target.respond_to?(:key?) and target.respond_to?(:[]) and target.key?(name)
+        end
+
+        def call_ruby_from_js(js_context, retval, target, symbol, args)
+          begin
+            retval.write_long(Convert.to_js(get_runtime(js_context), send_with_possible_block(target, symbol, args)).value)
+            JS_TRUE
+          rescue Exception => ex
+            SpiderMonkey.JS_SetPendingException(js_context, Convert.to_js(get_runtime(js_context), ex).value)
+            JS_FALSE
+          end
         end
 
         def send_with_possible_block(target, symbol, args)
