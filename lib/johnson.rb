@@ -7,14 +7,15 @@ require "johnson/cli"
 unless ENV['JOHNSON_FFI']
   # the native SpiderMonkey extension
   require "johnson/spidermonkey"
-
-  # visitable module and visitors
-  require "johnson/visitable"
-  require "johnson/visitors"
-
-  # parse tree nodes
-  require "johnson/nodes"
 end
+
+# visitable module and visitors
+require "johnson/visitable"
+require "johnson/visitors"
+
+# parse tree nodes
+require "johnson/nodes"
+
 
 # the SpiderMonkey bits written in Ruby
 
@@ -37,6 +38,7 @@ else
   require "johnson/spidermonkey/ffi/runtime"
   require "johnson/spidermonkey/ffi/context"
   require "johnson/spidermonkey/ffi/ruby_land_proxy"
+  require "johnson/spidermonkey/ffi/immutable_node"
 end
 
 # the 'public' interface

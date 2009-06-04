@@ -8,7 +8,8 @@ module Johnson
       end
       
       def test_constructing_a_proxy_directly_asplodes
-        assert_raise(Johnson::Error) { Johnson::SpiderMonkey::RubyLandProxy.new }
+        err = ENV['JOHNSON_FFI'] ? NoMethodError : Johnson::Error
+        assert_raise(err) { Johnson::SpiderMonkey::RubyLandProxy.new  }
       end
       
       def test_objects_get_wrapped_as_proxies

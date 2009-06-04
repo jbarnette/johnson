@@ -20,7 +20,7 @@ HOE = Hoe.new "johnson", Johnson::VERSION do |p|
   unless ENV['JOHNSON_FFI']
     p.test_globs       = %w(test/**/*_test.rb)
   else
-    p.test_globs       = %w(test/johnson/spidermonkey/ffi/**/*_test.rb test/johnson/*_test.rb)
+    p.test_globs       = %w(test/*_test.rb test/johnson/*_test.rb test/johnson/conversions/*_test.rb test/johnson/spidermonkey/**/*_test.rb)
   end
 
   p.clean_globs     << "lib/johnson/spidermonkey.bundle"
