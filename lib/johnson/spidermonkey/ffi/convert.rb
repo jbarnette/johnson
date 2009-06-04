@@ -159,11 +159,9 @@ module Johnson
         end
 
         def to_ruby_string(runtime, value)
-          js_string = JSGCThing.new(runtime, SpiderMonkey.JSVAL_TO_STRING(value))
-          js_string.root(binding)
-          result = SpiderMonkey.JS_GetStringBytes(js_string)
-          js_string.unroot
-          result
+          JSGCThing.new(runtime, SpiderMonkey.JSVAL_TO_STRING(value)).root(binding) do |js_string|
+            SpiderMonkey.JS_GetStringBytes(js_string)
+          end
         end
         
         def convert_regexp_to_ruby(runtime, value)

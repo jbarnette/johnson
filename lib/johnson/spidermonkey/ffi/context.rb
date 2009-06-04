@@ -31,7 +31,9 @@ module Johnson
         init_global
         init_extensions
 
-        SpiderMonkey.JS_SetErrorReporter(self, method(:report_error).to_proc)
+        @report_error_proc = method(:report_error).to_proc
+        SpiderMonkey.JS_SetErrorReporter(self, @report_error_proc)
+
         SpiderMonkey.JS_SetVersion(self, JSVERSION_LATEST)
         SpiderMonkey.JS_SetOptions(self, JSOPTION_VAROBJFIX | JSOPTION_DONT_REPORT_UNCAUGHT)
       end

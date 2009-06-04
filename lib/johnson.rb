@@ -16,7 +16,6 @@ require "johnson/visitors"
 # parse tree nodes
 require "johnson/nodes"
 
-
 # the SpiderMonkey bits written in Ruby
 
 unless ENV['JOHNSON_FFI']

@@ -10,10 +10,10 @@ module Johnson
         @context = @runtime.delegate.context
       end
 
-      def teardown
-        @runtime.delegate.destroy
-      end
-
+      # def teardown
+      #   @runtime.delegate.destroy
+      # end
+       
       def test_can_be_initialized_with_a_pointer
         js_object = JSGCThing.new(@runtime.delegate, SpiderMonkey.JS_NewObject(@context, nil, nil, nil))
       end
