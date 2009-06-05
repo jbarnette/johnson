@@ -204,11 +204,25 @@ module Johnson
       end
 
       def test_raises_in_js
-        err = RuntimeError.new("an exception")
-        asplode = lambda { raise err }
-        assert_js_equal(err, "x = null; try { foo(); } catch(ex) { x = ex; }; x", :foo => asplode)
+        @runtime["foo"] = lambda { raise RuntimeError.new("an exception") }
+        raised = @runtime.evaluate "x = null; try { foo(); } catch(ex) { x = ex; }; x"
+        assert_equal "#<RuntimeError: an exception>", raised.message
       end
-      
+
+      def test_uncaught_exceptions_have_decent_stack_trace
+        @runtime["foo"] = lambda { raise RuntimeError.new("an exception") }
+        line_number = __LINE__ - 1 # reference to previous line
+        begin
+          @runtime.evaluate "foo()"
+        rescue Exception => e
+          assert_equal "#<RuntimeError: an exception> at (none):1", e.message
+          assert_match %r/none:1\b/, e.backtrace[0]
+          assert_match %r/#{__FILE__}:#{line_number}\b/, e.backtrace[1]
+        else
+          flunk "exception was not raised"
+        end
+      end
+
       def test_array_multiple_assignment
         a = @runtime.evaluate("[1,2,3]")
         x, y, z = a

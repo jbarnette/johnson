@@ -297,12 +297,12 @@ JSBool report_ruby_error_in_js(JohnsonRuntime* runtime, int state, VALUE old_err
     case TAG_RAISE:
       {
         VALUE local_error = ruby_errinfo;
-        jsval js_err;
         ruby_errinfo = old_errinfo;
-        if (!convert_to_js(runtime, local_error, &js_err))
-          return JS_FALSE;
-        JS_SetPendingException(context, js_err);
-        return JS_FALSE;
+
+        local_error = rb_funcall(local_error, rb_intern("inspect"), 0);
+        JS_ReportError(context, StringValuePtr(local_error));
+
+        return JS_FALSE ;
       }
 
     case TAG_THROW:
