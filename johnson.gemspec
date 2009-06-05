@@ -2,13 +2,13 @@
 
 Gem::Specification.new do |s|
   s.name = %q{johnson}
-  s.version = "1.1.0.20090605115905"
+  s.version = "1.1.0.20090605132659"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["John Barnette", "Aaron Patterson", "Yehuda Katz", "Matthew Draper"]
   s.date = %q{2009-06-05}
   s.default_executable = %q{johnson}
-  s.description = %q{}
+  s.description = %q{Johnson is a Ruby to JavaScript bridge.}
   s.email = ["jbarnette@rubyforge.org", "aaron.patterson@gmail.com", "wycats@gmail.com", "matthew@trebex.net"]
   s.executables = ["johnson"]
   s.extensions = ["Rakefile"]
