@@ -1,3 +1,8 @@
+=== 1.2.0 (UNRELEASED)
+
+* Better cross-language stack traces. [Mike Dalessio]
+* Switch to Hoe 2.0.
+
 === 1.1.0 "Segfault City" (2009-04-04)
 
 * Enough delays. First real/RubyForge release!
