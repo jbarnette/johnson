@@ -14,6 +14,7 @@ HOE = Hoe.spec "johnson" do |p|
   p.history_file     = "CHANGELOG.rdoc"
   p.readme_file      = "README.rdoc"
   p.summary          = "Johnson wraps JavaScript in a loving Ruby embrace."
+  p.description      = "Johnson is a Ruby to JavaScript bridge."
   p.url              = "http://github.com/jbarnette/johnson/wikis"
 
   p.extra_rdoc_files = [p.readme_file]
