@@ -231,6 +231,47 @@ module Johnson
       def test_raises_exception_to_ruby
         assert_raise(Johnson::Error) { @runtime.evaluate("undefinedValue();") }
       end
+
+      def test_js_property_false_should_not_invoke
+        klass = Class.new do
+          def bar ; 10 ; end
+          def js_property?(name) ; false ; end
+        end
+        @runtime['foo'] = foo = klass.new
+        assert_equal foo.method(:bar), @runtime.evaluate("foo.bar")
+      end
+
+      def test_js_property_nil_should_not_invoke
+        klass = Class.new do
+          def bar ; 10 ; end
+          def js_property?(name) ; nil ; end
+        end
+        foo = klass.new
+        assert_js_equal(foo.method(:bar), "foo.bar", :foo => foo)
+      end
+
+      def test_js_property_true_should_invoke_0_arity
+        klass = Class.new do
+          def bar ; 10 ; end
+          def js_property?(name) ; true ; end
+        end
+        assert_js_equal(10, "foo.bar", :foo => klass.new)
+      end
+
+      def test_js_property_on_n_arity_should_raise_exception
+        klass = Class.new do
+          def bar(n) ; 10 + n ; end
+          def js_property?(name) ; true ; end
+        end
+        @runtime['foo'] = klass.new
+        begin
+          @runtime.evaluate("foo.bar")
+        rescue Exception => e
+          assert_match(/ArgumentError/, e.message)
+        else
+          flunk "did not raise an exception"
+        end
+      end
     end
   end
 end
