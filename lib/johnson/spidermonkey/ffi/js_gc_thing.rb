@@ -2,14 +2,11 @@ module Johnson
   module SpiderMonkey
 
     class JSGCThing
-      class << self
-        def root_names
-          @root_names ||= {}
-        end
-      end
 
       include HasPointer
+
       attr_reader :ptr_to_be_rooted
+
       def initialize(runtime, value)
         @runtime = runtime
         @value = value
@@ -73,21 +70,21 @@ module Johnson
       private
 
       def add_name(name)
-        self.class.root_names[@ptr_to_be_rooted] = FFI::MemoryPointer.from_string(name)
+        SpiderMonkey.root_names[@ptr_to_be_rooted] = FFI::MemoryPointer.from_string(name)
       end
 
       def remove_name
-        self.class.root_names.delete(@ptr_to_be_rooted)
+        SpiderMonkey.root_names.delete(@ptr_to_be_rooted)
       end
 
       def add_root(bind, name)
-        add_name(name)
-        SpiderMonkey.JS_AddNamedRoot(@runtime.context, @ptr_to_be_rooted, format_root_string(bind, name))
+        add_name(format_root_string(bind, name))
+        SpiderMonkey.JS_AddNamedRoot(@runtime.context, @ptr_to_be_rooted, SpiderMonkey.root_names[@ptr_to_be_rooted])
       end
 
       def add_root_rt(bind, name)
-        add_name(name)
-        SpiderMonkey.JS_AddNamedRootRT(@runtime.context.runtime, @ptr_to_be_rooted, format_root_string(bind, name))
+        add_name(format_root_string(bind, name))
+        SpiderMonkey.JS_AddNamedRootRT(@runtime.context.runtime, @ptr_to_be_rooted, SpiderMonkey.root_names[@ptr_to_be_rooted])
       end
 
       def remove_root

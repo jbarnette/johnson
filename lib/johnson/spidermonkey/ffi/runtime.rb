@@ -6,8 +6,13 @@ module Johnson
       SpiderMonkey.JS_ShutDown
     end
 
-    def self.runtimes
-      @runtimes ||= {}
+    class << self
+      def runtimes
+        @runtimes ||= {}
+      end
+      def root_names
+        @root_names ||= {}
+      end
     end
 
     class Runtime
@@ -53,7 +58,6 @@ module Johnson
         @gcthings = {}
         @roots = []
         @compiled_scripts = {}
-
         self["Ruby"] = Object
         
         @gc_callback_proc = method(:gc_callback).to_proc
@@ -69,6 +73,7 @@ module Johnson
 
         destroy_contexts
         SpiderMonkey.JS_DestroyRuntime(self)
+        SpiderMonkey.runtimes.delete(@ptr.address)
       end
 
       def gc_zeal=(value)
@@ -79,10 +84,6 @@ module Johnson
       def context
         contexts = (Thread.current[CONTEXT_MAP_KEY] ||= {})
         contexts[self.object_id] ||= Context.new(self)
-      end
-
-      def contexts
-        Thread.current[CONTEXT_MAP_KEY]
       end
 
       def has_native_global?

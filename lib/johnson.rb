@@ -1,4 +1,4 @@
-require "generator"
+require "generator"  if RUBY_VERSION =~ /1.8/
 require "johnson/version"
 
 # the command-line option parser and support libs
