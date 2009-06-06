@@ -8,7 +8,18 @@ end
 require "johnson"
 
 module Johnson
+  module GCTearDown
+    def teardown
+      if ENV['JOHNSON_GC']
+        STDOUT.putc '!'
+        GC.start
+      end
+    end
+  end
+
   class TestCase < Test::Unit::TestCase
+    include GCTearDown
+
     class TestLogger
       def debug(string)
         puts string
@@ -36,6 +47,7 @@ module Johnson
   end
 
   class NodeTestCase < Test::Unit::TestCase
+    include GCTearDown
     include Johnson::Nodes
   
     undef :default_test if method_defined? :default_test
