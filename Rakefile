@@ -1,6 +1,6 @@
 require "rubygems"
 require "hoe"
-require "rake/extensiontask"
+require "rake/extensiontask" unless RUBY_PLATFORM =~ /java/
 
 require "./lib/johnson/version.rb"
 

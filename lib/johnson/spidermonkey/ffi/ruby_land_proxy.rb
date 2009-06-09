@@ -1,6 +1,21 @@
 module Johnson
   module SpiderMonkey
     class RubyLandProxy
+
+      class NativeRubyLandProxy < FFI::AutoPointer
+        def self.make(runtime, jsvalue, name)
+          SpiderMonkey.JS_AddNamedRootRT(runtime, jsvalue.to_ptr, name)
+          self.new(jsvalue.to_ptr, self.new_releaser(runtime, jsvalue))
+        end
+        # Use a method to create the Proc to avoid binding the
+        # AutoPointer instance inside the Proc.
+        def self.new_releaser(runtime, jsvalue)
+          Proc.new do |ptr| 
+            runtime.send(:jsids).delete(jsvalue.value) if runtime.send(:jsids).has_key?(jsvalue.value)
+            SpiderMonkey.JS_RemoveRootRT(runtime, ptr)
+          end
+        end
+      end
       
       include Enumerable
 
@@ -17,17 +32,33 @@ module Johnson
             self.new(runtime, value, name)
           end
         end
-        
+        # def finalize(runtime, ptr, value, proc)
+        #   Proc.new { |*args| proc.call(runtime, ptr, value) }
+        # end
+        # def release(runtime, ptr, value)
+        #   if runtime.send(:jsids).has_key?(value)
+        #     runtime.send(:jsids).delete(value)
+        #   end
+        #   SpiderMonkey.JS_RemoveRootRT(runtime, ptr)
+        # end
+        # def method_to_proc method
+        #   method.to_proc
+        # end
+
       end
 
       def initialize(runtime, value, name)
         @runtime = runtime
         @proxy_js_value = JSValue.new(@runtime, value)
 
-        @proxy_js_value.root_rt(binding, name)
-        
-        @runtime.send(:roots) << @proxy_js_value
+        @native_proxy= NativeRubyLandProxy.make(runtime, @proxy_js_value, name)
+          #          @proxy_js_value.root_rt(binding, name)
         @runtime.send(:jsids)[@proxy_js_value.value] = self
+        # ObjectSpace.define_finalizer(self, RubyLandProxy.finalize(runtime, 
+        #                                                           @proxy_js_value.to_ptr, 
+        #                                                           @proxy_js_value.value, 
+        #                                                           RubyLandProxy.method_to_proc(self.class.method(:release))))
+
       end
 
       def [](name)

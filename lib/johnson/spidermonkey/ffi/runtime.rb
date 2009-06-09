@@ -2,7 +2,6 @@ module Johnson
   module SpiderMonkey
 
     at_exit do
-      runtimes.each_value { |rt| rt.destroy }
       SpiderMonkey.JS_ShutDown
     end
 
@@ -12,6 +11,23 @@ module Johnson
       end
       def root_names
         @root_names ||= {}
+      end
+    end
+
+    class NativeRuntime < FFI::AutoPointer
+      class << self
+        def allocate
+          self.new(SpiderMonkey.JS_NewRuntime(0x100000))
+        end
+        def release(runtime)
+          SpiderMonkey.JS_SetGCCallbackRT(runtime, nil)
+          iterator = FFI::MemoryPointer.new(:pointer).write_pointer(FFI::Pointer::NULL)
+          while not (context = SpiderMonkey.JS_ContextIterator(runtime, iterator)).null?
+            SpiderMonkey.JS_DestroyContext(iterator.read_pointer)
+            iterator.write_pointer(FFI::Pointer::NULL)
+          end
+          SpiderMonkey.JS_DestroyRuntime(runtime)
+        end
       end
     end
 
@@ -49,14 +65,14 @@ module Johnson
       end
 
       def initialize
-        @ptr = SpiderMonkey.JS_NewRuntime(0x100000)
+        @ptr = SpiderMonkey::NativeRuntime.allocate
         @native_global = SpiderMonkey.JS_GetGlobalObject(context)
         @gc_zeal = 0
 
         @jsids = {}
         @rbids = {}
         @gcthings = {}
-        @roots = []
+        @roots = {}
         @compiled_scripts = {}
         self["Ruby"] = Object
         
@@ -64,16 +80,6 @@ module Johnson
         SpiderMonkey.JS_SetGCCallbackRT(self, @gc_callback_proc)
 
         SpiderMonkey.runtimes[@ptr.address] = self
-      end
-
-      def destroy
-        @roots.each { |js_value| js_value.unroot_rt }
-        @roots.clear
-        @jsids.clear
-
-        destroy_contexts
-        SpiderMonkey.JS_DestroyRuntime(self)
-        SpiderMonkey.runtimes.delete(@ptr.address)
       end
 
       def gc_zeal=(value)
@@ -198,7 +204,7 @@ module Johnson
         script_object = SpiderMonkey.JS_NewScriptObject(context, compiled_js)
         
         JSGCThing.new(self, script_object).root(binding) do |js_object|
-          RubyLandProxy.make(self, SpiderMonkey.OBJECT_TO_JSVAL(js_object.to_ptr), 'JSScriptProxy')
+          RubyLandProxy.make(self, SpiderMonkey.OBJECT_TO_JSVAL(js_object.to_ptr), "JSScriptProxy")
         end
 
       end

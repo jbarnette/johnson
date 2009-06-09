@@ -22,6 +22,8 @@ module Johnson
     # Context
     attach_function :JS_NewContext, [ :pointer, :uint ], :pointer
     attach_function :JS_DestroyContext, [ :pointer ], :void
+    attach_function :JS_DestroyContextNoGC, [ :pointer ], :void
+    attach_function :JS_DestroyContextMaybeGC, [ :pointer ], :void
     attach_function :JS_ContextIterator, [ :pointer, :pointer ], :pointer
     attach_function :JS_SetContextPrivate, [ :pointer, :pointer ], :void
     attach_function :JS_GetRuntime, [ :pointer ], :pointer
@@ -284,7 +286,7 @@ module Johnson
       end
 
       def self.release(ptr)
-        SpiderMonkey.free(ptr)
+        # SpiderMonkey.free(ptr)
       end
 
       def name=(str)

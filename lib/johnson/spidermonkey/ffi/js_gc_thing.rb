@@ -10,7 +10,8 @@ module Johnson
       def initialize(runtime, value)
         @runtime = runtime
         @value = value
-        @ptr_to_be_rooted = FFI::MemoryPointer.new(:pointer).write_pointer(value)
+        @ptr_value = FFI::MemoryPointer.new(:pointer).write_pointer(value)
+        @ptr_to_be_rooted = FFI::Pointer.new(@ptr_value.address)
         @ptr = value
         @rooted = false
       end

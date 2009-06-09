@@ -23,6 +23,10 @@ module Johnson
       # @runtime.delegate.debugger = Johnson::SpiderMonkey::Debugger.new(TestLogger.new)
     end
     
+    # def teardown
+    #   @runtime.delegate.destroy
+    # end
+
     def assert_js(expression, options={})
       runtime = options[:runtime] || @runtime
       assert(runtime.evaluate(expression), "Expected JS expression [#{expression}] to be true.")

@@ -14,7 +14,8 @@ module Johnson
           @ptr = @ptr_to_be_rooted = pointer_or_value
         elsif pointer_or_value.kind_of?(Fixnum) or pointer_or_value.kind_of?(Bignum)
           @value = pointer_or_value
-          @ptr = @ptr_to_be_rooted = FFI::MemoryPointer.new(:long).write_long(@value)
+          @ptr_value = FFI::MemoryPointer.new(:long).write_long(@value)
+          @ptr = @ptr_to_be_rooted = FFI::Pointer.new(@ptr_value.address)
         else
           raise "Invalid initialization value for SpiderMonkey::JSValue"
         end

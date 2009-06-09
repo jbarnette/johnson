@@ -43,11 +43,12 @@ module Johnson
       end
 
       def init_global
-        if @runtime.has_native_global?
-          @native_global = @runtime.native_global
-        else
-          @native_global = NativeGlobal.new(self)
-        end
+        @native_global = if @runtime.has_native_global?
+                           @runtime.native_global
+                         else
+                           NativeGlobal.new(self)
+                         end
+        SpiderMonkey.JS_SetGlobalObject(self, @native_global)
       end
 
       def define_property(js_context, obj, argc, argv, retval)
@@ -76,7 +77,7 @@ module Johnson
         object_value = FFI::MemoryPointer.new(:long)
         @define_property_cb = method(:define_property).to_proc
 
-        SpiderMonkey.JS_GetProperty(self, @native_global, "Object", object_value)
+        SpiderMonkey.JS_GetProperty(self, @native_global, 'Object', object_value)
         SpiderMonkey.JS_AddNamedRoot(self, object_value, 'Object')
 
         SpiderMonkey.JS_DefineFunction(self, 

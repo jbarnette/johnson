@@ -4,126 +4,6 @@ module Johnson
     class JSLandProxy
 
       class << self
-        
-        def make(runtime, value)          
-          if runtime.send(:rbids).has_key?(value.__id__)
-            JSValue.new(runtime, runtime.send(:rbids)[value.__id__])
-          else
-            context = runtime.context
-
-            if runtime.send(:rbids).has_key?(value.__id__)
-              runtime.send(:rbids)[value.__id__]
-            else
-              
-              klass = if value.kind_of?(Class)
-                        JSLandClassProxyClass()
-                      elsif value.respond_to?(:call)
-                        JSLandCallableProxyClass()
-                      else
-                        JSLandProxyClass()
-                      end
-            end
-            
-            if value.kind_of?(Struct)
-              treat_all_properties_as_methods(value)
-            end
-
-            js_object = JSGCThing.new(runtime, SpiderMonkey.JS_NewObject(context, klass, nil, nil))
-            js_object.root(binding)
-            js_value = JSValue.new(runtime, SpiderMonkey.OBJECT_TO_JSVAL(js_object.to_ptr))
-
-            @js_method_missing = method(:js_method_missing).to_proc
-            @toArray = method(:to_array).to_proc
-            @toString = method(:to_string).to_proc
-
-            SpiderMonkey.JS_DefineFunction(context, js_object, "__noSuchMethod__", @js_method_missing, 2, 0)
-            SpiderMonkey.JS_DefineFunction(context, js_object, "toArray", @toArray, 0, 0)
-            SpiderMonkey.JS_DefineFunction(context, js_object, "toString", @toString, 0, 0)
-            
-            runtime.send(:rbids)[value.__id__] = js_value.value
-            private_data = FFI::MemoryPointer.new(:long).write_long(value.__id__)
-            runtime.add_gcthing(value.__id__, [value, private_data])
-            SpiderMonkey.JS_SetPrivate(context, js_object, private_data)
-            js_object.unroot
-            js_value
-          end
-        end
-
-        def js_value_is_proxy?(js_value)
-          js_class = SpiderMonkey.JS_GetClass(js_value.to_object)
-          js_class == JSLandClassProxyClass().to_ptr    || \
-          js_class == JSLandProxyClass().to_ptr         || \
-          js_class == JSLandCallableProxyClass().to_ptr
-        end
-
-        def unwrap_js_land_proxy(runtime, js_value)
-          get_ruby_object(runtime.context, js_value.to_object)
-        end
-
-        private
-
-        def JSLandClassProxyClass
-
-          return @js_land_class_proxy_class if defined? @js_land_class_proxy_class
-
-          @js_land_class_proxy_class = SpiderMonkey.JSClass.allocate
-          @js_land_class_proxy_class.name = 'JSLandClassProxy'
-          @js_land_class_proxy_class.addProperty = SpiderMonkey.method(:JS_PropertyStub).to_proc
-          @js_land_class_proxy_class.delProperty = SpiderMonkey.method(:JS_PropertyStub).to_proc
-          @js_land_class_proxy_class.getProperty = method(:get).to_proc
-          @js_land_class_proxy_class.setProperty = method(:set).to_proc
-          @js_land_class_proxy_class.enumerate = SpiderMonkey.method(:JS_EnumerateStub).to_proc
-          @js_land_class_proxy_class.resolve =  SpiderMonkey.method(:JS_ResolveStub).to_proc
-          @js_land_class_proxy_class.convert = SpiderMonkey.method(:JS_ConvertStub).to_proc
-          @js_land_class_proxy_class.finalize = method(:finalize).to_proc
-          @js_land_class_proxy_class.construct = method(:construct).to_proc
-
-          @js_land_class_proxy_class[:flags] = JSCLASS_HAS_PRIVATE
-
-          @js_land_class_proxy_class
-        end
-
-        def JSLandProxyClass
-
-          return @js_land_proxy_class if defined? @js_land_proxy_class
-
-          @js_land_proxy_class = SpiderMonkey.JSClass(:new_resolve).allocate
-          @js_land_proxy_class.name = 'JSLandProxy'
-          @js_land_proxy_class.addProperty = SpiderMonkey.method(:JS_PropertyStub).to_proc
-          @js_land_proxy_class.delProperty = SpiderMonkey.method(:JS_PropertyStub).to_proc
-          @js_land_proxy_class.getProperty = method(:get).to_proc
-          @js_land_proxy_class.setProperty = method(:set).to_proc
-          @js_land_proxy_class.enumerate = SpiderMonkey.method(:JS_EnumerateStub).to_proc
-          @js_land_proxy_class.resolve = method(:resolve).to_proc
-          @js_land_proxy_class.convert = SpiderMonkey.method(:JS_ConvertStub).to_proc
-          @js_land_proxy_class.finalize = method(:finalize).to_proc
-
-          @js_land_proxy_class[:flags] = JSCLASS_NEW_RESOLVE | JSCLASS_HAS_PRIVATE
-
-          @js_land_proxy_class
-        end
-
-        def JSLandCallableProxyClass
-
-          return @js_land_callable_proxy_class if defined? @js_land_callable_proxy_class
-
-          @js_land_callable_proxy_class = SpiderMonkey.JSClass.allocate
-          @js_land_callable_proxy_class.name = 'JSLandCallableProxy'
-          @js_land_callable_proxy_class.addProperty = SpiderMonkey.method(:JS_PropertyStub).to_proc
-          @js_land_callable_proxy_class.delProperty = SpiderMonkey.method(:JS_PropertyStub).to_proc
-          @js_land_callable_proxy_class.getProperty = method(:get).to_proc
-          @js_land_callable_proxy_class.setProperty = method(:set).to_proc
-          @js_land_callable_proxy_class.enumerate = SpiderMonkey.method(:JS_EnumerateStub).to_proc
-          @js_land_callable_proxy_class.resolve =  SpiderMonkey.method(:JS_ResolveStub).to_proc
-          @js_land_callable_proxy_class.convert = SpiderMonkey.method(:JS_ConvertStub).to_proc
-          @js_land_callable_proxy_class.finalize = method(:finalize).to_proc
-          @js_land_callable_proxy_class.construct = method(:construct).to_proc
-          @js_land_callable_proxy_class.call = method(:call).to_proc
-
-          @js_land_callable_proxy_class[:flags] = JSCLASS_HAS_PRIVATE
-
-          @js_land_callable_proxy_class
-        end
 
         def get_ruby_id(context, js_object)
           SpiderMonkey.JS_GetInstancePrivate(context, js_object, SpiderMonkey.JS_GetClass(js_object), nil).read_long
@@ -265,7 +145,7 @@ module Johnson
 
           self_id = SpiderMonkey.JS_GetInstancePrivate(js_context, 
                                                        SpiderMonkey.JSVAL_TO_OBJECT(SpiderMonkey.JS_ARGV_CALLEE(argv)), 
-                                                       JSLandCallableProxyClass(), nil).read_int
+                                                       JSLandCallableProxyClass, nil).read_int
           self_value = ObjectSpace._id2ref(self_id)
 
           args = argv.read_array_of_int(argc).collect do |js_value|
@@ -290,6 +170,133 @@ module Johnson
           end
 
         end
+
+        class NativeJSLandClassProxyClass
+          class << self
+            def allocate
+              js_land_class_proxy_class = SpiderMonkey.JSClass.allocate
+              js_land_class_proxy_class.name = 'JSLandClassProxy'
+              js_land_class_proxy_class.addProperty = SpiderMonkey.method(:JS_PropertyStub).to_proc
+              js_land_class_proxy_class.delProperty = SpiderMonkey.method(:JS_PropertyStub).to_proc
+              js_land_class_proxy_class.getProperty = JSLandProxy.method(:get).to_proc
+              js_land_class_proxy_class.setProperty = JSLandProxy.method(:set).to_proc
+              js_land_class_proxy_class.enumerate = SpiderMonkey.method(:JS_EnumerateStub).to_proc
+              js_land_class_proxy_class.resolve =  SpiderMonkey.method(:JS_ResolveStub).to_proc
+              js_land_class_proxy_class.convert = SpiderMonkey.method(:JS_ConvertStub).to_proc
+              js_land_class_proxy_class.finalize = JSLandProxy.method(:finalize).to_proc
+              js_land_class_proxy_class.construct = JSLandProxy.method(:construct).to_proc
+
+              js_land_class_proxy_class[:flags] = JSCLASS_HAS_PRIVATE
+
+              js_land_class_proxy_class
+            end
+          end
+        end
+
+        class NativeJSLandProxyClass
+          class << self
+            def allocate
+              js_land_proxy_class = SpiderMonkey.JSClass(:new_resolve).allocate
+              js_land_proxy_class.name = 'JSLandProxy'
+              js_land_proxy_class.addProperty = SpiderMonkey.method(:JS_PropertyStub).to_proc
+              js_land_proxy_class.delProperty = SpiderMonkey.method(:JS_PropertyStub).to_proc
+              js_land_proxy_class.getProperty = JSLandProxy.method(:get).to_proc
+              js_land_proxy_class.setProperty = JSLandProxy.method(:set).to_proc
+              js_land_proxy_class.enumerate = SpiderMonkey.method(:JS_EnumerateStub).to_proc
+              js_land_proxy_class.resolve = JSLandProxy.method(:resolve).to_proc
+              js_land_proxy_class.convert = SpiderMonkey.method(:JS_ConvertStub).to_proc
+              js_land_proxy_class.finalize = JSLandProxy.method(:finalize).to_proc
+
+              js_land_proxy_class[:flags] = JSCLASS_NEW_RESOLVE | JSCLASS_HAS_PRIVATE
+
+              js_land_proxy_class
+            end
+          end
+        end
+
+        class NativeJSLandCallableProxyClass
+          class << self
+            def allocate
+              js_land_callable_proxy_class = SpiderMonkey.JSClass.allocate
+              js_land_callable_proxy_class.name = 'JSLandCallableProxy'
+              js_land_callable_proxy_class.addProperty = SpiderMonkey.method(:JS_PropertyStub).to_proc
+              js_land_callable_proxy_class.delProperty = SpiderMonkey.method(:JS_PropertyStub).to_proc
+              js_land_callable_proxy_class.getProperty = JSLandProxy.method(:get).to_proc
+              js_land_callable_proxy_class.setProperty = JSLandProxy.method(:set).to_proc
+              js_land_callable_proxy_class.enumerate = SpiderMonkey.method(:JS_EnumerateStub).to_proc
+              js_land_callable_proxy_class.resolve =  SpiderMonkey.method(:JS_ResolveStub).to_proc
+              js_land_callable_proxy_class.convert = SpiderMonkey.method(:JS_ConvertStub).to_proc
+              js_land_callable_proxy_class.finalize = JSLandProxy.method(:finalize).to_proc
+              js_land_callable_proxy_class.construct = JSLandProxy.method(:construct).to_proc
+              js_land_callable_proxy_class.call = JSLandProxy.method(:call).to_proc
+
+              js_land_callable_proxy_class[:flags] = JSCLASS_HAS_PRIVATE
+
+              js_land_callable_proxy_class
+            end
+          end
+        end
+
+        JSLandClassProxyClass = NativeJSLandClassProxyClass.allocate
+        JSLandCallableProxyClass = NativeJSLandCallableProxyClass.allocate
+        JSLandProxyClass = NativeJSLandProxyClass.allocate
+
+        def make(runtime, value)          
+          if runtime.send(:rbids).has_key?(value.__id__)
+            JSValue.new(runtime, runtime.send(:rbids)[value.__id__])
+          else
+            context = runtime.context
+
+            if runtime.send(:rbids).has_key?(value.__id__)
+              runtime.send(:rbids)[value.__id__]
+            else
+              
+              klass = if value.kind_of?(Class)
+                        JSLandClassProxyClass
+                      elsif value.respond_to?(:call)
+                        JSLandCallableProxyClass
+                      else
+                        JSLandProxyClass
+                      end
+            end
+            
+            if value.kind_of?(Struct)
+              treat_all_properties_as_methods(value)
+            end
+
+            js_object = JSGCThing.new(runtime, SpiderMonkey.JS_NewObject(context, klass, nil, nil))
+            js_object.root(binding)
+            js_value = JSValue.new(runtime, SpiderMonkey.OBJECT_TO_JSVAL(js_object.to_ptr))
+
+            @js_method_missing = method(:js_method_missing).to_proc
+            @toArray = method(:to_array).to_proc
+            @toString = method(:to_string).to_proc
+
+            SpiderMonkey.JS_DefineFunction(context, js_object, "__noSuchMethod__", @js_method_missing, 2, 0)
+            SpiderMonkey.JS_DefineFunction(context, js_object, "toArray", @toArray, 0, 0)
+            SpiderMonkey.JS_DefineFunction(context, js_object, "toString", @toString, 0, 0)
+            
+            runtime.send(:rbids)[value.__id__] = js_value.value
+            private_data = FFI::MemoryPointer.new(:long).write_long(value.__id__)
+            runtime.add_gcthing(value.__id__, [value, private_data])
+            SpiderMonkey.JS_SetPrivate(context, js_object, private_data)
+            js_object.unroot
+            js_value
+          end
+        end
+
+        def js_value_is_proxy?(js_value)
+          js_class = SpiderMonkey.JS_GetClass(js_value.to_object)
+          js_class == JSLandClassProxyClass.to_ptr    || \
+          js_class == JSLandProxyClass.to_ptr         ||
+          js_class == JSLandCallableProxyClass.to_ptr
+        end
+
+        def unwrap_js_land_proxy(runtime, js_value)
+          get_ruby_object(runtime.context, js_value.to_object)
+        end
+
+        private
 
         def to_array(js_context, obj, argc, argv, retval)
 
