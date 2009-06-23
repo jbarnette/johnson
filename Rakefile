@@ -2,7 +2,7 @@ require "rubygems"
 require "hoe"
 require "rake/extensiontask"
 
-require "./lib/johnson/version.rb"
+Hoe.plugin :debugging
 
 HOE = Hoe.spec "johnson" do |p|
   p.developer "John Barnette",   "jbarnette@rubyforge.org"
@@ -10,7 +10,6 @@ HOE = Hoe.spec "johnson" do |p|
   p.developer "Yehuda Katz",     "wycats@gmail.com"
   p.developer "Matthew Draper",  "matthew@trebex.net"
 
-  p.version          = Johnson::VERSION
   p.history_file     = "CHANGELOG.rdoc"
   p.readme_file      = "README.rdoc"
   p.summary          = "Johnson wraps JavaScript in a loving Ruby embrace."

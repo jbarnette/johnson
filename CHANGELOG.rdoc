@@ -1,9 +1,10 @@
-=== 1.2.0 (UNRELEASED)
+=== UNRELEASED
 
+* Switch to hoe-debugging for GDB and Valgrind support.
 * Better cross-language stack traces. [Mike Dalessio]
-* Switch to Hoe 2.0.
+* Switch to Hoe 2.x.
 
-=== 1.1.0 "Segfault City" (2009-04-04)
+=== 1.1.0 / 2009-04-04
 
 * Enough delays. First real/RubyForge release!
 * Cleaned up the build.
