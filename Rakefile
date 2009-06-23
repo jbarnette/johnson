@@ -2,7 +2,7 @@ require "rubygems"
 require "hoe"
 require "rake/extensiontask"
 
-Hoe.plugin :debugging
+Hoe.plugin :debugging, :git
 
 HOE = Hoe.spec "johnson" do
   developer "John Barnette",   "jbarnette@rubyforge.org"
