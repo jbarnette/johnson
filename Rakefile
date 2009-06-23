@@ -4,29 +4,26 @@ require "rake/extensiontask"
 
 Hoe.plugin :debugging
 
-HOE = Hoe.spec "johnson" do |p|
-  p.developer "John Barnette",   "jbarnette@rubyforge.org"
-  p.developer "Aaron Patterson", "aaron.patterson@gmail.com"
-  p.developer "Yehuda Katz",     "wycats@gmail.com"
-  p.developer "Matthew Draper",  "matthew@trebex.net"
+HOE = Hoe.spec "johnson" do
+  developer "John Barnette",   "jbarnette@rubyforge.org"
+  developer "Aaron Patterson", "aaron.patterson@gmail.com"
+  developer "Yehuda Katz",     "wycats@gmail.com"
+  developer "Matthew Draper",  "matthew@trebex.net"
 
-  p.history_file     = "CHANGELOG.rdoc"
-  p.readme_file      = "README.rdoc"
-  p.summary          = "Johnson wraps JavaScript in a loving Ruby embrace."
-  p.description      = "Johnson is a Ruby to JavaScript bridge."
-  p.url              = "http://github.com/jbarnette/johnson/wikis"
+  self.extra_rdoc_files = FileList["*.rdoc"]
+  self.history_file     = "CHANGELOG.rdoc"
+  self.readme_file      = "README.rdoc"
+  self.test_globs       = %w(test/**/*_test.rb)
 
-  p.extra_rdoc_files = [p.readme_file]
-  p.test_globs       = %w(test/**/*_test.rb)
+  clean_globs << "lib/johnson/spidermonkey.bundle"
+  clean_globs << "tmp"
+  clean_globs << "vendor/spidermonkey/**/*.OBJ"
+  clean_globs << "ext/**/*.{o,so,bundle,a,log}"
 
-  p.clean_globs     << "lib/johnson/spidermonkey.bundle"
-  p.clean_globs     << "tmp"
-  p.clean_globs     << "vendor/spidermonkey/**/*.OBJ"
-  p.clean_globs     << "ext/**/*.{o,so,bundle,a,log}"
-
-  p.extra_deps      << "rake"
-  p.extra_dev_deps  << "rake-compiler"
-  p.spec_extras      = { :extensions => %w(Rakefile) }
+  # FIX: this crap needs to die
+  extra_deps << "rake"
+  extra_dev_deps << "rake-compiler"
+  self.spec_extras = { :extensions => %w(Rakefile) }
 end
 
 Rake::ExtensionTask.new "spidermonkey", HOE.spec do |ext|

@@ -1,10 +1,13 @@
 = Johnson
 
-Johnson wraps JavaScript in a loving Ruby embrace.
+* http://github.com/jbarnette/johnson
+* http://johnson.lighthouseapp.com
+* http://groups.google.com/group/johnson-talk
 
-* {Source Code}[http://github.com/jbarnette/johnson]
-* {Bug Tracker}[http://johnson.lighthouseapp.com]
-* {RubyForge Project}[http://johnson.rubyforge.org]
+== Description
+
+Johnson wraps JavaScript in a loving Ruby embrace. It embeds the
+Mozilla SpiderMonkey JavaScript runtime as a C extension.
 
 == Examples
 
@@ -16,18 +19,18 @@ Johnson wraps JavaScript in a loving Ruby embrace.
 
 == Installation
 
-  [sudo] gem install johnson
+    $ gem install johnson
 
-=== Restrictions
+=== TODO
 
-Johnson is currently developed and tested on Mac OS X with Ruby
-1.8.6. We'd like to widen our support: contributions are very welcome!
-
-It's also kinda segfaulty at the moment. GC is hard.
+* Support more than just Mac OS X / Ruby 1.8.6.
+* Stop freaking segfaulting.
 
 == License
 
-Copyright 2008-2009 John Barnette, Aaron Patterson, Yehuda Katz,
+Copyright 2008-2009 John Barnette,
+Aaron Patterson,
+Yehuda Katz,
 Matthew Draper
 
 Permission is hereby granted, free of charge, to any person obtaining
