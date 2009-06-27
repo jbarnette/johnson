@@ -1,8 +1,8 @@
-=== UNRELEASED
+=== 1.1.1 / 2009-06-27
 
-* Switch to hoe-debugging for GDB and Valgrind support.
-* Better cross-language stack traces. [Mike Dalessio]
-* Switch to Hoe 2.x.
+* Stress GC during tests by setting JOHNSON_GC env var. [Mike Dalessio]
+* Better cross-language exception stack traces. [Mike Dalessio]
+* Modernize our use of Hoe and plugins.
 
 === 1.1.0 / 2009-04-04
 
@@ -12,6 +12,6 @@
 * Fixed allocation-during-GC bugs.
 * Added some new GC bugs.
 
-=== 1.0.0 (2008-03-11)
+=== 1.0.0 / 2008-03-11
 
 * Birthday!
