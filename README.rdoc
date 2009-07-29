@@ -1,7 +1,6 @@
 = Johnson
 
 * http://github.com/jbarnette/johnson
-* http://johnson.lighthouseapp.com
 * http://groups.google.com/group/johnson-talk
 
 == Description
