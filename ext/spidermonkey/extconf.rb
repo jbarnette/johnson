@@ -18,9 +18,12 @@ $CFLAGS << cflags.collect { |f| " -#{f}" }.join(" ")
 spidermonkey_dir = File.expand_path File.dirname(__FILE__) +
   "/../../vendor/spidermonkey"
 
+Dir.chdir spidermonkey_dir do
+  system "make -f Makefile.ref" if Dir["**/libjs.a"].empty?
+end
+
 libjs = Dir[spidermonkey_dir + "/**/libjs.a"].first
-abort "libjs.a isn't built!" unless libjs
-$LOCAL_LIBS<< libjs
+$LOCAL_LIBS << libjs
 
 dir_config "johnson/spidermonkey"
 

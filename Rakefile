@@ -1,10 +1,14 @@
 require "rubygems"
+
+gem "hoe", ">= 2.3"
 require "hoe"
+
+gem "rake-compiler", ">= 0.6.0"
 require "rake/extensiontask"
 
-Hoe.plugin :debugging, :git
+Hoe.plugin :debugging, :doofus, :git
 
-HOE = Hoe.spec "johnson" do
+Hoe.spec "johnson" do
   developer "John Barnette",   "jbarnette@rubyforge.org"
   developer "Aaron Patterson", "aaron.patterson@gmail.com"
   developer "Yehuda Katz",     "wycats@gmail.com"
@@ -15,26 +19,65 @@ HOE = Hoe.spec "johnson" do
   self.readme_file      = "README.rdoc"
   self.test_globs       = %w(test/**/*_test.rb)
 
-  clean_globs << "lib/johnson/spidermonkey.bundle"
-  clean_globs << "tmp"
-  clean_globs << "vendor/spidermonkey/**/*.OBJ"
-  clean_globs << "ext/**/*.{o,so,bundle,a,log}"
+  self.spec_extras = { :extensions => %w(ext/spidermonkey/extconf.rb) }
 
-  # FIX: this crap needs to die
-  extra_deps << "rake"
-  extra_dev_deps << "rake-compiler"
-  self.spec_extras = { :extensions => %w(Rakefile) }
+  extra_dev_deps << ["rake-compiler", ">= 0.6.0"]
+
+  clean_globs    << "ext/**/Makefile"
+  clean_globs    << "ext/**/*.{o,so,bundle,a,log}"
+  clean_globs    << "ext/spidermonkey/immutable_node.c"
+  clean_globs    << "lib/johnson/spidermonkey.bundle"
+  clean_globs    << "tmp"
+  clean_globs    << "vendor/spidermonkey/**/*.OBJ"
+
+  Rake::ExtensionTask.new "spidermonkey", spec do |ext|
+    ext.lib_dir = "lib/johnson"
+  end
 end
 
-Rake::ExtensionTask.new "spidermonkey", HOE.spec do |ext|
-  ext.lib_dir = "lib/johnson"
+task :clean do
+  Dir.chdir "vendor/spidermonkey" do
+    sh "make clean -f Makefile.ref" unless Dir["**/libjs.a"].empty?
+  end
 end
 
 task :test => :compile
 
-Dir["lib/tasks/*.rake"].each { |f| load f }
+require "erb"
 
-# HACK: If Rake is running as part of the gem install, clear out the
-# default task and make the extensions compile instead.
+GENERATED_NODE = "ext/spidermonkey/immutable_node.c"
 
-Rake::Task[:default].prerequisites.replace %w(compile) if ENV["RUBYARCHDIR"]
+task :package        => GENERATED_NODE
+task :check_manifest => GENERATED_NODE
+
+def jsops
+  ops = []
+  File.open("vendor/spidermonkey/jsopcode.tbl", "rb") { |f|
+    f.each_line do |line|
+      if line =~ /^OPDEF\((\w+),/
+        ops << $1
+      end
+    end
+  }
+  ops
+end
+
+def tokens
+  toks = []
+  File.open("vendor/spidermonkey/jsscan.h", "rb") { |f|
+    f.each_line do |line|
+      line.scan(/TOK_\w+/).each do |token|
+        next if token == "TOK_ERROR"
+        toks << token
+      end
+    end
+  }
+  toks.uniq
+end
+
+file GENERATED_NODE => "ext/spidermonkey/immutable_node.c.erb"  do |t|
+  template = ERB.new(File.open(t.prerequisites.first, "rb") { |x| x.read })
+  File.open(GENERATED_NODE, "wb") { |f| f.write template.result(binding) }
+end
+
+file "ext/spidermonkey/extconf.rb" => GENERATED_NODE
