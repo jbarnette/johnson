@@ -60,5 +60,17 @@ module Johnson
         GC.start
       }
     end
+
+    def test_evaluated_compiled_script_checks_argument_type
+      assert_raises(ArgumentError) {
+        @runtime.evaluate_compiled_script(nil)
+      }
+      assert_raises(ArgumentError) {
+        @runtime.evaluate_compiled_script(17)
+      }
+      assert_raises(ArgumentError) {
+        @runtime.evaluate_compiled_script("3+9")
+      }
+    end
   end
 end

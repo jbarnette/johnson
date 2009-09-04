@@ -127,6 +127,10 @@ static VALUE native_compile(VALUE self, VALUE script, VALUE filename, VALUE line
 static VALUE evaluate_compiled_script(VALUE self, VALUE compiled_script)
 {
   JohnsonRuntime* runtime;
+
+  if (!ruby_value_is_script_proxy(compiled_script))
+    rb_raise(rb_eArgError, "Compiled JS Script expected");
+
   Data_Get_Struct(self, JohnsonRuntime, runtime);
 
   JSContext * context = johnson_get_current_context(runtime);
