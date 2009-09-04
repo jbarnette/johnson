@@ -39,8 +39,8 @@ module Johnson
                               x++;
                             }
                             some_number++;
-                        ", 'awesome_script')
-      @runtime.break('awesome_script', 4) do
+                        ")
+      script.break(4) do
         break_times += 1
         assert_equal(@runtime['i'], @runtime['x'])
         assert_equal(1, @runtime['some_number'])

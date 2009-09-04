@@ -50,5 +50,11 @@ module Johnson #:nodoc:
         call_function_property(name, *args)
       end
     end
+    class RubyLandScript < RubyLandProxy # native
+      def break(linenum, &block)
+        runtime.set_trap(self, linenum, block)
+        runtime.traps << [self, linenum]
+      end
+    end
   end
 end

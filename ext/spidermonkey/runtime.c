@@ -325,6 +325,6 @@ void init_Johnson_SpiderMonkey_Runtime(VALUE spidermonkey)
   rb_define_method(klass, "gc_zeal=", set_gc_zeal, 1);
   rb_define_method(klass, "evaluate_compiled_script", evaluate_compiled_script, 1);
   rb_define_private_method(klass, "native_compile", native_compile, 3);
-  rb_define_private_method(klass, "set_trap", set_trap, 3);
+  rb_define_method(klass, "set_trap", set_trap, 3);
   rb_define_private_method(klass, "clear_trap", clear_trap, 2);
 }

@@ -8,6 +8,7 @@ DECLARE_RUBY_WRAPPER(rb_yield, VALUE v)
 DEFINE_RUBY_WRAPPER(rb_yield, rb_yield, ARGLIST1(v))
 
 static VALUE proxy_class = Qnil;
+static VALUE script_class = Qnil;
 
 static inline JSBool get_jsval_for_proxy(RubyLandProxy* proxy, jsval* jv)
 {
@@ -468,7 +469,12 @@ static void finalize(RubyLandProxy* proxy)
 
 bool ruby_value_is_proxy(VALUE maybe_proxy)
 {
-  return proxy_class == CLASS_OF(maybe_proxy); 
+  return proxy_class == CLASS_OF(maybe_proxy) || script_class == CLASS_OF(maybe_proxy);
+}
+
+bool ruby_value_is_script_proxy(VALUE maybe_proxy)
+{
+  return script_class == CLASS_OF(maybe_proxy);
 }
 
 JSBool unwrap_ruby_land_proxy(JohnsonRuntime* runtime, VALUE wrapped, jsval* retval)
@@ -498,7 +504,7 @@ VALUE make_ruby_land_proxy(JohnsonRuntime* runtime, jsval value, const char cons
   {    
     // otherwise make one and cache it
     RubyLandProxy* our_proxy; 
-    VALUE proxy = Data_Make_Struct(proxy_class, RubyLandProxy, 0, finalize, our_proxy);
+    VALUE proxy = Data_Make_Struct((strcmp(root_name, "JSScriptProxy") ? proxy_class : script_class), RubyLandProxy, 0, finalize, our_proxy);
 
     JSContext * context = johnson_get_current_context(runtime);
 
@@ -540,4 +546,7 @@ void init_Johnson_SpiderMonkey_Proxy(VALUE spidermonkey)
   rb_define_private_method(proxy_class, "runtime", runtime, 0);
   rb_define_private_method(proxy_class, "function_property?", function_property_p, 1);
   rb_define_private_method(proxy_class, "call_function_property", call_function_property, -1);
+
+
+  script_class = rb_define_class_under(spidermonkey, "RubyLandScript", proxy_class);
 }

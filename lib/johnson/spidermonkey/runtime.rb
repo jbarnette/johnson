@@ -3,9 +3,9 @@ module Johnson #:nodoc:
     class Runtime # native
       CONTEXT_MAP_KEY = :johnson_context_map
 
+      attr_reader :traps
       def initialize(options={})
         @debugger = nil
-        @compiled_scripts = {}
         @gcthings = {}
         @traps = []
         initialize_native(options)
@@ -55,17 +55,7 @@ module Johnson #:nodoc:
       def compile(script, filename=nil, linenum=nil)
         filename ||= 'none'
         linenum  ||= 1
-        @compiled_scripts[filename] = native_compile(script, filename, linenum)
-      end
-
-      ###
-      # Yield to +block+ in +filename+ at +linenum+
-      def break(filename, linenum, &block)
-        raise "#{filename} has not been compiled" unless @compiled_scripts.key?(filename)
-
-        compiled_script = @compiled_scripts[filename]
-        set_trap(compiled_script, linenum, block)
-        @traps << [compiled_script, linenum]
+        native_compile(script, filename, linenum)
       end
 
       class << self
