@@ -1,9 +1,9 @@
 require "rubygems"
 
-gem "hoe", ">= 2.3"
+gem "hoe", "~> 2.3"
 require "hoe"
 
-gem "rake-compiler", ">= 0.6.0"
+gem "rake-compiler", "~> 0.6"
 require "rake/extensiontask"
 
 Hoe.plugin :debugging, :doofus, :git
@@ -14,14 +14,13 @@ Hoe.spec "johnson" do
   developer "Yehuda Katz",     "wycats@gmail.com"
   developer "Matthew Draper",  "matthew@trebex.net"
 
-  self.extra_rdoc_files = FileList["*.rdoc"]
-  self.history_file     = "CHANGELOG.rdoc"
-  self.readme_file      = "README.rdoc"
-  self.test_globs       = %w(test/**/*_test.rb)
+  self.extra_rdoc_files         = FileList["*.rdoc"]
+  self.history_file             = "CHANGELOG.rdoc"
+  self.readme_file              = "README.rdoc"
+  self.test_globs               = %w(test/**/*_test.rb)
+  self.spec_extras[:extensions] = %w(ext/spidermonkey/extconf.rb)
 
-  self.spec_extras = { :extensions => %w(ext/spidermonkey/extconf.rb) }
-
-  extra_dev_deps << ["rake-compiler", ">= 0.6.0"]
+  extra_dev_deps << ["rake-compiler", "~> 0.6"]
 
   clean_globs    << "ext/**/Makefile"
   clean_globs    << "ext/**/*.{o,so,bundle,a,log}"
