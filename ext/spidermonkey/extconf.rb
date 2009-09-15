@@ -1,5 +1,4 @@
-# this needs to happen before mkmf is required
-ENV["ARCHFLAGS"] = "-arch #{`uname -p` =~ /powerpc/ ? 'ppc' : 'i386'}"
+ENV["RC_ARCHS"] = "" if RUBY_PLATFORM =~ /darwin/
 
 require "find"
 require "mkmf"
