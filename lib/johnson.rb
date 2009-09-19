@@ -24,9 +24,6 @@ require "johnson/error"
 require "johnson/runtime"
 require "johnson/parser"
 
-# make sure all the Johnson JavaScript libs are in the load path
-$LOAD_PATH.push(File.expand_path("#{File.dirname(__FILE__)}/../js"))
-
 module Johnson
   VERSION = "1.1.2"
 
