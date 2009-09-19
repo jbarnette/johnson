@@ -266,7 +266,7 @@ initialize_native(VALUE self, VALUE UNUSED(options))
 
     JSContext* context = johnson_get_current_context(runtime);
 
-    if (runtime->global = JS_GetGlobalObject(context))
+    if ((runtime->global = JS_GetGlobalObject(context)))
       return self;
   }
 
