@@ -241,7 +241,7 @@ VALUE convert_to_ruby(JohnsonRuntime* runtime, jsval js)
       if (js_value_is_regexp(runtime, js))
         JRETURN_RUBY(convert_regexp_to_ruby(runtime, js));
     
-      JRETURN_RUBY(make_ruby_land_proxy(runtime, js, "RubyLandProxy"));
+      JRETURN_RUBY(make_ruby_land_proxy(runtime, js, LEAKY_ROOT_NAME("RubyLandProxy", JS_GetStringBytes(JS_ValueToString(context, js)))));
         
     case JSTYPE_BOOLEAN:
       JRETURN_RUBY(JSVAL_TRUE == js ? Qtrue : Qfalse);

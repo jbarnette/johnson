@@ -3,6 +3,8 @@
 
 #include "spidermonkey.h"
 
+//#define LEAK_ROOT_NAMES
+
 #define RAISE_JS_ERROR(rb_runtime, ex) \
   do {\
     JohnsonRuntime * _rt = NULL;\

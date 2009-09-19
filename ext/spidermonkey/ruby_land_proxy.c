@@ -504,7 +504,7 @@ VALUE make_ruby_land_proxy(JohnsonRuntime* runtime, jsval value, const char cons
   {    
     // otherwise make one and cache it
     RubyLandProxy* our_proxy; 
-    VALUE proxy = Data_Make_Struct((strcmp(root_name, "JSScriptProxy") ? proxy_class : script_class), RubyLandProxy, 0, finalize, our_proxy);
+    VALUE proxy = Data_Make_Struct((strncmp(root_name, "JSScriptProxy", strlen("JSScriptProxy")) ? proxy_class : script_class), RubyLandProxy, 0, finalize, our_proxy);
 
     JSContext * context = johnson_get_current_context(runtime);
 

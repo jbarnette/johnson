@@ -115,7 +115,7 @@ static VALUE native_compile(VALUE self, VALUE script, VALUE filename, VALUE line
 
   PREPARE_RUBY_JROOTS(context, 1);
   JROOT(script_object);
-  JRETURN_RUBY(make_ruby_land_proxy(runtime, OBJECT_TO_JSVAL(script_object), "JSScriptProxy"));
+  JRETURN_RUBY(make_ruby_land_proxy(runtime, OBJECT_TO_JSVAL(script_object), LEAKY_ROOT_NAME("JSScriptProxy", RTEST(filename) ? RSTRING(rb_inspect(filename))->ptr : "(?)")));
 }
 
 /*
