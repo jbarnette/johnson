@@ -187,6 +187,19 @@ set_gc_zeal(VALUE self, VALUE zeal)
   return zeal;
 }
 
+static VALUE
+gc(VALUE self)
+{
+  JohnsonRuntime* runtime;
+  Data_Get_Struct(self, JohnsonRuntime, runtime);
+
+  JSContext* context = johnson_get_current_context(runtime);
+
+  JS_GC(context);
+
+  return Qnil;
+}
+
 /*
  * call-seq:
  *   debugger=(debugger)
@@ -326,6 +339,7 @@ void init_Johnson_SpiderMonkey_Runtime(VALUE spidermonkey)
 
   rb_define_method(klass, "global", global, 0);
   rb_define_method(klass, "debugger=", set_debugger, 1);
+  rb_define_method(klass, "gc", gc, 0);
   rb_define_method(klass, "gc_zeal=", set_gc_zeal, 1);
   rb_define_method(klass, "evaluate_compiled_script", evaluate_compiled_script, 1);
   rb_define_private_method(klass, "native_compile", native_compile, 3);
