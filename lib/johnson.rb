@@ -1,5 +1,4 @@
 require "generator"
-require "johnson/version"
 
 # the command-line option parser and support libs
 require "johnson/cli"
@@ -33,14 +32,15 @@ $LOAD_PATH.push(File.expand_path("#{File.dirname(__FILE__)}/../js"))
 
 module Johnson
   PRELUDE = IO.read(File.dirname(__FILE__) + "/../js/johnson/prelude.js")
-  
+  VERSION = "1.1.2"
+
   def self.evaluate(expression, vars={})
     runtime = Johnson::Runtime.new
     vars.each { |key, value| runtime[key] = value }
-    
+
     runtime.evaluate(expression)
   end
-  
+
   def self.parse(js, *args)
     Johnson::Parser.parse(js, *args)
   end
