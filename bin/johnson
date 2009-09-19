@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 
 require "readline"
-require "johnson"
+require "johnson/cli"
 
 RUNTIME = js = Johnson::Runtime.new
 RUNTIME.evaluate(Johnson::CLI::JS)

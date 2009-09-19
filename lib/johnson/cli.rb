@@ -1,3 +1,4 @@
+require "johnson"
 require "johnson/cli/options"
 
 module Johnson #:nodoc:
