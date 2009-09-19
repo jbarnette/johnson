@@ -7,32 +7,34 @@ module Johnson
     PRELUDE = IO.read PRELUDE_PATH
 
     attr_reader :delegate
-    
+
     def initialize(delegate=Johnson::SpiderMonkey::Runtime)
       @delegate = delegate.is_a?(Class) ? delegate.new : delegate
       evaluate PRELUDE, PRELUDE_PATH, 1
       global.Johnson.runtime = self
     end
-    
+
     def [](key)
       delegate[key.to_s]
     end
-    
+
     def []=(key, value)
       delegate[key.to_s] = value
     end
-    
+
     def evaluate(expression, filename=nil, linenum=nil)
       return nil if expression.nil?
       delegate.evaluate(expression, filename, linenum)
     end
-    
+
     def global
       delegate.global
     end
-    
+
     def load(*files)
-      files.map { |f| delegate.evaluate(File.read(f).gsub(/\A#!.*$/, ''), f, 1) }.last
+      files.map { |f|
+        delegate.evaluate(File.read(f).gsub(/\A#!.*$/, ''), f, 1)
+      }.last
     end
 
     ###
