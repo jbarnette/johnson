@@ -462,6 +462,8 @@ static void finalize(RubyLandProxy* proxy)
   {
     // remove our GC handle on the JS value
     JS_RemoveRootRT(proxy->runtime->js, &(proxy->key));
+
+    johnson_runtime_unref(proxy->runtime);
   }
 
   free(proxy);
@@ -519,7 +521,9 @@ VALUE make_ruby_land_proxy(JohnsonRuntime* runtime, jsval value, const char cons
 
     // put the proxy OID in the id map
     JCHECK(JS_HashTableAdd(runtime->jsids, (void *)value, (void *)proxy));
-    
+
+    johnson_runtime_ref(runtime);
+
     JRETURN_RUBY(proxy);
   }
 }
