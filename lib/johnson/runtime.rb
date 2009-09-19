@@ -60,12 +60,5 @@ module Johnson
     def evaluate_compiled_script(script)
       delegate.evaluate_compiled(script)
     end
-
-    private
-    # Called by SpiderMonkey's garbage collector to determine whether or
-    # not it should GC
-    def should_sm_gc?
-      false
-    end
   end
 end
