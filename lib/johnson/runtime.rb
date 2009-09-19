@@ -1,10 +1,16 @@
 module Johnson
   class Runtime
+
+    PRELUDE_PATH = File.expand_path File.dirname(__FILE__) +
+      "/js/prelude.js"
+
+    PRELUDE = IO.read PRELUDE_PATH
+
     attr_reader :delegate
     
     def initialize(delegate=Johnson::SpiderMonkey::Runtime)
       @delegate = delegate.is_a?(Class) ? delegate.new : delegate
-      evaluate(Johnson::PRELUDE, "Johnson::PRELUDE", 1)
+      evaluate PRELUDE, PRELUDE_PATH, 1
       global.Johnson.runtime = self
     end
     

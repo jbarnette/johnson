@@ -28,7 +28,6 @@ require "johnson/parser"
 $LOAD_PATH.push(File.expand_path("#{File.dirname(__FILE__)}/../js"))
 
 module Johnson
-  PRELUDE = IO.read(File.dirname(__FILE__) + "/../js/johnson/prelude.js")
   VERSION = "1.1.2"
 
   def self.evaluate(expression, vars={})

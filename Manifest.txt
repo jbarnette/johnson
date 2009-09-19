@@ -29,12 +29,12 @@ ext/spidermonkey/runtime.c
 ext/spidermonkey/runtime.h
 ext/spidermonkey/spidermonkey.c
 ext/spidermonkey/spidermonkey.h
-js/johnson/cli.js
-js/johnson/prelude.js
 lib/johnson.rb
 lib/johnson/cli.rb
 lib/johnson/cli/options.rb
 lib/johnson/error.rb
+lib/johnson/js/cli.js
+lib/johnson/js/prelude.js
 lib/johnson/nodes.rb
 lib/johnson/nodes/binary_node.rb
 lib/johnson/nodes/for.rb
@@ -53,7 +53,6 @@ lib/johnson/spidermonkey/js_land_proxy.rb
 lib/johnson/spidermonkey/mutable_tree_visitor.rb
 lib/johnson/spidermonkey/ruby_land_proxy.rb
 lib/johnson/spidermonkey/runtime.rb
-lib/johnson/version.rb
 lib/johnson/visitable.rb
 lib/johnson/visitors.rb
 lib/johnson/visitors/dot_visitor.rb
