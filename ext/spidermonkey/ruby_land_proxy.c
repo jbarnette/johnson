@@ -462,8 +462,6 @@ static void finalize(RubyLandProxy* proxy)
   {
     // remove our GC handle on the JS value
     JS_RemoveRootRT(proxy->runtime->js, &(proxy->key));
-
-    johnson_runtime_unref(proxy->runtime);
   }
 
   free(proxy);
@@ -495,17 +493,16 @@ JSBool unwrap_ruby_land_proxy(JohnsonRuntime* runtime, VALUE wrapped, jsval* ret
 
 VALUE make_ruby_land_proxy(JohnsonRuntime* runtime, jsval value, const char const* root_name)
 {
-  VALUE id = (VALUE)JS_HashTableLookup(runtime->jsids, (void *)value);
+  RubyLandProxy * our_proxy = (RubyLandProxy *)JS_HashTableLookup(runtime->jsids, (void *)value);
   
-  if (id)
+  if (our_proxy)
   {
     // if we already have a proxy, return it
-    return id;
+    return our_proxy->self;
   }
   else
   {    
     // otherwise make one and cache it
-    RubyLandProxy* our_proxy; 
     VALUE proxy = Data_Make_Struct((strncmp(root_name, "JSScriptProxy", strlen("JSScriptProxy")) ? proxy_class : script_class), RubyLandProxy, 0, finalize, our_proxy);
 
     JSContext * context = johnson_get_current_context(runtime);
@@ -515,14 +512,16 @@ VALUE make_ruby_land_proxy(JohnsonRuntime* runtime, jsval value, const char cons
 
     our_proxy->runtime = runtime;
     our_proxy->key = (void *)value;
+    our_proxy->self = proxy;
 
     // root the value for JS GC and lookups
     JCHECK(JS_AddNamedRootRT(runtime->js, &(our_proxy->key), root_name));
 
     // put the proxy OID in the id map
-    JCHECK(JS_HashTableAdd(runtime->jsids, (void *)value, (void *)proxy));
+    JCHECK(JS_HashTableAdd(runtime->jsids, (void *)value, (void *)our_proxy));
 
-    johnson_runtime_ref(runtime);
+    VALUE rb_runtime = (VALUE)JS_GetRuntimePrivate(runtime->js);
+    rb_iv_set(proxy, "@runtime", rb_runtime);
 
     JRETURN_RUBY(proxy);
   }

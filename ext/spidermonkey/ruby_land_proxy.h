@@ -21,6 +21,7 @@
 typedef struct {
   void* key;
   JohnsonRuntime* runtime;
+  VALUE self;
 } RubyLandProxy;
 
 bool ruby_value_is_proxy(VALUE maybe_proxy);

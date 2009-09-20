@@ -6,8 +6,6 @@
 #include "jroot.h"
 #include "ruby_land_proxy.h"
 
-static VALUE live_runtimes;
-
 /*
  * call-seq:
  *   global
@@ -272,8 +270,6 @@ initialize_native(VALUE self, VALUE UNUSED(options))
   JohnsonRuntime* runtime;
   Data_Get_Struct(self, JohnsonRuntime, runtime);
 
-  runtime->refs = 0;
-
   if ((runtime->js = JS_NewRuntime(0x100000))
     && (runtime->jsids = create_id_hash())
     && (runtime->rbids = create_id_hash()))
@@ -310,24 +306,14 @@ JSContext* johnson_get_current_context(JohnsonRuntime * runtime)
   return context->js;
 }
 
-void johnson_runtime_ref(JohnsonRuntime* runtime)
+static int proxy_cleanup_enumerator(JSHashEntry *entry, int i, void* arg)
 {
-  runtime->refs++;
-  if (runtime->refs == 1)
-  {
-    VALUE self = (VALUE)JS_GetRuntimePrivate(runtime->js);
-    rb_hash_aset(live_runtimes, self, Qtrue);
-  }
-}
-
-void johnson_runtime_unref(JohnsonRuntime* runtime)
-{
-  runtime->refs--;
-  if (runtime->refs == 0)
-  {
-    VALUE self = (VALUE)JS_GetRuntimePrivate(runtime->js);
-    rb_hash_delete(live_runtimes, self);
-  }
+  JohnsonRuntime *runtime = (JohnsonRuntime*)(arg);
+  // entry->key is jsval; entry->value is RubyLandProxy*
+  RubyLandProxy * proxy = (RubyLandProxy *)(entry->value);
+  JS_RemoveRootRT(runtime->js, &(proxy->key));
+  proxy->runtime = NULL;
+  return 0;
 }
 
 static void deallocate(JohnsonRuntime* runtime)
@@ -344,6 +330,10 @@ static void deallocate(JohnsonRuntime* runtime)
     iterator = NULL;
   }
 
+  JSContext* cleanup = JS_NewContext(runtime->js, 8192L);
+  JS_HashTableEnumerateEntries(runtime->jsids, proxy_cleanup_enumerator, runtime);
+  JS_DestroyContext(cleanup);
+
   JS_DestroyRuntime(runtime->js);
   free(runtime);
 }
@@ -357,9 +347,6 @@ static VALUE allocate(VALUE klass)
 void init_Johnson_SpiderMonkey_Runtime(VALUE spidermonkey)
 {
   VALUE klass = rb_define_class_under(spidermonkey, "Runtime", rb_cObject);
-
-  live_runtimes = rb_hash_new();
-  rb_iv_set(klass, "@live_runtimes", live_runtimes);
 
   rb_define_alloc_func(klass, allocate);
   rb_define_private_method(klass, "initialize_native", initialize_native, 1);

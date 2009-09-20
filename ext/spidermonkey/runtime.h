@@ -19,14 +19,9 @@ typedef struct {
 
   JSHashTable *jsids; // jsid -> rbid
   JSHashTable *rbids; // rbid -> jsid
-
-  int refs;
 } JohnsonRuntime;
 
 JSContext* johnson_get_current_context(JohnsonRuntime* runtime);
 void init_Johnson_SpiderMonkey_Runtime(VALUE spidermonkey);
-
-void johnson_runtime_ref(JohnsonRuntime* runtime);
-void johnson_runtime_unref(JohnsonRuntime* runtime);
 
 #endif
