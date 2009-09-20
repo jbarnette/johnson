@@ -148,15 +148,18 @@
 #define JERROR(format, args...) \
   do \
   { \
-    REMOVE_JROOTS; \
     char _jroot_msg[_JROOT_ERRSIZE]; \
     snprintf(_jroot_msg, _JROOT_ERRSIZE, (format) , ## args); \
     if (_jroot_ruby) \
+    { \
+      REMOVE_JROOTS; \
       rb_raise(rb_eRuntimeError,  _jroot_msg); \
+    } \
     else \
     { \
       JSString* _jroot_err_str = JS_NewStringCopyZ(_jroot_context, _jroot_msg); \
       if (_jroot_err_str) JS_SetPendingException(_jroot_context, STRING_TO_JSVAL(_jroot_err_str)); \
+      REMOVE_JROOTS; \
       return JS_FALSE; \
     } \
   } while(0)

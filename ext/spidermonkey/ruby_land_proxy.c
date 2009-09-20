@@ -412,13 +412,13 @@ call_function_property(int argc, VALUE* argv, VALUE self)
 
   JROOT(function);
 
-  JSType funtype = JS_TypeOfValue(context, function);
-  
   // should never be anything but a function
-  if (funtype != JSTYPE_FUNCTION)
+  if (!JS_ObjectIsFunction(context, function))
     JERROR("Specified property \"%s\" isn't a function.", StringValueCStr(argv[0]));
 
-  JRETURN_RUBY(call_js_function_value(proxy->runtime, proxy_value, function, argc - 1, &(argv[1])));
+  REMOVE_JROOTS;
+
+  return call_js_function_value(proxy->runtime, proxy_value, function, argc - 1, &(argv[1]));
 }
 
 /*
