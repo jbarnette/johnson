@@ -249,7 +249,7 @@ each(VALUE self)
     {
       jsval element;
       JCHECK(JS_GetElement(context, value, (signed) i, &element));
-      CALL_RUBY_WRAPPER(rb_yield, convert_to_ruby(proxy->runtime, element));
+      CALL_RUBY_WRAPPER(rb_yield, CONVERT_TO_RUBY(proxy->runtime, element));
     }
   }
   else
@@ -440,7 +440,7 @@ static VALUE to_s(VALUE self)
   JROOT(proxy_value);
   
   JSString* str = JS_ValueToString(context, proxy_value);
-  JRETURN_RUBY(convert_js_string_to_ruby(proxy->runtime, str));
+  JRETURN_RUBY(CONVERT_JS_STRING_TO_RUBY(proxy->runtime, str));
 }
 
 ///////////////////////////////////////////////////////////////////////////

@@ -4,6 +4,12 @@
 
 DEFINE_RUBY_WRAPPER(convert_to_ruby, convert_to_ruby, ARGLIST2(runtime, js_value))
 
+DEFINE_RUBY_WRAPPER(convert_js_string_to_ruby, convert_js_string_to_ruby, ARGLIST2(runtime, str))
+
+static VALUE convert_regexp_to_ruby(JohnsonRuntime* runtime, jsval regexp);
+DECLARE_RUBY_WRAPPER(convert_regexp_to_ruby, JohnsonRuntime* runtime; jsval regexp)
+DEFINE_RUBY_WRAPPER(convert_regexp_to_ruby, convert_regexp_to_ruby, ARGLIST2(runtime, regexp))
+
 DECLARE_RUBY_WRAPPER(rb_funcall_0, VALUE obj; ID sym; int argc)
 DEFINE_RUBY_WRAPPER(rb_funcall_0, rb_funcall, ARGLIST3(obj, sym, argc))
 
@@ -174,7 +180,7 @@ static VALUE convert_regexp_to_ruby(JohnsonRuntime* runtime, jsval regexp)
   JSRegExp* re = (JSRegExp*)JS_GetPrivate(context, JSVAL_TO_OBJECT(regexp));
 
   JRETURN_RUBY(CALL_RUBY_WRAPPER(rb_funcall_2, rb_cRegexp, rb_intern("new"), 2,
-    convert_js_string_to_ruby(runtime, re->source),
+    CONVERT_JS_STRING_TO_RUBY(runtime, re->source),
     INT2NUM((long)re->flags)));
 }
 
@@ -239,7 +245,7 @@ VALUE convert_to_ruby(JohnsonRuntime* runtime, jsval js)
         JRETURN_RUBY(unwrap_js_land_proxy(runtime, js));
 
       if (js_value_is_regexp(runtime, js))
-        JRETURN_RUBY(convert_regexp_to_ruby(runtime, js));
+        JRETURN_RUBY(CALL_RUBY_WRAPPER(convert_regexp_to_ruby, runtime, js));
     
       JRETURN_RUBY(make_ruby_land_proxy(runtime, js, LEAKY_ROOT_NAME("RubyLandProxy", JS_GetStringBytes(JS_ValueToString(context, js)))));
         
@@ -247,7 +253,7 @@ VALUE convert_to_ruby(JohnsonRuntime* runtime, jsval js)
       JRETURN_RUBY(JSVAL_TRUE == js ? Qtrue : Qfalse);
       
     case JSTYPE_STRING:
-      JRETURN_RUBY(convert_js_string_to_ruby(runtime, JSVAL_TO_STRING(js)));
+      JRETURN_RUBY(CONVERT_JS_STRING_TO_RUBY(runtime, JSVAL_TO_STRING(js)));
       
     case JSTYPE_NUMBER:
       if (JSVAL_IS_INT(js)) JRETURN_RUBY(INT2FIX(JSVAL_TO_INT(js)));
