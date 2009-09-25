@@ -1,3 +1,10 @@
+# FIXME: This definition should probably be somewhere else
+class Array
+  def js_property?(name)
+    name == :length
+  end
+end
+
 module Johnson
   module SpiderMonkey
     module JSLandProxy #:nodoc:
