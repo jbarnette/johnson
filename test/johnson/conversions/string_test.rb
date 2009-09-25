@@ -21,6 +21,14 @@ module Johnson
         @runtime[:v] = v = "hola"
         assert_not_same(v, @runtime.evaluate("v"))
       end
+
+      def test_multibyte_character_roundtrip_js
+        s = @runtime.evaluate("'\\u20AC'")
+        @runtime[:s] = s
+        assert_equal('', @runtime.evaluate("s.substr(1)"))
+        assert_equal(1, @runtime.evaluate("s.length"))
+        assert_js("'\\u20ac' == s")
+      end
     end
   end
 end

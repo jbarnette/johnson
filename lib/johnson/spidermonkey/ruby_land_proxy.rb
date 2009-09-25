@@ -1,3 +1,16 @@
+require 'iconv'
+class String
+  JavaScriptToRuby = Iconv.open('UTF-8', 'UTF-16')
+  RubyToJavaScript = Iconv.open('UTF-16', 'UTF-8')
+
+  def utf16_to_utf8
+    JavaScriptToRuby.iconv(self)
+  end
+  def utf8_to_utf16
+    RubyToJavaScript.iconv(self)
+  end
+end
+
 module Johnson #:nodoc:
   module SpiderMonkey #:nodoc:
     class RubyLandProxy # native

@@ -108,7 +108,8 @@ JSBool convert_to_js(JohnsonRuntime* runtime, VALUE ruby, jsval* retval)
 
     case T_STRING:
       {
-        JSString* str = JS_NewStringCopyN(context, StringValuePtr(ruby), (size_t) StringValueLen(ruby));
+        VALUE encoded_ruby = CALL_RUBY_WRAPPER(rb_funcall_0, ruby, rb_intern("utf8_to_utf16"), 0);
+        JSString* str = JS_NewUCStringCopyN(context, StringValuePtr(encoded_ruby), (size_t) StringValueLen(encoded_ruby) / 2);
         JCHECK(str);
         *retval = STRING_TO_JSVAL(str);
         JRETURN;
@@ -167,9 +168,11 @@ VALUE convert_js_string_to_ruby(JohnsonRuntime* runtime, JSString* str)
   JSContext * context = johnson_get_current_context(runtime);
   PREPARE_RUBY_JROOTS(context, 1);
   JROOT(str);
-  char* bytes = JS_GetStringBytes(str);
-  JCHECK(bytes);
-  JRETURN_RUBY(rb_str_new(bytes, (signed long)JS_GetStringLength(str)));
+  jschar* chars = JS_GetStringChars(str);
+  JCHECK(chars);
+  size_t len = JS_GetStringLength(str);
+  VALUE raw_ruby = rb_str_new(chars, len * 2);
+  JRETURN_RUBY(CALL_RUBY_WRAPPER(rb_funcall_0, raw_ruby, rb_intern("utf16_to_utf8"), 0));
 }
 
 static VALUE convert_regexp_to_ruby(JohnsonRuntime* runtime, jsval regexp)
