@@ -1,7 +1,9 @@
 require 'iconv'
 class String
   JavaScriptToRuby = Iconv.open('UTF-8', 'UTF-16')
+  JavaScriptToRuby.iconv("\000x\000x")
   RubyToJavaScript = Iconv.open('UTF-16', 'UTF-8')
+  RubyToJavaScript.iconv('xx')
 
   def utf16_to_utf8
     JavaScriptToRuby.iconv(self)
