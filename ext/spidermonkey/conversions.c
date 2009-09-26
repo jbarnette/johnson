@@ -187,21 +187,22 @@ static VALUE convert_regexp_to_ruby(JohnsonRuntime* runtime, jsval regexp)
     INT2NUM((long)re->flags)));
 }
 
-static bool js_value_is_regexp(JohnsonRuntime* runtime, jsval maybe_regexp)
+static JSBool js_value_is_regexp(JohnsonRuntime* runtime, jsval maybe_regexp, bool* is_regexp)
 {
   JSContext * context = johnson_get_current_context(runtime);
-  PREPARE_RUBY_JROOTS(context, 1);
+  PREPARE_JROOTS(context, 1);
   JROOT(maybe_regexp);
   JSBool result = JS_InstanceOf(context, JSVAL_TO_OBJECT(maybe_regexp), &js_RegExpClass, NULL);
-  JRETURN_RUBY(result ? true : false);
+  *is_regexp = (result ? true : false);
+  JRETURN;
 }
 
-static bool js_value_is_symbol(JohnsonRuntime* runtime, jsval maybe_symbol)
+static JSBool js_value_is_symbol(JohnsonRuntime* runtime, jsval maybe_symbol, bool* is_symbol)
 {
   jsval nsJohnson, cSymbol;
   JSContext * context = johnson_get_current_context(runtime);
 
-  PREPARE_RUBY_JROOTS(context, 3);
+  PREPARE_JROOTS(context, 3);
   JROOT(maybe_symbol);
 
   JCHECK(JS_GetProperty(context, runtime->global, "Johnson", &nsJohnson));
@@ -217,7 +218,8 @@ static bool js_value_is_symbol(JohnsonRuntime* runtime, jsval maybe_symbol)
   JSBool is_a_symbol;
   JCHECK(JS_HasInstance(context, JSVAL_TO_OBJECT(cSymbol), maybe_symbol, &is_a_symbol));
 
-  JRETURN_RUBY(is_a_symbol != JS_FALSE);
+  *is_symbol = (is_a_symbol != JS_FALSE);
+  JRETURN;
 }
 
 VALUE convert_to_ruby(JohnsonRuntime* runtime, jsval js)
@@ -241,13 +243,17 @@ VALUE convert_to_ruby(JohnsonRuntime* runtime, jsval js)
         JRETURN_RUBY(make_ruby_land_proxy(runtime, js, "GlobalProxy"));
       
       // this conditional requires the Prelude
-      if (js_value_is_symbol(runtime, js))
+      bool is_symbol = false;
+      JCHECK(js_value_is_symbol(runtime, js, &is_symbol));
+      if (is_symbol)
         JRETURN_RUBY(ID2SYM(rb_intern(JS_GetStringBytes(JS_ValueToString(context, js)))));
     
       if (js_value_is_proxy(runtime, js))
         JRETURN_RUBY(unwrap_js_land_proxy(runtime, js));
 
-      if (js_value_is_regexp(runtime, js))
+      bool is_regexp = false;
+      JCHECK(js_value_is_regexp(runtime, js, &is_regexp));
+      if (is_regexp)
         JRETURN_RUBY(CALL_RUBY_WRAPPER(convert_regexp_to_ruby, runtime, js));
     
       JRETURN_RUBY(make_ruby_land_proxy(runtime, js, LEAKY_ROOT_NAME("RubyLandProxy", JS_GetStringBytes(JS_ValueToString(context, js)))));
