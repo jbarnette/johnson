@@ -26,14 +26,6 @@ module Johnson
           (target.respond_to?(:js_property?) && target.__send__(:js_property?, name))
       end
       
-      def self.call_proc_by_oid(oid, *args)
-        id2ref(oid).call(*args)
-      end
-      
-      def self.id2ref(oid)
-        ObjectSpace._id2ref(oid)
-      end
-      
       def self.autovivified(target, attribute)
         target.send(:__johnson_js_properties)[attribute]
       end
