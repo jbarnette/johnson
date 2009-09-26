@@ -3,6 +3,9 @@ class Array
   def js_property?(name)
     name == :length
   end
+  def js_properties
+    (0...size).to_a
+  end
 end
 
 module Johnson
