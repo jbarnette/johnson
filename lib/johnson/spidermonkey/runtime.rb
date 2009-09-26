@@ -22,6 +22,9 @@ module Johnson #:nodoc:
         @gcthings.delete(object_id) if defined? @gcthings
       end
 
+      def debugger?
+        not @debugger.nil?
+      end
 
       def current_context
         contexts = (Thread.current[CONTEXT_MAP_KEY] ||= {})

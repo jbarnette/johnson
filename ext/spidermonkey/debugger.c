@@ -3,6 +3,14 @@
 #include "conversions.h"
 #include "immutable_node.h"
 
+static VALUE debugger_class = Qnil;
+
+bool ruby_value_is_debugger(VALUE maybe_debugger)
+{
+  VALUE klass = CLASS_OF(maybe_debugger);
+  return (klass == debugger_class);
+}
+
 /*
  * call-seq:
  *   frame_pc(context, frame)
@@ -217,10 +225,10 @@ void init_Johnson_SpiderMonkey_Debugger(VALUE spidermonkey)
   */
 
   /* This is the debugging hooks used with SpiderMonkey. */
-  VALUE debugger = rb_define_class_under(spidermonkey, "Debugger", rb_cObject);
-  rb_define_private_method(debugger, "frame_pc", frame_pc, 2);
-  rb_define_private_method(debugger, "line_number", line_number, 3);
-  rb_define_private_method(debugger, "file_name", file_name, 2);
+  debugger_class = rb_define_class_under(spidermonkey, "Debugger", rb_cObject);
+  rb_define_private_method(debugger_class, "frame_pc", frame_pc, 2);
+  rb_define_private_method(debugger_class, "line_number", line_number, 3);
+  rb_define_private_method(debugger_class, "file_name", file_name, 2);
 
-  rb_define_alloc_func(debugger, allocate);
+  rb_define_alloc_func(debugger_class, allocate);
 }

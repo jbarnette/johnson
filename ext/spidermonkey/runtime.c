@@ -2,7 +2,7 @@
 #include "global.h"
 #include "idhash.h"
 #include "conversions.h"
-#include "jsdbgapi.h"
+#include "debugger.h"
 #include "jroot.h"
 #include "ruby_land_proxy.h"
 
@@ -211,6 +211,9 @@ set_debugger(VALUE self, VALUE debugger)
 {
   JohnsonRuntime* runtime;
   JSDebugHooks* debug_hooks;
+
+  if (!ruby_value_is_debugger(debugger))
+    rb_raise(rb_eTypeError, "Expected Johnson::SpiderMonkey::Debugger instance");
 
   rb_iv_set(self, "@debugger", debugger);
   Data_Get_Struct(self, JohnsonRuntime, runtime);
