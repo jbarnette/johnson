@@ -8,7 +8,7 @@
 
 /*
  * call-seq:
- *   global
+ *   runtime.global  =>  proxy
  *
  * Returns the global object used for this context.
  */
@@ -33,9 +33,9 @@ static JSTrapStatus trap_handler( JSContext *context,
 
 /*
  * call-seq:
- *   clear_trap(script, line_num)
+ *   runtime.clear_trap(script, line_num)  =>  runtime
  *
- * Set the trap at +script+ and +line_num+ to +block+
+ * Clear the trap previously set at +line_num+ of +script+.
  */
 static VALUE clear_trap(VALUE self, VALUE script, VALUE linenum)
 {
@@ -57,9 +57,10 @@ static VALUE clear_trap(VALUE self, VALUE script, VALUE linenum)
 
 /*
  * call-seq:
- *   set_trap(script, parsecode, block)
+ *   runtime.set_trap(script, line_num, block)  =>  true
  *
- * Set the trap at +script+ and +parsecode+ to +block+
+ * Set a trap to invoke +block+ when execution of +script+ reaches
+ * +line_num+.
  */
 static VALUE set_trap(VALUE self, VALUE script, VALUE linenum, VALUE block)
 {
@@ -78,9 +79,10 @@ static VALUE set_trap(VALUE self, VALUE script, VALUE linenum, VALUE block)
 
 /*
  * call-seq:
- *   native_compile(script, filename, linenum)
+ *   runtime.native_compile(script_string, filename, linenum)  =>  script_proxy
  *
- * Compile +script+ with +filename+ using +linenum+
+ * Compile the JavaScript code in +script_string+, marked as originating
+ * from +filename+ starting at +linenum+.
  */
 static VALUE native_compile(VALUE self, VALUE script, VALUE filename, VALUE linenum)
 {
@@ -119,9 +121,10 @@ static VALUE native_compile(VALUE self, VALUE script, VALUE filename, VALUE line
 
 /*
  * call-seq:
- *   evaluate_compiled_script(script)
+ *   runtime.evaluate_compiled_script(script_proxy)  =>  result
  *
- * Evaluate +script+
+ * Evaluate previously compiled +script_proxy+, returning the final
+ * result from that script.
  */
 static VALUE evaluate_compiled_script(VALUE self, VALUE compiled_script)
 {
@@ -169,10 +172,13 @@ static VALUE evaluate_compiled_script(VALUE self, VALUE compiled_script)
 #ifdef JS_GC_ZEAL
 /*
  * call-seq:
- *   gc_zeal=(level)
+ *   runtime.gc_zeal = level  =>  level
  *
  * Sets the GC zeal.
- * 0 = normal, 1 = Very Frequent, 2 = Extremely Frequent
+ *
+ * 0:: Normal
+ * 1:: Very Frequent
+ * 2:: Extremely Frequent
  */
 static VALUE
 set_gc_zeal(VALUE self, VALUE zeal)
@@ -188,6 +194,12 @@ set_gc_zeal(VALUE self, VALUE zeal)
 }
 #endif
 
+/*
+ * call-seq:
+ *   runtime.gc  =>  nil
+ *
+ * Manually initiates a SpiderMonkey Garbage Collection run.
+ */
 static VALUE
 gc(VALUE self)
 {
@@ -203,9 +215,10 @@ gc(VALUE self)
 
 /*
  * call-seq:
- *   debugger=(debugger)
+ *   runtime.debugger = debugger  =>  debugger
  *
- * Sets a debugger object
+ * Directs the runtime to install a full set of debug hooks, using the
+ * given +debugger+, which must be a Johnson::SpiderMonkey::Debugger.
  */
 static VALUE
 set_debugger(VALUE self, VALUE debugger)
@@ -268,6 +281,13 @@ JSBool gc_callback(JSContext *context, JSGCStatus status)
   return JS_FALSE;
 }
 
+/**
+ * call-seq:
+ *   runtime.initialize_native(options)  =>  runtime
+ *
+ * Create the underlying SpiderMonkey runtime. This must be called
+ * first, and only once. Called by +initialize+ by default.
+ */
 static VALUE
 initialize_native(VALUE self, VALUE UNUSED(options))
 {
@@ -350,6 +370,11 @@ static VALUE allocate(VALUE klass)
 
 void init_Johnson_SpiderMonkey_Runtime(VALUE spidermonkey)
 {
+  /* HACK:  These comments are *only* to make RDoc happy.
+  VALUE johnson = rb_define_module("Johnson");
+  VALUE spidermonkey = rb_define_module_under(johnson, "SpiderMonkey");
+  */
+
   VALUE klass = rb_define_class_under(spidermonkey, "Runtime", rb_cObject);
 
   rb_define_alloc_func(klass, allocate);

@@ -35,9 +35,10 @@ static JSBool branch_callback(JSContext* js, JSScript* UNUSED(script))
 
 /*
  * call-seq:
- *   native_initialize(options={})
+ *   context.native_initialize(runtime, options)  =>  context
  *
- * Initializes the native spidermonkey values.
+ * Create the underlying SpiderMonkey context. This must be called
+ * first, and only once. Called by +initialize+ by default.
  */
 static VALUE
 initialize_native(VALUE self, VALUE rb_runtime, VALUE UNUSED(options))
