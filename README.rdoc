@@ -22,7 +22,6 @@ Mozilla SpiderMonkey JavaScript runtime as a C extension.
 
 === TODO
 
-* Support more than just Mac OS X / Ruby 1.8.6.
 * Stop freaking segfaulting.
 
 == License
