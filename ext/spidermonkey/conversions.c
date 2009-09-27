@@ -10,10 +10,8 @@ static VALUE convert_regexp_to_ruby(JohnsonRuntime* runtime, jsval regexp);
 DECLARE_RUBY_WRAPPER(convert_regexp_to_ruby, JohnsonRuntime* runtime; jsval regexp)
 DEFINE_RUBY_WRAPPER(convert_regexp_to_ruby, convert_regexp_to_ruby, ARGLIST2(runtime, regexp))
 
-DECLARE_RUBY_WRAPPER(rb_funcall_0, VALUE obj; ID sym; int argc)
 DEFINE_RUBY_WRAPPER(rb_funcall_0, rb_funcall, ARGLIST3(obj, sym, argc))
-
-DECLARE_RUBY_WRAPPER(rb_funcall_2, VALUE obj; ID sym; int argc; VALUE a; VALUE b)
+DEFINE_RUBY_WRAPPER(rb_funcall_1, rb_funcall, ARGLIST4(obj, sym, argc, a))
 DEFINE_RUBY_WRAPPER(rb_funcall_2, rb_funcall, ARGLIST5(obj, sym, argc, a, b))
 
 static JSBool convert_float_or_bignum_to_js(JohnsonRuntime* runtime, VALUE float_or_bignum, jsval* retval)

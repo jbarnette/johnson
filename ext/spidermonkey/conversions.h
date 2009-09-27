@@ -11,6 +11,13 @@ DECLARE_RUBY_WRAPPER(convert_to_ruby, JohnsonRuntime* runtime; jsval js_value)
 DECLARE_RUBY_WRAPPER(convert_js_string_to_ruby, JohnsonRuntime* runtime; JSString* str)
 #define CONVERT_JS_STRING_TO_RUBY(runtime, js) CALL_RUBY_WRAPPER(convert_js_string_to_ruby, runtime, js)
 
+DECLARE_RUBY_WRAPPER(rb_funcall_0, VALUE obj; ID sym; int argc)
+#define RB_FUNCALL_0(obj, sym) CALL_RUBY_WRAPPER(rb_funcall_0, obj, sym, 0)
+DECLARE_RUBY_WRAPPER(rb_funcall_1, VALUE obj; ID sym; int argc; VALUE a)
+#define RB_FUNCALL_1(obj, sym, a) CALL_RUBY_WRAPPER(rb_funcall_1, obj, sym, 1, a)
+DECLARE_RUBY_WRAPPER(rb_funcall_2, VALUE obj; ID sym; int argc; VALUE a; VALUE b)
+#define RB_FUNCALL_2(obj, sym, a, b) CALL_RUBY_WRAPPER(rb_funcall_2, obj, sym, 2, a, b)
+
 JSBool convert_to_js(JohnsonRuntime* runtime, VALUE ruby, jsval* retval);
 VALUE convert_to_ruby(JohnsonRuntime* runtime, jsval js);
 VALUE convert_js_string_to_ruby(JohnsonRuntime* runtime, JSString* str);

@@ -19,14 +19,15 @@ static VALUE global(VALUE self)
   return convert_to_ruby(runtime, OBJECT_TO_JSVAL(runtime->global));
 }
 
-static JSTrapStatus trap_handler( JSContext *UNUSED(context),
+static JSTrapStatus trap_handler( JSContext *context,
                                   JSScript *UNUSED(script),
                                   jsbytecode *UNUSED(pc),
                                   jsval *UNUSED(rval),
                                   void *block_closure )
 {
+  PREPARE_JROOTS(context, 0);
   VALUE block = (VALUE)block_closure;
-  rb_funcall(block, rb_intern("call"), 0);
+  RB_FUNCALL_0(block, rb_intern("call"));
   return JSTRAP_CONTINUE;
 }
 

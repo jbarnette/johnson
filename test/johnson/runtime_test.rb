@@ -50,6 +50,35 @@ module Johnson
       assert_equal(2, @runtime['some_number'])
     end
 
+    def test_breakpoint_can_raise
+      break_times = 0
+      @runtime['some_number'] = 0
+      @runtime['alert'] = lambda {|x,y| p [x, y] }
+      script = @runtime.compile("some_number++;
+                            var x = 0;
+                            try {
+                              for(var i = 0; i < 10; i++) {
+                                x++;
+                              }
+                            } catch(ex) {
+                              note_error(ex);
+                            }
+                            some_number++;
+                        ")
+      script.break(5) do
+        break_times += 1
+        assert_equal(@runtime['i'], @runtime['x'])
+        assert_equal(1, @runtime['some_number'])
+        raise ArgumentError, "Test" if @runtime['i'] > 4
+      end
+      break_ex = nil
+      @runtime['note_error'] = lambda {|ex| break_ex = ex }
+      @runtime.evaluate_compiled_script(script)
+      assert_match(/ArgumentError: Test/, break_ex.message)
+      assert_equal(6, break_times)
+      assert_equal(2, @runtime['some_number'])
+    end
+
     def test_try_to_gc
       10.times {
         thread = Thread.new do
