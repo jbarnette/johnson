@@ -11,6 +11,14 @@ module Johnson
       assert_nil(@runtime.evaluate(nil))
     end
 
+    def test_global_treats_symbols_as_strings
+      @runtime[:foo] = 17
+      @runtime['bar'] = 4
+      assert_equal 17, @runtime['foo']
+      assert_equal 4, @runtime[:bar]
+      assert_js_equal 21, 'foo + bar'
+    end
+
     def test_js_eval
       assert_equal(1, @runtime.evaluate('eval("1");'))
     end
