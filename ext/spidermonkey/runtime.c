@@ -168,6 +168,7 @@ static VALUE evaluate_compiled_script(VALUE self, VALUE compiled_script)
   return convert_to_ruby(runtime, js);
 }
 
+#ifdef JS_GC_ZEAL
 /*
  * call-seq:
  *   gc_zeal=(level)
@@ -187,6 +188,7 @@ set_gc_zeal(VALUE self, VALUE zeal)
 
   return zeal;
 }
+#endif
 
 static VALUE
 gc(VALUE self)
@@ -358,7 +360,9 @@ void init_Johnson_SpiderMonkey_Runtime(VALUE spidermonkey)
   rb_define_method(klass, "global", global, 0);
   rb_define_method(klass, "debugger=", set_debugger, 1);
   rb_define_method(klass, "gc", gc, 0);
+#ifdef JS_GC_ZEAL
   rb_define_method(klass, "gc_zeal=", set_gc_zeal, 1);
+#endif
   rb_define_method(klass, "evaluate_compiled_script", evaluate_compiled_script, 1);
   rb_define_private_method(klass, "native_compile", native_compile, 3);
   rb_define_method(klass, "set_trap", set_trap, 3);
