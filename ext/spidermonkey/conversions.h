@@ -18,6 +18,9 @@ DECLARE_RUBY_WRAPPER(rb_funcall_1, VALUE obj; ID sym; int argc; VALUE a)
 DECLARE_RUBY_WRAPPER(rb_funcall_2, VALUE obj; ID sym; int argc; VALUE a; VALUE b)
 #define RB_FUNCALL_2(obj, sym, a, b) CALL_RUBY_WRAPPER(rb_funcall_2, obj, sym, 2, a, b)
 
+DECLARE_RUBY_WRAPPER(rb_intern, const char* name)
+#define RB_INTERN(name) CALL_RUBY_WRAPPER(rb_intern, name)
+
 JSBool convert_to_js(JohnsonRuntime* runtime, VALUE ruby, jsval* retval);
 VALUE convert_to_ruby(JohnsonRuntime* runtime, jsval js);
 VALUE convert_js_string_to_ruby(JohnsonRuntime* runtime, JSString* str);

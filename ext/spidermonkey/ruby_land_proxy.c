@@ -7,6 +7,12 @@ DEFINE_RUBY_WRAPPER(rb_call_super, rb_call_super, ARGLIST2(argc, argv))
 DECLARE_RUBY_WRAPPER(rb_yield, VALUE v)
 DEFINE_RUBY_WRAPPER(rb_yield, rb_yield, ARGLIST1(v))
 
+DECLARE_RUBY_WRAPPER(rb_check_type, VALUE o; int t)
+DEFINE_VOID_RUBY_WRAPPER(rb_check_type, rb_check_type, ARGLIST2(o, t))
+
+DEFINE_RUBY_WRAPPER(rb_string_value, rb_string_value, ARGLIST1(v))
+DEFINE_VOID_RUBY_WRAPPER(rb_string_value_cstr, rb_string_value_cstr, ARGLIST1(v))
+
 DEFINE_RUBY_WRAPPER(make_ruby_land_proxy, make_ruby_land_proxy, ARGLIST3(runtime, value, root_name))
 
 static VALUE proxy_class = Qnil;
@@ -70,8 +76,10 @@ get(VALUE self, VALUE name)
       JCHECK(JS_GetElement(context,
           JSVAL_TO_OBJECT(proxy_value), (jsint)(NUM2INT(name)), &js_value));
       break;
+    case T_SYMBOL:
+      name = RB_FUNCALL_0(name, RB_INTERN("to_s"));
     default:
-      Check_Type(name, T_STRING);
+      CALL_RUBY_WRAPPER(rb_string_value_cstr, &name);
       JCHECK(JS_GetProperty(context,
           JSVAL_TO_OBJECT(proxy_value), StringValueCStr(name), &js_value));
       break;
@@ -109,8 +117,10 @@ set(VALUE self, VALUE name, VALUE value)
       JCHECK(JS_SetElement(context,
               JSVAL_TO_OBJECT(proxy_value), (jsint)(NUM2INT(name)), &js_value));
       break;
+    case T_SYMBOL:
+      name = RB_FUNCALL_0(name, RB_INTERN("to_s"));
     default:
-      Check_Type(name, T_STRING);
+      CALL_RUBY_WRAPPER(rb_string_value_cstr, &name);
       JCHECK(JS_SetProperty(context,
             JSVAL_TO_OBJECT(proxy_value), StringValueCStr(name), &js_value));
       break;
@@ -361,8 +371,11 @@ runtime(VALUE self)
 static VALUE
 function_property_p(VALUE self, VALUE name)
 {
-  Check_Type(name, T_STRING);
-  
+  if (TYPE(name) == T_SYMBOL)
+    name = rb_funcall(name, rb_intern("to_s"), 0);
+
+  rb_string_value_cstr(&name);
+
   RubyLandProxy* proxy;
   Data_Get_Struct(self, RubyLandProxy, proxy);
   JSContext * context = johnson_get_current_context(proxy->runtime);
@@ -408,15 +421,18 @@ call_function_property(int argc, VALUE* argv, VALUE self)
   JROOT(proxy_value);
 
   jsval function;
+
+  VALUE name = argv[0];
+  CALL_RUBY_WRAPPER(rb_string_value_cstr, &name);
   
   JCHECK(JS_GetProperty(context,
-    JSVAL_TO_OBJECT(proxy_value), StringValueCStr(argv[0]), &function));
+    JSVAL_TO_OBJECT(proxy_value), StringValueCStr(name), &function));
 
   JROOT(function);
 
   // should never be anything but a function
   if (!JS_ObjectIsFunction(context, function))
-    JERROR("Specified property \"%s\" isn't a function.", StringValueCStr(argv[0]));
+    JERROR("Specified property \"%s\" isn't a function.", StringValueCStr(name));
 
   REMOVE_JROOTS;
 

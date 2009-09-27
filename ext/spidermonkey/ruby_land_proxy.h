@@ -20,6 +20,9 @@
 
 DECLARE_RUBY_WRAPPER(make_ruby_land_proxy, JohnsonRuntime* runtime; jsval value; const char const* root_name)
 
+DECLARE_RUBY_WRAPPER(rb_string_value, VALUE v)
+DECLARE_RUBY_WRAPPER(rb_string_value_cstr, VALUE v)
+
 typedef struct {
   void* key;
   JohnsonRuntime* runtime;

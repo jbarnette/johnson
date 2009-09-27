@@ -182,6 +182,13 @@
     name ## _args * _data = (name ## _args *)(FIX2LONG(magic) << 2); \
     return func(arglist); \
   }
+#define DEFINE_VOID_RUBY_WRAPPER(name, func, arglist) \
+  VALUE name ## _invoke(VALUE magic) \
+  { \
+    name ## _args * _data = (name ## _args *)(FIX2LONG(magic) << 2); \
+    func(arglist); \
+    return Qnil; \
+  }
 #define RUBY_WRAPPER_ARG(name, args...) ({ name ## _args _x = { args }; LONG2FIX((long)(&_x) >> 2); })
 #define RUBY_WRAPPER(name) name ## _invoke
 #define CALL_RUBY_WRAPPER(name, args...) JPROTECT(RUBY_WRAPPER(name), RUBY_WRAPPER_ARG(name, args))

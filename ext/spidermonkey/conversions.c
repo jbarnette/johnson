@@ -17,9 +17,7 @@ DEFINE_RUBY_WRAPPER(rb_funcall_2, rb_funcall, ARGLIST5(obj, sym, argc, a, b))
 DECLARE_RUBY_WRAPPER(rb_float_new, double v)
 DEFINE_RUBY_WRAPPER(rb_float_new, rb_float_new, ARGLIST1(v))
 
-DECLARE_RUBY_WRAPPER(rb_intern, const char* name)
 DEFINE_RUBY_WRAPPER(rb_intern, rb_intern, ARGLIST1(name))
-#define RB_INTERN(name) CALL_RUBY_WRAPPER(rb_intern, name)
 
 static JSBool convert_float_or_bignum_to_js(JohnsonRuntime* runtime, VALUE float_or_bignum, jsval* retval)
 {
@@ -33,6 +31,7 @@ static JSBool convert_symbol_to_js(JohnsonRuntime* runtime, VALUE symbol, jsval*
   PREPARE_JROOTS(context, 2);
 
   VALUE to_s = CALL_RUBY_WRAPPER(rb_funcall_0, symbol, RB_INTERN("to_s"), 0);
+  CALL_RUBY_WRAPPER(rb_string_value, &to_s);
   jsval name = STRING_TO_JSVAL(JS_NewStringCopyN(context, StringValuePtr(to_s), (size_t) StringValueLen(to_s)));
 
   JROOT(name);
@@ -53,6 +52,7 @@ static JSBool convert_regexp_to_js(JohnsonRuntime* runtime, VALUE regexp, jsval*
   JSContext * context = johnson_get_current_context(runtime);
   PREPARE_JROOTS(context, 0);
   VALUE source = rb_funcall(regexp, RB_INTERN("source"), 0);
+  CALL_RUBY_WRAPPER(rb_string_value, &source);
   jsint options = (jsint)(NUM2INT(rb_funcall(regexp, RB_INTERN("options"), 0)));
 
   JSObject* obj = JS_NewRegExpObject(context,
@@ -114,6 +114,7 @@ JSBool convert_to_js(JohnsonRuntime* runtime, VALUE ruby, jsval* retval)
     case T_STRING:
       {
         VALUE encoded_ruby = CALL_RUBY_WRAPPER(rb_funcall_0, ruby, RB_INTERN("utf8_to_utf16"), 0);
+        CALL_RUBY_WRAPPER(rb_string_value, &encoded_ruby);
         JSString* str = JS_NewUCStringCopyN(context, StringValuePtr(encoded_ruby), (size_t) StringValueLen(encoded_ruby) / 2);
         JCHECK(str);
         *retval = STRING_TO_JSVAL(str);

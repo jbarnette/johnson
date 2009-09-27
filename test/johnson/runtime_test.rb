@@ -19,6 +19,15 @@ module Johnson
       assert_js_equal 21, 'foo + bar'
     end
 
+    def test_disallows_invalid_key_types
+      assert_raises(TypeError) {
+        @runtime[4.1] = 3
+      }
+      assert_raises(TypeError) {
+        @runtime[%w(hello world)]
+      }
+    end
+
     def test_js_eval
       assert_equal(1, @runtime.evaluate('eval("1");'))
     end

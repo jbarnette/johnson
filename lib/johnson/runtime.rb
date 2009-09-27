@@ -15,11 +15,11 @@ module Johnson
     end
 
     def [](key)
-      delegate[key.to_s]
+      delegate[key]
     end
 
     def []=(key, value)
-      delegate[key.to_s] = value
+      delegate[key] = value
     end
 
     def evaluate(expression, filename=nil, linenum=nil)
