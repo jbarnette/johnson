@@ -79,6 +79,28 @@ module Johnson
       assert_equal(2, @runtime['some_number'])
     end
 
+    def test_breakpoints_are_cleared
+      break_times = 0
+      @runtime['some_number'] = 0
+      script = @runtime.compile("some_number++;
+                            var x = 0;
+                            for(var i = 0; i < 10; i++) {
+                              x++;
+                            }
+                            some_number++;
+                        ")
+      script.break(4) do
+        break_times += 1
+        assert_equal(@runtime['i'], @runtime['x'])
+        assert_equal(1, @runtime['some_number'] % 2)
+      end
+      3.times do
+        @runtime.evaluate_compiled_script(script)
+      end
+      assert_equal(10, break_times)
+      assert_equal(6, @runtime['some_number'])
+    end
+
     def test_try_to_gc
       10.times {
         thread = Thread.new do
