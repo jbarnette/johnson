@@ -14,6 +14,13 @@ DEFINE_RUBY_WRAPPER(rb_funcall_0, rb_funcall, ARGLIST3(obj, sym, argc))
 DEFINE_RUBY_WRAPPER(rb_funcall_1, rb_funcall, ARGLIST4(obj, sym, argc, a))
 DEFINE_RUBY_WRAPPER(rb_funcall_2, rb_funcall, ARGLIST5(obj, sym, argc, a, b))
 
+DECLARE_RUBY_WRAPPER(rb_float_new, double v)
+DEFINE_RUBY_WRAPPER(rb_float_new, rb_float_new, ARGLIST1(v))
+
+DECLARE_RUBY_WRAPPER(rb_intern, const char* name)
+DEFINE_RUBY_WRAPPER(rb_intern, rb_intern, ARGLIST1(name))
+#define RB_INTERN(name) CALL_RUBY_WRAPPER(rb_intern, name)
+
 static JSBool convert_float_or_bignum_to_js(JohnsonRuntime* runtime, VALUE float_or_bignum, jsval* retval)
 {
   JSContext * context = johnson_get_current_context(runtime);
@@ -25,7 +32,7 @@ static JSBool convert_symbol_to_js(JohnsonRuntime* runtime, VALUE symbol, jsval*
   JSContext * context = johnson_get_current_context(runtime);
   PREPARE_JROOTS(context, 2);
 
-  VALUE to_s = CALL_RUBY_WRAPPER(rb_funcall_0, symbol, rb_intern("to_s"), 0);
+  VALUE to_s = CALL_RUBY_WRAPPER(rb_funcall_0, symbol, RB_INTERN("to_s"), 0);
   jsval name = STRING_TO_JSVAL(JS_NewStringCopyN(context, StringValuePtr(to_s), (size_t) StringValueLen(to_s)));
 
   JROOT(name);
@@ -45,8 +52,8 @@ static JSBool convert_regexp_to_js(JohnsonRuntime* runtime, VALUE regexp, jsval*
 {
   JSContext * context = johnson_get_current_context(runtime);
   PREPARE_JROOTS(context, 0);
-  VALUE source = rb_funcall(regexp, rb_intern("source"), 0);
-  jsint options = (jsint)(NUM2INT(rb_funcall(regexp, rb_intern("options"), 0)));
+  VALUE source = rb_funcall(regexp, RB_INTERN("source"), 0);
+  jsint options = (jsint)(NUM2INT(rb_funcall(regexp, RB_INTERN("options"), 0)));
 
   JSObject* obj = JS_NewRegExpObject(context,
         StringValuePtr(source),
@@ -106,7 +113,7 @@ JSBool convert_to_js(JohnsonRuntime* runtime, VALUE ruby, jsval* retval)
 
     case T_STRING:
       {
-        VALUE encoded_ruby = CALL_RUBY_WRAPPER(rb_funcall_0, ruby, rb_intern("utf8_to_utf16"), 0);
+        VALUE encoded_ruby = CALL_RUBY_WRAPPER(rb_funcall_0, ruby, RB_INTERN("utf8_to_utf16"), 0);
         JSString* str = JS_NewUCStringCopyN(context, StringValuePtr(encoded_ruby), (size_t) StringValueLen(encoded_ruby) / 2);
         JCHECK(str);
         *retval = STRING_TO_JSVAL(str);
@@ -146,7 +153,7 @@ JSBool convert_to_js(JohnsonRuntime* runtime, VALUE ruby, jsval* retval)
       JCHECK(convert_regexp_to_js(runtime, ruby, retval));
       JRETURN;
 
-    case T_DATA: // HEY! keep T_DATA last for fall-through
+    case T_DATA:
       if (ruby_value_is_proxy(ruby))
         JCHECK(unwrap_ruby_land_proxy(runtime, ruby, retval));
       else // If we can't identify the object, just wrap it
@@ -170,7 +177,7 @@ VALUE convert_js_string_to_ruby(JohnsonRuntime* runtime, JSString* str)
   JCHECK(chars);
   size_t len = JS_GetStringLength(str);
   VALUE raw_ruby = rb_str_new(chars, len * 2);
-  JRETURN_RUBY(CALL_RUBY_WRAPPER(rb_funcall_0, raw_ruby, rb_intern("utf16_to_utf8"), 0));
+  JRETURN_RUBY(RB_FUNCALL_0(raw_ruby, RB_INTERN("utf16_to_utf8")));
 }
 
 static VALUE convert_regexp_to_ruby(JohnsonRuntime* runtime, jsval regexp)
@@ -180,7 +187,7 @@ static VALUE convert_regexp_to_ruby(JohnsonRuntime* runtime, jsval regexp)
   JROOT(regexp);
   JSRegExp* re = (JSRegExp*)JS_GetPrivate(context, JSVAL_TO_OBJECT(regexp));
 
-  JRETURN_RUBY(CALL_RUBY_WRAPPER(rb_funcall_2, rb_cRegexp, rb_intern("new"), 2,
+  JRETURN_RUBY(RB_FUNCALL_2(rb_cRegexp, RB_INTERN("new"),
     CONVERT_JS_STRING_TO_RUBY(runtime, re->source),
     INT2NUM((long)re->flags)));
 }
@@ -238,13 +245,13 @@ VALUE convert_to_ruby(JohnsonRuntime* runtime, jsval js)
     case JSTYPE_OBJECT:
       if (OBJECT_TO_JSVAL(runtime->global) == js)
         // global gets special treatment, since the Prelude might not be loaded
-        JRETURN_RUBY(make_ruby_land_proxy(runtime, js, "GlobalProxy"));
+        JRETURN_RUBY(CALL_RUBY_WRAPPER(make_ruby_land_proxy, runtime, js, "GlobalProxy"));
       
       // this conditional requires the Prelude
       bool is_symbol = false;
       JCHECK(js_value_is_symbol(runtime, js, &is_symbol));
       if (is_symbol)
-        JRETURN_RUBY(ID2SYM(rb_intern(JS_GetStringBytes(JS_ValueToString(context, js)))));
+        JRETURN_RUBY(ID2SYM(RB_INTERN(JS_GetStringBytes(JS_ValueToString(context, js)))));
     
       if (js_value_is_proxy(runtime, js))
         JRETURN_RUBY(unwrap_js_land_proxy(runtime, js));
@@ -254,7 +261,7 @@ VALUE convert_to_ruby(JohnsonRuntime* runtime, jsval js)
       if (is_regexp)
         JRETURN_RUBY(CALL_RUBY_WRAPPER(convert_regexp_to_ruby, runtime, js));
     
-      JRETURN_RUBY(make_ruby_land_proxy(runtime, js, LEAKY_ROOT_NAME("RubyLandProxy", JS_GetStringBytes(JS_ValueToString(context, js)))));
+      JRETURN_RUBY(CALL_RUBY_WRAPPER(make_ruby_land_proxy, runtime, js, LEAKY_ROOT_NAME("RubyLandProxy", JS_GetStringBytes(JS_ValueToString(context, js)))));
         
     case JSTYPE_BOOLEAN:
       JRETURN_RUBY(JSVAL_TRUE == js ? Qtrue : Qfalse);
@@ -264,7 +271,7 @@ VALUE convert_to_ruby(JohnsonRuntime* runtime, jsval js)
       
     case JSTYPE_NUMBER:
       if (JSVAL_IS_INT(js)) JRETURN_RUBY(INT2FIX(JSVAL_TO_INT(js)));
-      else JRETURN_RUBY(rb_float_new(*JSVAL_TO_DOUBLE(js)));
+      else JRETURN_RUBY(CALL_RUBY_WRAPPER(rb_float_new, *JSVAL_TO_DOUBLE(js)));
 
     default:
       JERROR("unknown js type in switch");

@@ -18,6 +18,8 @@
 #define LEAKY_ROOT_NAME(static_string, dynamic_detail) (static_string)
 #endif
 
+DECLARE_RUBY_WRAPPER(make_ruby_land_proxy, JohnsonRuntime* runtime; jsval value; const char const* root_name)
+
 typedef struct {
   void* key;
   JohnsonRuntime* runtime;

@@ -7,6 +7,8 @@ DEFINE_RUBY_WRAPPER(rb_call_super, rb_call_super, ARGLIST2(argc, argv))
 DECLARE_RUBY_WRAPPER(rb_yield, VALUE v)
 DEFINE_RUBY_WRAPPER(rb_yield, rb_yield, ARGLIST1(v))
 
+DEFINE_RUBY_WRAPPER(make_ruby_land_proxy, make_ruby_land_proxy, ARGLIST3(runtime, value, root_name))
+
 static VALUE proxy_class = Qnil;
 static VALUE script_class = Qnil;
 
