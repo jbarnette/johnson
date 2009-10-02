@@ -113,9 +113,15 @@ JSBool convert_to_js(JohnsonRuntime* runtime, VALUE ruby, jsval* retval)
 
     case T_STRING:
       {
-        VALUE encoded_ruby = CALL_RUBY_WRAPPER(rb_funcall_0, ruby, RB_INTERN("utf8_to_utf16"), 0);
-        CALL_RUBY_WRAPPER(rb_string_value, &encoded_ruby);
-        JSString* str = JS_NewUCStringCopyN(context, StringValuePtr(encoded_ruby), (size_t) StringValueLen(encoded_ruby) / 2);
+        CALL_RUBY_WRAPPER(rb_string_value, &ruby);
+        const char * src = StringValuePtr(ruby);
+        const size_t srclen = StringValueLen(ruby);
+        size_t dstlen = 0;
+        JCHECK(JS_DecodeBytes(context, src, srclen, NULL, &dstlen));
+        jschar* dstchars = JS_malloc(context, sizeof(jschar) * (1 + dstlen));
+        JCHECK(dstchars);
+        JCHECK(JS_DecodeBytes(context, src, srclen, dstchars, &dstlen));
+        JSString* str = JS_NewUCString(context, dstchars, dstlen);
         JCHECK(str);
         *retval = STRING_TO_JSVAL(str);
         JRETURN;
@@ -174,11 +180,18 @@ VALUE convert_js_string_to_ruby(JohnsonRuntime* runtime, JSString* str)
   JSContext * context = johnson_get_current_context(runtime);
   PREPARE_RUBY_JROOTS(context, 1);
   JROOT(str);
-  jschar* chars = JS_GetStringChars(str);
-  JCHECK(chars);
-  size_t len = JS_GetStringLength(str);
-  VALUE raw_ruby = rb_str_new(chars, len * 2);
-  JRETURN_RUBY(RB_FUNCALL_0(raw_ruby, RB_INTERN("utf16_to_utf8")));
+  jschar* src = JS_GetStringChars(str);
+  JCHECK(src);
+  size_t srclen = JS_GetStringLength(str);
+  size_t dstlen = 0;
+  JCHECK(JS_EncodeCharacters(context, src, srclen, NULL, &dstlen));
+  char* dst = JS_malloc(context, sizeof(char) * (1 + dstlen));
+  JCHECK(dst);
+  JCHECK(JS_EncodeCharacters(context, src, srclen, dst, &dstlen));
+  // This will leak dst if rb_str_new raises
+  VALUE ruby_str = rb_str_new(dst, dstlen);
+  JS_free(context, dst);
+  JRETURN_RUBY(ruby_str);
 }
 
 static VALUE convert_regexp_to_ruby(JohnsonRuntime* runtime, jsval regexp)

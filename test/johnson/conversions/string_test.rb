@@ -23,10 +23,14 @@ module Johnson
       end
 
       def test_multibyte_character_roundtrip_js
-        s = @runtime.evaluate("'\\u20AC'")
-        @runtime[:s] = s
+        assert_equal(1, @runtime.evaluate("'\\u20AC'.length"))
+        assert_equal(0x20ac, @runtime.evaluate("'\\u20AC'.charCodeAt(0)"))
+        assert_equal(0x0000, @runtime.evaluate("'\\u0000'.charCodeAt(0)"))
+        @runtime[:s] = "\xe2\x82\xac"
+        assert_equal(0x20ac, @runtime.evaluate("s.charCodeAt(0)"))
         assert_equal('', @runtime.evaluate("s.substr(1)"))
         assert_equal(1, @runtime.evaluate("s.length"))
+        assert_equal("\xe2\x82\xac", @runtime.evaluate("s"))
         assert_js("'\\u20ac' == s")
       end
     end
