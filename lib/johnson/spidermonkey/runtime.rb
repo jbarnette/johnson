@@ -1,6 +1,6 @@
 module Johnson #:nodoc:
   module SpiderMonkey #:nodoc:
-    class Runtime # native
+    class Runtime < Johnson::Runtime # native
       CONTEXT_MAP_KEY = :johnson_context_map
 
       attr_reader :traps
@@ -9,7 +9,7 @@ module Johnson #:nodoc:
         @gcthings = {}
         @traps = []
         initialize_native(options)
-        self["Ruby"] = Object
+        super()
       end
       
       # called from js_land_proxy.c:make_js_land_proxy
@@ -31,23 +31,10 @@ module Johnson #:nodoc:
         contexts[self.object_id] ||= Context.new(self)
       end
 
-      def [](key)
-        global[key]
-      end
-      
-      def []=(key, value)
-        global[key] = value
-      end
-
-      ###
-      # Evaluate +script+ with +filename+ and +linenum+
-      def evaluate(script, filename = nil, linenum = nil)
-        compiled_script = compile(script, filename, linenum)
-        evaluate_compiled_script(compiled_script)
-      end
-
-      def evaluate_compiled script
-        evaluate_compiled_script(script)
+      alias :evaluate_compiled_script_without_clearing_traps :evaluate_compiled_script
+      def evaluate_compiled_script script
+        evaluate_compiled_script_without_clearing_traps(script)
+      ensure
         @traps.each do |trap_tuple|
           clear_trap(*trap_tuple)
         end

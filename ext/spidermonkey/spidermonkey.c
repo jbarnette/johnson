@@ -8,7 +8,7 @@ void Init_spidermonkey()
 {
   JS_SetCStringsAreUTF8();
 
-  VALUE johnson = rb_define_module("Johnson"); // FIXME: this belongs outside the extension
+  VALUE johnson = rb_const_get(rb_mKernel, rb_intern("Johnson"));
   VALUE spidermonkey = rb_define_module_under(johnson, "SpiderMonkey");
   
   init_Johnson_SpiderMonkey_Context(spidermonkey);

@@ -4,35 +4,62 @@ module Johnson
   class Runtime
 
     PRELUDE_PATH = File.expand_path File.dirname(__FILE__) +
-      "/js/prelude.js"
+      "/js/prelude.js" # :nodoc:
 
-    PRELUDE = IO.read PRELUDE_PATH
-
-    ###
-    # The underlying JavaScript engine instance.
-    attr_reader :delegate
+    PRELUDE = IO.read PRELUDE_PATH # :nodoc:
 
     ###
-    # Create a new Runtime instance, using the given +delegate+ class,
-    # or a Johnson::SpiderMonkey::Runtime by default.
-    def initialize(delegate=Johnson::SpiderMonkey::Runtime)
-      @delegate = delegate.is_a?(Class) ? delegate.new : delegate
+    # Deprecated: Previously, returned the underlying JavaScript engine
+    # instance. Now returns self.
+    def delegate
+      self
+    end
+
+    ###
+    # Create a new Runtime instance, using the default JavaScript
+    # engine.
+    #
+    # Optionally takes a parameter specifying which engine to use, but
+    # this is deprecated; instead, just create an instance of that
+    # engine's runtime directly.
+    #
+    # :call-seq:
+    #   new(runtime_class=nil)
+    #
+    def self.new(*args)
+      return super if self < Johnson::Runtime
+
+      delegate = args.first
+      if delegate.is_a? Class
+        delegate.new
+      elsif delegate
+        delegate
+      else
+        Johnson::SpiderMonkey::Runtime.new
+      end
+    end
+
+    ###
+    # Install the Johnson prelude into this runtime environment.
+    def initialize # :notnew:
       evaluate PRELUDE, PRELUDE_PATH, 1
       global.Johnson.runtime = self
+      global['Ruby'] = Object
     end
 
     ###
     # Access the +key+ property of the JavaScript +global+ object.
     def [](key)
-      delegate[key]
+      global[key]
     end
 
     ###
     # Set the +key+ property of the JavaScript +global+ object to
     # +value+.
     def []=(key, value)
-      delegate[key] = value
+      global[key] = value
     end
+
 
     ###
     # Execute the JavaScript source in +script+. If supplied, the script
@@ -40,15 +67,17 @@ module Johnson
     #
     # Equivalent to calling RubyLandScript#execute on the result of
     # Runtime#compile.
-    def evaluate(script, filename=nil, linenum=nil)
+    def evaluate(script, filename = nil, linenum = nil)
       return nil if script.nil?
-      delegate.evaluate(script, filename, linenum)
+      compiled_script = compile(script, filename, linenum)
+      evaluate_compiled_script(compiled_script)
     end
+
 
     ###
     # The JavaScript unique Global Object.
     def global
-      delegate.global
+      raise NotImplementedError
     end
 
     ###
@@ -57,7 +86,7 @@ module Johnson
     # Checks for (and skips) a shebang line at the top of any of them.
     def load(*files)
       files.map { |f|
-        delegate.evaluate(File.read(f).gsub(/\A#!.*$/, ''), f, 1)
+        evaluate(File.read(f).gsub(/\A#!.*$/, ''), f, 1)
       }.last
     end
 
@@ -76,11 +105,14 @@ module Johnson
     # Compile the JavaScript source in +script+. If supplied, the script
     # is marked as starting on line +linenum+ of +filename+.
     def compile(script, filename=nil, linenum=nil)
-      delegate.compile(script, filename, linenum)
+      raise NotImplementedError
     end
 
+    ###
+    # Evaluates the given JS script, that should have been returned by a
+    # previous call to #compile().
     def evaluate_compiled_script(script)
-      delegate.evaluate_compiled(script)
+      raise NotImplementedError
     end
   end
 end

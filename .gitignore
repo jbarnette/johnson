@@ -9,8 +9,8 @@
 /ext/spidermonkey/*.o
 /ext/spidermonkey/*.so
 
-/lib/johnson/*.bundle
-/lib/johnson/*.so
+/lib/johnson/spidermonkey/*.bundle
+/lib/johnson/spidermonkey/*.so
 
 /vendor/spidermonkey/*.OBJ
 

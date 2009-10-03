@@ -375,7 +375,10 @@ void init_Johnson_SpiderMonkey_Runtime(VALUE spidermonkey)
   VALUE spidermonkey = rb_define_module_under(johnson, "SpiderMonkey");
   */
 
-  VALUE klass = rb_define_class_under(spidermonkey, "Runtime", rb_cObject);
+  VALUE johnson = rb_const_get(rb_mKernel, rb_intern("Johnson"));
+  VALUE johnson_runtime = rb_const_get(johnson, rb_intern("Runtime"));
+
+  VALUE klass = rb_define_class_under(spidermonkey, "Runtime", johnson_runtime);
 
   rb_define_alloc_func(klass, allocate);
   rb_define_private_method(klass, "initialize_native", initialize_native, 1);

@@ -567,8 +567,11 @@ void init_Johnson_SpiderMonkey_Proxy(VALUE spidermonkey)
   VALUE spidermonkey = rb_define_module_under(johnson, "SpiderMonkey");
   */
 
+  VALUE johnson = rb_const_get(rb_mKernel, rb_intern("Johnson"));
+  VALUE johnson_proxy = rb_const_get(johnson, rb_intern("RubyLandProxy"));
+
   /* RubyLandProxy class. */
-  proxy_class = rb_define_class_under(spidermonkey, "RubyLandProxy", rb_cObject);
+  proxy_class = rb_define_class_under(spidermonkey, "RubyLandProxy", johnson_proxy);
 
   rb_define_method(proxy_class, "[]", get, 1);
   rb_define_method(proxy_class, "[]=", set, 2);

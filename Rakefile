@@ -30,7 +30,7 @@ Hoe.spec "johnson" do
   clean_globs    << "vendor/spidermonkey/**/*.OBJ"
 
   Rake::ExtensionTask.new "spidermonkey", spec do |ext|
-    ext.lib_dir = "lib/johnson"
+    ext.lib_dir = "lib/johnson/spidermonkey"
   end
 end
 
