@@ -8,7 +8,7 @@
 
 /*
  * call-seq:
- *   runtime.global  =>  proxy
+ *   global()
  *
  * Returns the global object used for this context.
  */
@@ -33,7 +33,7 @@ static JSTrapStatus trap_handler( JSContext *context,
 
 /*
  * call-seq:
- *   runtime.clear_trap(script, line_num)  =>  runtime
+ *   clear_trap(script, line_num)
  *
  * Clear the trap previously set at +line_num+ of +script+.
  */
@@ -57,7 +57,7 @@ static VALUE clear_trap(VALUE self, VALUE script, VALUE linenum)
 
 /*
  * call-seq:
- *   runtime.set_trap(script, line_num, block)  =>  true
+ *   set_trap(script, line_num, block)
  *
  * Set a trap to invoke +block+ when execution of +script+ reaches
  * +line_num+.
@@ -79,7 +79,7 @@ static VALUE set_trap(VALUE self, VALUE script, VALUE linenum, VALUE block)
 
 /*
  * call-seq:
- *   runtime.native_compile(script_string, filename, linenum)  =>  script_proxy
+ *   native_compile(script_string, filename, linenum)
  *
  * Compile the JavaScript code in +script_string+, marked as originating
  * from +filename+ starting at +linenum+.
@@ -121,7 +121,7 @@ static VALUE native_compile(VALUE self, VALUE script, VALUE filename, VALUE line
 
 /*
  * call-seq:
- *   runtime.evaluate_compiled_script(script_proxy)  =>  result
+ *   evaluate_compiled_script(script_proxy)
  *
  * Evaluate previously compiled +script_proxy+, returning the final
  * result from that script.
@@ -172,7 +172,7 @@ static VALUE evaluate_compiled_script(VALUE self, VALUE compiled_script)
 #ifdef JS_GC_ZEAL
 /*
  * call-seq:
- *   runtime.gc_zeal = level  =>  level
+ *   gc_zeal=(level)
  *
  * Sets the GC zeal.
  *
@@ -196,7 +196,7 @@ set_gc_zeal(VALUE self, VALUE zeal)
 
 /*
  * call-seq:
- *   runtime.gc  =>  nil
+ *   gc()
  *
  * Manually initiates a SpiderMonkey Garbage Collection run.
  */
@@ -215,7 +215,7 @@ gc(VALUE self)
 
 /*
  * call-seq:
- *   runtime.debugger = debugger  =>  debugger
+ *   debugger=(debugger)
  *
  * Directs the runtime to install a full set of debug hooks, using the
  * given +debugger+, which must be a Johnson::SpiderMonkey::Debugger.
@@ -283,7 +283,7 @@ JSBool gc_callback(JSContext *context, JSGCStatus status)
 
 /**
  * call-seq:
- *   runtime.initialize_native(options)  =>  runtime
+ *   initialize_native(options)
  *
  * Create the underlying SpiderMonkey runtime. This must be called
  * first, and only once. Called by +initialize+ by default.

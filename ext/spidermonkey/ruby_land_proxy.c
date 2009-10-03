@@ -52,7 +52,7 @@ static VALUE call_js_function_value(JohnsonRuntime* runtime, jsval target, jsval
 
 /*
  * call-seq:
- *   proxy[name]  =>  value
+ *   [](name)
  *
  * Retrieves the current value of the +name+ property of this JavaScript
  * object.
@@ -91,7 +91,7 @@ get(VALUE self, VALUE name)
 
 /*
  * call-seq:
- *   proxy[name] = value  =>  value
+ *   []=(name, value)
  *
  * Sets this JavaScript object's +name+ property to +value+.
  */
@@ -132,7 +132,7 @@ set(VALUE self, VALUE name, VALUE value)
 
 /*
  * call-seq:
- *   proxy.function?  =>  true or false
+ *   function?()
  *
  * Returns <code>true</code> if this JavaScript object is a function.
  */
@@ -151,7 +151,7 @@ function_p(VALUE self)
 
 /*
  * call-seq:
- *   proxy.respond_to?(symbol)  =>  true or false
+ *   respond_to?(symbol)
  *
  * Returns <code>true</code> if this JavaScript object responds to the
  * named method.
@@ -193,7 +193,7 @@ respond_to_p(int argc, const VALUE* argv, VALUE self)
 
 /*
  * call-seq:
- *   proxy.native_call(this, *args)  =>  result
+ *   native_call(this, *args)
  *
  * Call this Ruby Object as a function, with the given +this+ object and
  * arguments. Equivalent to the call method in JavaScript.
@@ -233,8 +233,8 @@ destroy_id_array(JSContext* context, void* data)
 
 /*
  * call-seq:
- *   array_proxy.each {| element | block }  =>  array_proxy
- *   object_proxy.each {| name, value | block }  =>  object_proxy
+ *   each {| element | block }
+ *   each {| name, value | block }
  *
  * Calls <em>block</em> with each item in this JavaScript array, or with
  * each +name+/+value+ pair (like a Hash) for any other JavaScript
@@ -315,8 +315,7 @@ each(VALUE self)
 
 /*
  * call-seq:
- *   array_proxy.length  =>  element_count
- *   object_proxy.length  =>  property_count
+ *   length()
  *
  * Returns the number of entries in the JavaScript array, or the number
  * of properties on the JavaScript object.
@@ -358,7 +357,7 @@ length(VALUE self)
 
 /*
  * call-seq:
- *   proxy.runtime  =>  runtime
+ *   runtime()
  *
  * Returns the Johnson::SpiderMonkey::Runtime against which this object
  * is registered.
@@ -373,7 +372,7 @@ runtime(VALUE self)
 
 /*
  * call-seq:
- *   proxy.function_property?(name)  =>  true or false
+ *   function_property?(name)
  *
  * Returns <code>true</code> if this JavaScript object's +name+ property
  * is a function.
@@ -410,7 +409,7 @@ function_property_p(VALUE self, VALUE name)
 
 /*
  * call-seq:
- *   proxy.call_function_property(name, arguments)  =>  result
+ *   call_function_property(name, arguments)
  *
  * Calls this JavaScript object's +name+ method, passing the given
  * arguments.
@@ -455,7 +454,7 @@ call_function_property(int argc, VALUE* argv, VALUE self)
 
 /*
  * call-seq:
- *   proxy.to_s  =>  string
+ *   to_s()
  *
  * Converts the JavaScript object to a string, using its toString method
  * if available.
