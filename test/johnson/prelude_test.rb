@@ -52,5 +52,28 @@ module Johnson
         flag;
       END
     end
+
+    def test_apply_without_second_param_works
+      assert_js(<<-END)
+        var func = function() { return arguments.length; };
+        func.apply(null, null) == 0 && func.apply(null) == 0;
+      END
+    end
+
+    def test_apply_with_non_array_throws
+      assert_raise(Johnson::Error) {
+        @runtime.evaluate(<<-END)
+          var func = function() { return arguments.length; };
+          func.apply(null, "foo");
+        END
+      }
+
+      assert_raise(Johnson::Error) {
+        @runtime.evaluate(<<-END)
+          var func = function() { return arguments.length; };
+          func.apply(null, { foo: 'bar' });
+        END
+      }
+    end
   end
 end
