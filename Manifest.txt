@@ -45,7 +45,9 @@ lib/johnson/nodes/node.rb
 lib/johnson/nodes/ternary_node.rb
 lib/johnson/parser.rb
 lib/johnson/parser/syntax_error.rb
+lib/johnson/ruby_land_proxy.rb
 lib/johnson/runtime.rb
+lib/johnson/spidermonkey.rb
 lib/johnson/spidermonkey/context.rb
 lib/johnson/spidermonkey/debugger.rb
 lib/johnson/spidermonkey/immutable_node.rb
