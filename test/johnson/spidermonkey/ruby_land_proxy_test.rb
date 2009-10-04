@@ -63,7 +63,9 @@ module Johnson
       end
       
       def test_calling_non_functions_complains
-        assert_raise(RuntimeError) { @runtime.evaluate("new Object()").call }
+        o = @runtime.evaluate("new Object()")
+        assert_equal(false, o.respond_to?(:call))
+        assert_raise(NoMethodError) { o.call }
       end
       
       def test_functions_can_be_called

@@ -1,5 +1,47 @@
 module Johnson #:nodoc:
   class RubyLandProxy
+    class << self
+      def apply_wrappers(proxy)
+        wrappers.each do |(wrapper, test)|
+          next if test && !test.call(proxy)
+          next if wrapper.respond_to?(:test?) && !wrapper.test?(proxy)
+
+          if wrapper.respond_to?(:call)
+            proxy = wrapper.call(proxy)
+            break unless Johnson::RubyLandProxy === proxy
+          else
+            proxy.send :extend, wrapper
+          end
+        end
+        proxy
+      end
+      def add_wrapper(wrapper, &test)
+        wrappers.push [wrapper, test]
+      end
+      def insert_wrapper(wrapper, &test)
+        wrappers.unshift [wrapper, test]
+      end
+      def wrappers
+        @wrappers ||= []
+      end
+    end
+
+    module Callable
+      def self.test?(proxy)
+        proxy.respond_to?(:call_using)
+      end
+
+      def to_proc
+        @proc ||= Proc.new { |*args| call(*args) }
+      end
+
+      def call(*args)
+        call_using(runtime.global, *args)
+      end
+    end
+
+    add_wrapper Callable
+
     include Enumerable
 
     # FIXME: need to revisit array vs non-array proxy, to_a/to_ary semantics, etc.
@@ -10,14 +52,6 @@ module Johnson #:nodoc:
       raise Johnson::Error, "#{self.class.name} is an internal support class."
     end
     private :initialize
-
-    def to_proc
-      @proc ||= Proc.new { |*args| call(*args) }
-    end
-
-    def call(*args)
-      call_using(runtime.global, *args)
-    end
 
     def inspect
       toString

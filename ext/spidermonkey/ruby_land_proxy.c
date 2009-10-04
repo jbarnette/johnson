@@ -149,6 +149,12 @@ function_p(VALUE self)
   JRETURN_RUBY(JS_TypeOfValue(context, proxy_value) == JSTYPE_FUNCTION ? Qtrue : Qfalse);
 }
 
+static VALUE
+callable_test_p(VALUE self, VALUE proxy)
+{
+  return function_p(proxy);
+}
+
 /*
  * call-seq:
  *   respond_to?(symbol)
@@ -501,12 +507,19 @@ static void finalize(RubyLandProxy* proxy)
 
 bool ruby_value_is_proxy(VALUE maybe_proxy)
 {
-  return proxy_class == CLASS_OF(maybe_proxy) || script_class == CLASS_OF(maybe_proxy);
+  return rb_obj_is_kind_of(maybe_proxy, proxy_class);
 }
 
 bool ruby_value_is_script_proxy(VALUE maybe_proxy)
 {
-  return script_class == CLASS_OF(maybe_proxy);
+  return rb_obj_is_kind_of(maybe_proxy, script_class);
+}
+
+VALUE apply_wrappers(VALUE proxy)
+{
+  VALUE johnson = rb_const_get(rb_mKernel, rb_intern("Johnson"));
+  VALUE johnson_proxy = rb_const_get(johnson, rb_intern("RubyLandProxy"));
+  return rb_funcall(johnson_proxy, rb_intern("apply_wrappers"), 1, proxy);
 }
 
 JSBool unwrap_ruby_land_proxy(JohnsonRuntime* runtime, VALUE wrapped, jsval* retval)
@@ -542,6 +555,9 @@ VALUE make_ruby_land_proxy(JohnsonRuntime* runtime, jsval value, const char cons
     PREPARE_RUBY_JROOTS(context, 1);
     JROOT(value);
 
+    VALUE rb_runtime = (VALUE)JS_GetRuntimePrivate(runtime->js);
+    rb_iv_set(proxy, "@runtime", rb_runtime);
+
     our_proxy->runtime = runtime;
     our_proxy->key = (void *)value;
     our_proxy->self = proxy;
@@ -552,10 +568,11 @@ VALUE make_ruby_land_proxy(JohnsonRuntime* runtime, jsval value, const char cons
     // put the proxy OID in the id map
     JCHECK(JS_HashTableAdd(runtime->jsids, (void *)value, (void *)our_proxy));
 
-    VALUE rb_runtime = (VALUE)JS_GetRuntimePrivate(runtime->js);
-    rb_iv_set(proxy, "@runtime", rb_runtime);
+    VALUE final_proxy = JPROTECT(apply_wrappers, proxy);
 
-    JRETURN_RUBY(proxy);
+    our_proxy->self = final_proxy;
+
+    JRETURN_RUBY(final_proxy);
   }
 }
 
@@ -580,11 +597,15 @@ void init_Johnson_SpiderMonkey_Proxy(VALUE spidermonkey)
   rb_define_method(proxy_class, "length", length, 0);
   rb_define_method(proxy_class, "to_s", to_s, 0);
 
-  rb_define_private_method(proxy_class, "native_call", native_call, -1);
   rb_define_private_method(proxy_class, "runtime", runtime, 0);
   rb_define_private_method(proxy_class, "function_property?", function_property_p, 1);
   rb_define_private_method(proxy_class, "call_function_property", call_function_property, -1);
 
+  VALUE callable = rb_define_module_under(proxy_class, "Callable");
+  rb_define_singleton_method(callable, "test?", callable_test_p, 1);
+  rb_define_private_method(callable, "native_call", native_call, -1);
+
+  rb_funcall(johnson_proxy, rb_intern("insert_wrapper"), 1, callable);
 
   script_class = rb_define_class_under(spidermonkey, "RubyLandScript", proxy_class);
 }
