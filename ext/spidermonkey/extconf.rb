@@ -29,4 +29,4 @@ dir_config "johnson/spidermonkey"
 find_header "jsautocfg.h", File.dirname(libjs)
 find_header "jsapi.h", spidermonkey_dir
 
-create_makefile "johnson/spidermonkey"
+create_makefile "johnson/spidermonkey/spidermonkey"
