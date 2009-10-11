@@ -49,6 +49,11 @@ module Johnson #:nodoc:
       end
 
       class << self
+
+        def parse_io *args
+          Johnson::SpiderMonkey::ImmutableNode.parse_io( *args )
+        end
+
         def raise_js_exception(jsex)
           raise jsex if Exception === jsex
           raise Johnson::Error.new(jsex.to_s) unless Johnson::SpiderMonkey::RubyLandProxy === jsex

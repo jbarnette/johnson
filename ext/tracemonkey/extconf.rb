@@ -14,19 +14,21 @@ cflags.concat defines.collect  { |d| "D#{d}" }
 
 $CFLAGS << cflags.collect { |f| " -#{f}" }.join(" ")
 
-spidermonkey_dir = File.expand_path File.dirname(__FILE__) +
-  "/../../vendor/spidermonkey"
+tracemonkey_dir = File.expand_path File.dirname(__FILE__) +
+  "/../../vendor/tracemonkey"
 
-Dir.chdir spidermonkey_dir do
-  system "make -f Makefile.ref" if Dir["**/libjs.a"].empty?
+Dir.chdir tracemonkey_dir do
+  system "autoconf213" if Dir["configure"].empty?
+  system "./configure" if Dir["Makefile"].empty?
+  system "make" if Dir["**/libjs_static.a"].empty?
 end
 
-libjs = Dir[spidermonkey_dir + "/**/libjs.a"].first
+libjs = Dir[tracemonkey_dir + "/**/libjs_static.a"].first
 $LOCAL_LIBS << libjs
 
-dir_config "johnson/spidermonkey"
+dir_config "johnson/tracemonkey"
 
 find_header "jsautocfg.h", File.dirname(libjs)
-find_header "jsapi.h", spidermonkey_dir
+find_header "jsapi.h", tracemonkey_dir
 
-create_makefile "johnson/spidermonkey"
+create_makefile "johnson/tracemonkey"

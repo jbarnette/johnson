@@ -3,6 +3,8 @@
 /tmp
 
 /ext/spidermonkey/*.bundle
+/ext/spidermonkey/*.bundle
+
 /ext/spidermonkey/Makefile
 /ext/spidermonkey/*.log
 /ext/spidermonkey/immutable_node.c
@@ -18,3 +20,11 @@
 .*.swp
 tags
 .DS_Store
+
+/lib/johnson/tracemonkey/*.bundle
+
+
+# SMP: REMOVE 
+
+/save
+/vendor/tbd

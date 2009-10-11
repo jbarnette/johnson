@@ -3,9 +3,9 @@ require File.expand_path(File.join(File.dirname(__FILE__), "/../../helper"))
 require 'stringio'
 
 module Johnson
-  module SpiderMonkey
+  module TraceMonkey
     class ImmutableNodeTest < Johnson::TestCase
-      include Johnson::SpiderMonkey
+      include Johnson::TraceMonkey
 
       def test_initialize
         node = nil

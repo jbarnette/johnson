@@ -15,29 +15,31 @@ module Johnson
       self
     end
 
-    ###
-    # Create a new Runtime instance, using the default JavaScript
-    # engine.
-    #
-    # Optionally takes a parameter specifying which engine to use, but
-    # this is deprecated; instead, just create an instance of that
-    # engine's runtime directly.
-    #
-    # :call-seq:
-    #   new(runtime_class=nil)
-    #
-    def self.new(*args)
-      return super if self < Johnson::Runtime
+     ###
+     # Create a new Runtime instance, using the default JavaScript
+     # engine.
+     #
+     # Optionally takes a parameter specifying which engine to use, but
+     # this is deprecated; instead, just create an instance of that
+     # engine's runtime directly.
+     #
+     # :call-seq:
+     #   new(runtime_class=nil)
+     #
+     def self.new(*args)
+       return super if self < Johnson::Runtime
 
-      delegate = args.first
-      if delegate.is_a? Class
-        delegate.new
-      elsif delegate
-        delegate
-      else
-        Johnson::SpiderMonkey::Runtime.new
-      end
-    end
+       delegate = args.first
+       if delegate.is_a? Class
+         delegate.new
+       elsif delegate
+         delegate
+       elsif
+         v = default.new( *args )
+         raise "hell" if !v
+         v
+       end
+     end
 
     ###
     # Install the Johnson prelude into this runtime environment.
@@ -114,5 +116,24 @@ module Johnson
     def evaluate_compiled_script(script)
       raise NotImplementedError
     end
+
+    @runtimes = []
+
+    class << self
+      private
+
+      def default
+        if @runtimes.empty?
+          require "johnson/spidermonkey"
+        end
+        @runtimes[0]
+      end
+
+      def inherited runtime
+        @runtimes << runtime
+      end
+
+    end
+
   end
 end

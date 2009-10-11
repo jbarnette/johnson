@@ -26,6 +26,7 @@ module Johnson
 
     def setup
       @runtime = Johnson::Runtime.new
+      raise "hell" if !@runtime
       #@runtime.delegate.gc_zeal = 2
       #@runtime.delegate.debugger = Johnson::SpiderMonkey::Debugger.new(TestLogger.new)
     end

@@ -1,4 +1,5 @@
 require 'stringio'
+require 'johnson/runtime'
 require 'johnson/parser/syntax_error'
 
 module Johnson
@@ -14,7 +15,7 @@ module Johnson
       end
 
       def parse_io(js, filename = nil, linenum = nil)
-        Johnson::SpiderMonkey::ImmutableNode.parse_io(js, filename, linenum)
+        Johnson::Runtime.send(:default).parse_io(js, filename, linenum)
       end
     end
   end

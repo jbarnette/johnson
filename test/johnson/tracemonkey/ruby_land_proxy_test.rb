@@ -1,19 +1,19 @@
 require File.expand_path(File.join(File.dirname(__FILE__), "/../../helper"))
 
 module Johnson
-  module SpiderMonkey
+  module TraceMonkey
     class RubyLandProxyTest < Johnson::TestCase
       def setup
-        @runtime = Johnson::Runtime.new(Johnson::SpiderMonkey::Runtime)
+        @runtime = Johnson::Runtime.new(Johnson::TraceMonkey::Runtime)
       end
       
       def test_constructing_a_proxy_directly_asplodes
-        assert_raise(Johnson::Error) { Johnson::SpiderMonkey::RubyLandProxy.new }
+        assert_raise(Johnson::Error) { Johnson::TraceMonkey::RubyLandProxy.new }
       end
       
       def test_objects_get_wrapped_as_proxies
-        assert_kind_of(Johnson::SpiderMonkey::RubyLandProxy, @runtime.evaluate("x = {}"))
-        assert_kind_of(Johnson::SpiderMonkey::RubyLandProxy, @runtime.evaluate("new Object()"))
+        assert_kind_of(Johnson::TraceMonkey::RubyLandProxy, @runtime.evaluate("x = {}"))
+        assert_kind_of(Johnson::TraceMonkey::RubyLandProxy, @runtime.evaluate("new Object()"))
       end
       
       def test_proxies_get_unwrapped_when_roundtripping
@@ -48,17 +48,17 @@ module Johnson
 
       def test_functions_get_wrapped_as_proxies
         f = @runtime.evaluate("function() {}")
-        assert_kind_of(Johnson::SpiderMonkey::RubyLandProxy, f)
+        assert_kind_of(Johnson::TraceMonkey::RubyLandProxy, f)
         assert(f.function?)
       end
 
       def test_function?
         f = @runtime.evaluate("function() {}")
-        assert_kind_of(Johnson::SpiderMonkey::RubyLandProxy, f)
+        assert_kind_of(Johnson::TraceMonkey::RubyLandProxy, f)
         assert(f.function?)
 
         f = @runtime.evaluate("new Object()")
-        assert_kind_of(Johnson::SpiderMonkey::RubyLandProxy, f)
+        assert_kind_of(Johnson::TraceMonkey::RubyLandProxy, f)
         assert(!f.function?)
       end
       
@@ -92,7 +92,7 @@ module Johnson
       
       def test_can_be_indexed_by_string
         proxy = @runtime.evaluate("x = { foo: 42 }")
-        assert_kind_of(Johnson::SpiderMonkey::RubyLandProxy, proxy)
+        assert_kind_of(Johnson::TraceMonkey::RubyLandProxy, proxy)
         
         assert_equal(42, proxy["foo"])
         
@@ -106,7 +106,7 @@ module Johnson
       
       def test_can_be_indexed_by_symbol
         proxy = @runtime.evaluate("x = { foo: 42 }")
-        assert_kind_of(Johnson::SpiderMonkey::RubyLandProxy, proxy)
+        assert_kind_of(Johnson::TraceMonkey::RubyLandProxy, proxy)
         
         assert_equal(42, proxy[:foo])
         

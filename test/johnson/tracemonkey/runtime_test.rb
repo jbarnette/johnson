@@ -1,15 +1,15 @@
 require File.expand_path(File.join(File.dirname(__FILE__), "/../../helper"))
 
 module Johnson
-  module SpiderMonkey
+  module TraceMonkey
     class RuntimeTest < Johnson::TestCase
       def setup
-        @runtime = Johnson::SpiderMonkey::Runtime.new
+        @runtime = Johnson::TraceMonkey::Runtime.new
       end
       
       def test_can_create_more_than_one_without_barfing
         assert_nothing_raised {
-          Johnson::SpiderMonkey::Runtime.new
+          Johnson::TraceMonkey::Runtime.new
         }
       end
 
@@ -33,7 +33,7 @@ module Johnson
       end
 
       def test_reports_a_debugger_is_registered
-        @runtime.debugger = Johnson::SpiderMonkey::Debugger.new(nil)
+        @runtime.debugger = Johnson::TraceMonkey::Debugger.new(nil)
         assert @runtime.debugger?
       end
     end

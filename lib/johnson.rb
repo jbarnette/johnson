@@ -13,9 +13,6 @@ require "johnson/visitors"
 # parse tree nodes
 require "johnson/nodes"
 
-# SpiderMonkey, the default JS engine
-require "johnson/spidermonkey"
-
 module Johnson
   VERSION = "1.1.2"
 

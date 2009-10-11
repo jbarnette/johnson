@@ -1,10 +1,10 @@
 require File.expand_path(File.join(File.dirname(__FILE__), "/../../helper"))
 
 module Johnson
-  module SpiderMonkey
+  module TraceMonkey
     class ContextTest < Johnson::TestCase
       def setup
-        @runtime = Johnson::Runtime.new(Johnson::SpiderMonkey::Runtime)
+        @runtime = Johnson::Runtime.new(Johnson::TraceMonkey::Runtime)
       end
       
       def test_wraps_global_unfuckedly
