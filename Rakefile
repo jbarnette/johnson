@@ -100,11 +100,13 @@ INTERPRETERS.each do |interpreter|
 
   file "ext/{interpreter}/extconf.rb" => generated_node
 
-  task :test do
+  task :"test:#{interpreter}" do
     tests = Dir["test/**/generic/**/*_test.rb"] + Dir["test/**/#{interpreter}/**/*_test.rb"]
     tests.map! { |t| %(require "#{t}";) }
     ruby "#{Hoe::RUBY_FLAGS} -rrubygems -rjohnson -rjohnson/#{interpreter} -e '#{tests.join("; ")}' #{FILTER}"
   end
+
+  task :test => :"test:#{interpreter}"
 
 end
 
