@@ -198,7 +198,7 @@ set_gc_zeal(VALUE self, VALUE zeal)
  * call-seq:
  *   gc()
  *
- * Manually initiates a SpiderMonkey Garbage Collection run.
+ * Manually initiates a TraceMonkey Garbage Collection run.
  */
 static VALUE
 gc(VALUE self)
@@ -218,7 +218,7 @@ gc(VALUE self)
  *   debugger=(debugger)
  *
  * Directs the runtime to install a full set of debug hooks, using the
- * given +debugger+, which must be a Johnson::SpiderMonkey::Debugger.
+ * given +debugger+, which must be a Johnson::TraceMonkey::Debugger.
  */
 static VALUE
 set_debugger(VALUE self, VALUE debugger)
@@ -227,7 +227,7 @@ set_debugger(VALUE self, VALUE debugger)
   JSDebugHooks* debug_hooks;
 
   if (!ruby_value_is_debugger(debugger))
-    rb_raise(rb_eTypeError, "Expected Johnson::SpiderMonkey::Debugger instance");
+    rb_raise(rb_eTypeError, "Expected Johnson::TraceMonkey::Debugger instance");
 
   rb_iv_set(self, "@debugger", debugger);
   Data_Get_Struct(self, JohnsonRuntime, runtime);
@@ -285,7 +285,7 @@ JSBool gc_callback(JSContext *context, JSGCStatus status)
  * call-seq:
  *   initialize_native(options)
  *
- * Create the underlying SpiderMonkey runtime. This must be called
+ * Create the underlying TraceMonkey runtime. This must be called
  * first, and only once. Called by +initialize+ by default.
  */
 static VALUE
@@ -368,17 +368,17 @@ static VALUE allocate(VALUE klass)
   return Data_Wrap_Struct(klass, 0, deallocate, runtime);
 }
 
-void init_Johnson_SpiderMonkey_Runtime(VALUE spidermonkey)
+void init_Johnson_TraceMonkey_Runtime(VALUE tracemonkey)
 {
   /* HACK:  These comments are *only* to make RDoc happy.
   VALUE johnson = rb_define_module("Johnson");
-  VALUE spidermonkey = rb_define_module_under(johnson, "SpiderMonkey");
+  VALUE tracemonkey = rb_define_module_under(johnson, "TraceMonkey");
   */
 
   VALUE johnson = rb_const_get(rb_mKernel, rb_intern("Johnson"));
   VALUE johnson_runtime = rb_const_get(johnson, rb_intern("Runtime"));
 
-  VALUE klass = rb_define_class_under(spidermonkey, "Runtime", johnson_runtime);
+  VALUE klass = rb_define_class_under(tracemonkey, "Runtime", johnson_runtime);
 
   rb_define_alloc_func(klass, allocate);
   rb_define_private_method(klass, "initialize_native", (ruby_callback)initialize_native, 1);

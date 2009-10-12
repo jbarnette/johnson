@@ -25,7 +25,7 @@ Hoe.spec "johnson" do
   clean_globs    << "ext/**/Makefile"
   clean_globs    << "ext/**/*.{o,so,bundle,a,log}"
   clean_globs    << "ext/spidermonkey/immutable_node.c"
-  clean_globs    << "ext/tracemonkey/immutable_node.c"
+  clean_globs    << "ext/tracemonkey/immutable_node.cc"
   clean_globs    << "lib/johnson/spidermonkey.bundle"
   clean_globs    << "lib/johnson/tracemonkey.bundle"
   clean_globs    << "tmp"
@@ -87,18 +87,29 @@ task(:test).clear
 INTERPRETERS = [ "spidermonkey", "tracemonkey" ]
 FILTER = ENV['FILTER'] || ENV['TESTOPTS']
 
+SUFFIXES = {}
+SUFFIXES[ "spidermonkey" ] = "c"
+SUFFIXES[ "tracemonkey" ] = "cc"
+
 INTERPRETERS.each do |interpreter|
+
+  suffix = SUFFIXES[interpreter]
   
-  generated_nodes << "ext/#{interpreter}/immutable_node.c"
+  generated_nodes << "ext/#{interpreter}/immutable_node.#{suffix}"
   
-  generated_node = "ext/#{interpreter}/immutable_node.c.erb"
+  generated_node = "ext/#{interpreter}/immutable_node.#{suffix}"
   
-  file generated_node => "ext/#{interpreter}/immutable_node.c.erb"  do |t|
+  file generated_node => "ext/#{interpreter}/immutable_node.#{suffix}.erb"  do |t|
     template = ERB.new(File.open(t.prerequisites.first, "rb") { |x| x.read })
-    File.open(generated_node, "wb") { |f| f.write template.result(binding) }
+    jsops = jsops interpreter
+    tokens = tokens interpreter
+    template.result(binding)
+    # File.open(generated_node, "wb") { |f| f.write template.result(binding) }
   end
 
-  file "ext/{interpreter}/extconf.rb" => generated_node
+  task :"immutable_node:#{interpreter}" => generated_node
+
+  file "ext/#{interpreter}/extconf.rb" => generated_node
 
   task :"test:#{interpreter}" do
     tests = Dir["test/**/generic/**/*_test.rb"] + Dir["test/**/#{interpreter}/**/*_test.rb"]
@@ -112,3 +123,8 @@ end
 
 task :package        => generated_nodes
 task :check_manifest => generated_nodes
+
+
+# Local Variables:
+# mode:ruby
+# End:

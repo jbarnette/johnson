@@ -12,7 +12,7 @@ define_property(JSContext *js_context, JSObject* UNUSED(obj), uintN argc, jsval 
   return JS_DefineProperty(js_context, JSVAL_TO_OBJECT(argv[0]), name, argc > 2 ? argv[2] : JSVAL_VOID, NULL, NULL, flags);
 }
 
-VALUE init_spidermonkey_extensions(JohnsonContext* context, VALUE self)
+VALUE init_tracemonkey_extensions(JohnsonContext* context, VALUE self)
 {
   PREPARE_RUBY_JROOTS(context->js, 1);
   

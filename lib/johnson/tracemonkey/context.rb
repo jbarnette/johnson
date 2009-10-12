@@ -1,5 +1,5 @@
 module Johnson #:nodoc:
-  module SpiderMonkey #:nodoc:
+  module TraceMonkey #:nodoc:
     class Context # native
       def initialize(runtime, options={})
         @runtime = runtime

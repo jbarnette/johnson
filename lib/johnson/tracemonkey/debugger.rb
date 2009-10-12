@@ -1,5 +1,5 @@
 module Johnson #:nodoc:
-  module SpiderMonkey #:nodoc:
+  module TraceMonkey #:nodoc:
     class Debugger # native
       JSTRAP_ERROR    = 0
       JSTRAP_CONTINUE = 1

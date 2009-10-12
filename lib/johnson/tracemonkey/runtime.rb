@@ -1,5 +1,5 @@
 module Johnson #:nodoc:
-  module SpiderMonkey #:nodoc:
+  module TraceMonkey #:nodoc:
     class Runtime < Johnson::Runtime # native
       CONTEXT_MAP_KEY = :johnson_context_map
 
@@ -49,9 +49,14 @@ module Johnson #:nodoc:
       end
 
       class << self
+
+        def parse_io *args
+          Johnson::TraceMonkey::ImmutableNode.parse_io( *args )
+        end
+
         def raise_js_exception(jsex)
           raise jsex if Exception === jsex
-          raise Johnson::Error.new(jsex.to_s) unless Johnson::SpiderMonkey::RubyLandProxy === jsex
+          raise Johnson::Error.new(jsex.to_s) unless Johnson::TraceMonkey::RubyLandProxy === jsex
 
           stack = jsex.stack rescue nil
 
@@ -70,7 +75,7 @@ module Johnson #:nodoc:
       end
 
       private
-      # Called by SpiderMonkey's garbage collector to determine whether or
+      # Called by TraceMonkey's garbage collector to determine whether or
       # not it should GC
       def should_sm_gc?
         return false if Thread.list.find_all { |t|

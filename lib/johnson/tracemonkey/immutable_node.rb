@@ -1,5 +1,5 @@
 module Johnson #:nodoc:
-  module SpiderMonkey #:nodoc:
+  module TraceMonkey #:nodoc:
     class ImmutableNode
       def accept(visitor)
         case pn_arity

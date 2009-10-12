@@ -10,7 +10,7 @@
 #include "jsfun.h"
 
 typedef struct {
-  // JSParseContext * pc;
+  JSCompiler * pc;
   JSParseNode * node;
   JSContext * js;
   JSRuntime * runtime;

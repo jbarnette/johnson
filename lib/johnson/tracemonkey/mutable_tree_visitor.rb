@@ -1,5 +1,5 @@
 module Johnson
-  module SpiderMonkey
+  module TraceMonkey
     class MutableTreeVisitor
       include Johnson::Nodes
 

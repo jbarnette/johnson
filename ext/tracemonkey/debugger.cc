@@ -217,15 +217,15 @@ static VALUE allocate(VALUE klass)
   return self;
 }
 
-void init_Johnson_SpiderMonkey_Debugger(VALUE spidermonkey)
+void init_Johnson_TraceMonkey_Debugger(VALUE tracemonkey)
 {
   /* HACK:  These comments are *only* to make RDoc happy.
   VALUE johnson = rb_define_module("Johnson");
-  VALUE spidermonkey = rb_define_module_under(johnson, "SpiderMonkey");
+  VALUE tracemonkey = rb_define_module_under(johnson, "TraceMonkey");
   */
 
-  /* This is the debugging hooks used with SpiderMonkey. */
-  debugger_class = rb_define_class_under(spidermonkey, "Debugger", rb_cObject);
+  /* This is the debugging hooks used with TraceMonkey. */
+  debugger_class = rb_define_class_under(tracemonkey, "Debugger", rb_cObject);
   rb_define_private_method(debugger_class, "frame_pc", (ruby_callback)frame_pc, 2);
   rb_define_private_method(debugger_class, "line_number", (ruby_callback)line_number, 3);
   rb_define_private_method(debugger_class, "file_name", (ruby_callback)file_name, 2);

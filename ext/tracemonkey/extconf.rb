@@ -19,7 +19,7 @@ tracemonkey_dir = File.expand_path File.dirname(__FILE__) +
 
 Dir.chdir tracemonkey_dir do
   system "autoconf213" if Dir["configure"].empty?
-  system "./configure" if Dir["Makefile"].empty?
+  system "./configure --enable-static" if Dir["Makefile"].empty?
   system "make" if Dir["**/libjs_static.a"].empty?
 end
 

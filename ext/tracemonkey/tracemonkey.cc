@@ -4,6 +4,7 @@
 #include "debugger.h"
 #include "immutable_node.h"
 
+extern "C"
 void Init_tracemonkey()
 {
   JS_SetCStringsAreUTF8();

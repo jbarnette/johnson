@@ -9,7 +9,7 @@ class Array
 end
 
 module Johnson
-  module SpiderMonkey
+  module TraceMonkey
     module JSLandProxy #:nodoc:
       def self.send_with_possible_block(target, symbol, args)
         block = args.pop if args.last.is_a?(RubyLandProxy) && args.last.function?
