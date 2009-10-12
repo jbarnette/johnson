@@ -1,7 +1,7 @@
-#ifndef JOHNSON_SPIDERMONKEY_JS_LAND_PROXY_H
-#define JOHNSON_SPIDERMONKEY_JS_LAND_PROXY_H
+#ifndef JOHNSON_TRACEMONKEY_JS_LAND_PROXY_H
+#define JOHNSON_TRACEMONKEY_JS_LAND_PROXY_H
 
-#include "spidermonkey.h"
+#include "tracemonkey.h"
 #include "runtime.h"
 
 bool js_value_is_proxy(JohnsonRuntime* runtime, jsval maybe_proxy);

@@ -1,7 +1,7 @@
-#ifndef JOHNSON_SPIDERMONKEY_CONVERSIONS_H
-#define JOHNSON_SPIDERMONKEY_CONVERSIONS_H
+#ifndef JOHNSON_TRACEMONKEY_CONVERSIONS_H
+#define JOHNSON_TRACEMONKEY_CONVERSIONS_H
 
-#include "spidermonkey.h"
+#include "tracemonkey.h"
 #include "context.h"
 #include "runtime.h"
 
@@ -13,6 +13,7 @@ DECLARE_RUBY_WRAPPER(convert_js_string_to_ruby, JohnsonRuntime* runtime; JSStrin
 
 DECLARE_RUBY_WRAPPER(rb_funcall_0, VALUE obj; ID sym; int argc)
 #define RB_FUNCALL_0(obj, sym) CALL_RUBY_WRAPPER(rb_funcall_0, obj, sym, 0)
+#define RB_FUNCALL_0T(obj, sym, T) CALL_RUBY_WRAPPER_T(rb_funcall_0, T, obj, sym, 0)
 DECLARE_RUBY_WRAPPER(rb_funcall_1, VALUE obj; ID sym; int argc; VALUE a)
 #define RB_FUNCALL_1(obj, sym, a) CALL_RUBY_WRAPPER(rb_funcall_1, obj, sym, 1, a)
 DECLARE_RUBY_WRAPPER(rb_funcall_2, VALUE obj; ID sym; int argc; VALUE a; VALUE b)

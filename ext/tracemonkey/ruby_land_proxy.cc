@@ -10,8 +10,8 @@ DEFINE_RUBY_WRAPPER(rb_yield, rb_yield, ARGLIST1(v))
 DECLARE_RUBY_WRAPPER(rb_check_type, VALUE o; int t)
 DEFINE_VOID_RUBY_WRAPPER(rb_check_type, rb_check_type, ARGLIST2(o, t))
 
-DEFINE_RUBY_WRAPPER(rb_string_value, rb_string_value, ARGLIST1(v))
-DEFINE_VOID_RUBY_WRAPPER(rb_string_value_cstr, rb_string_value_cstr, ARGLIST1(v))
+DEFINE_RUBY_WRAPPER(rb_string_value, rb_string_value, ARGLIST1T(volatile VALUE*,v))
+DEFINE_VOID_RUBY_WRAPPER(rb_string_value_cstr, rb_string_value_cstr, ARGLIST1T(volatile VALUE*,v))
 
 DEFINE_RUBY_WRAPPER(make_ruby_land_proxy, make_ruby_land_proxy, ARGLIST3(runtime, value, root_name))
 
@@ -80,7 +80,7 @@ get(VALUE self, VALUE name)
     case T_SYMBOL:
       name = RB_FUNCALL_0(name, RB_INTERN("to_s"));
     default:
-      CALL_RUBY_WRAPPER(rb_string_value_cstr, &name);
+      CALL_RUBY_WRAPPER(rb_string_value_cstr, (VALUE)&name);
       JCHECK(JS_GetProperty(context,
           JSVAL_TO_OBJECT(proxy_value), StringValueCStr(name), &js_value));
       break;
@@ -121,7 +121,7 @@ set(VALUE self, VALUE name, VALUE value)
     case T_SYMBOL:
       name = RB_FUNCALL_0(name, RB_INTERN("to_s"));
     default:
-      CALL_RUBY_WRAPPER(rb_string_value_cstr, &name);
+      CALL_RUBY_WRAPPER(rb_string_value_cstr, (VALUE)&name);
       JCHECK(JS_SetProperty(context,
             JSVAL_TO_OBJECT(proxy_value), StringValueCStr(name), &js_value));
       break;
@@ -150,7 +150,7 @@ function_p(VALUE self)
 }
 
 static VALUE
-callable_test_p(VALUE self, VALUE proxy)
+callable_test_p(VALUE /* self */, VALUE proxy)
 {
   return function_p(proxy);
 }
@@ -209,7 +209,7 @@ native_call(int argc, VALUE* argv, VALUE self)
 {
   if (!function_p(self))
     rb_raise(rb_eRuntimeError,
-      "This Johnson::SpiderMonkey::RubyLandProxy isn't a function.");
+      "This Johnson::TraceMonkey::RubyLandProxy isn't a function.");
 
   if (argc < 1)
     rb_raise(rb_eArgError, "Target object required");
@@ -365,7 +365,7 @@ length(VALUE self)
  * call-seq:
  *   runtime()
  *
- * Returns the Johnson::SpiderMonkey::Runtime against which this object
+ * Returns the Johnson::TraceMonkey::Runtime against which this object
  * is registered.
  */
 static VALUE
@@ -442,7 +442,7 @@ call_function_property(int argc, VALUE* argv, VALUE self)
   jsval function;
 
   VALUE name = argv[0];
-  CALL_RUBY_WRAPPER(rb_string_value_cstr, &name);
+  CALL_RUBY_WRAPPER(rb_string_value_cstr, (VALUE)&name);
   
   JCHECK(JS_GetProperty(context,
     JSVAL_TO_OBJECT(proxy_value), StringValueCStr(name), &function));
@@ -450,7 +450,7 @@ call_function_property(int argc, VALUE* argv, VALUE self)
   JROOT(function);
 
   // should never be anything but a function
-  if (!JS_ObjectIsFunction(context, function))
+  if (!JS_ObjectIsFunction(context, JSVAL_TO_OBJECT(function)))
     JERROR("Specified property \"%s\" isn't a function.", StringValueCStr(name));
 
   REMOVE_JROOTS;
@@ -536,7 +536,7 @@ JSBool unwrap_ruby_land_proxy(JohnsonRuntime* runtime, VALUE wrapped, jsval* ret
   JRETURN;
 }
 
-VALUE make_ruby_land_proxy(JohnsonRuntime* runtime, jsval value, const char const* root_name)
+VALUE make_ruby_land_proxy(JohnsonRuntime* runtime, jsval value, const char* root_name)
 {
   RubyLandProxy * our_proxy = (RubyLandProxy *)JS_HashTableLookup(runtime->jsids, (void *)value);
   
@@ -576,36 +576,36 @@ VALUE make_ruby_land_proxy(JohnsonRuntime* runtime, jsval value, const char cons
   }
 }
 
-void init_Johnson_SpiderMonkey_Proxy(VALUE spidermonkey)
+void init_Johnson_TraceMonkey_Proxy(VALUE tracemonkey)
 {
   /* HACK:  These comments are *only* to make RDoc happy.
   VALUE johnson = rb_define_module("Johnson");
-  VALUE spidermonkey = rb_define_module_under(johnson, "SpiderMonkey");
+  VALUE tracemonkey = rb_define_module_under(johnson, "TraceMonkey");
   */
 
   VALUE johnson = rb_const_get(rb_mKernel, rb_intern("Johnson"));
   VALUE johnson_proxy = rb_const_get(johnson, rb_intern("RubyLandProxy"));
 
   /* RubyLandProxy class. */
-  proxy_class = rb_define_class_under(spidermonkey, "RubyLandProxy", johnson_proxy);
+  proxy_class = rb_define_class_under(tracemonkey, "RubyLandProxy", johnson_proxy);
 
-  rb_define_method(proxy_class, "[]", get, 1);
-  rb_define_method(proxy_class, "[]=", set, 2);
-  rb_define_method(proxy_class, "function?", function_p, 0);
-  rb_define_method(proxy_class, "respond_to?", respond_to_p, -1);
-  rb_define_method(proxy_class, "each", each, 0);
-  rb_define_method(proxy_class, "length", length, 0);
-  rb_define_method(proxy_class, "to_s", to_s, 0);
+  rb_define_method(proxy_class, "[]", (ruby_callback)get, 1);
+  rb_define_method(proxy_class, "[]=", (ruby_callback)set, 2);
+  rb_define_method(proxy_class, "function?", (ruby_callback)function_p, 0);
+  rb_define_method(proxy_class, "respond_to?", (ruby_callback)respond_to_p, -1);
+  rb_define_method(proxy_class, "each", (ruby_callback)each, 0);
+  rb_define_method(proxy_class, "length", (ruby_callback)length, 0);
+  rb_define_method(proxy_class, "to_s", (ruby_callback)to_s, 0);
 
-  rb_define_private_method(proxy_class, "runtime", runtime, 0);
-  rb_define_private_method(proxy_class, "function_property?", function_property_p, 1);
-  rb_define_private_method(proxy_class, "call_function_property", call_function_property, -1);
+  rb_define_private_method(proxy_class, "runtime", (ruby_callback)runtime, 0);
+  rb_define_private_method(proxy_class, "function_property?", (ruby_callback)function_property_p, 1);
+  rb_define_private_method(proxy_class, "call_function_property", (ruby_callback)call_function_property, -1);
 
   VALUE callable = rb_define_module_under(proxy_class, "Callable");
-  rb_define_singleton_method(callable, "test?", callable_test_p, 1);
-  rb_define_private_method(callable, "native_call", native_call, -1);
+  rb_define_singleton_method(callable, "test?", (ruby_callback)callable_test_p, 1);
+  rb_define_private_method(callable, "native_call", (ruby_callback)native_call, -1);
 
   rb_funcall(johnson_proxy, rb_intern("insert_wrapper"), 1, callable);
 
-  script_class = rb_define_class_under(spidermonkey, "RubyLandScript", proxy_class);
+  script_class = rb_define_class_under(tracemonkey, "RubyLandScript", proxy_class);
 }

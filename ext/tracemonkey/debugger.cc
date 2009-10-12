@@ -74,7 +74,7 @@ static JSTrapStatus interrupt_handler(JSContext *js, JSScript *script,
   VALUE rb_script = Data_Wrap_Struct(rb_cObject, NULL, NULL, script);
   VALUE rb_pc     = Data_Wrap_Struct(rb_cObject, NULL, NULL, pc);
 
-  return NUM2INT(rb_funcall(self, rb_intern("interrupt_handler"), 3,
+  return (JSTrapStatus)NUM2INT(rb_funcall(self, rb_intern("interrupt_handler"), 3,
         rb_cx,
         rb_script,
         rb_pc
@@ -116,7 +116,7 @@ static JSTrapStatus debugger_handler(JSContext *js, JSScript *script,
   VALUE rb_script = Data_Wrap_Struct(rb_cObject, NULL, NULL, script);
   VALUE rb_pc     = Data_Wrap_Struct(rb_cObject, NULL, NULL, pc);
 
-  return NUM2INT(rb_funcall(self, rb_intern("debugger_handler"), 3,
+  return (JSTrapStatus)NUM2INT(rb_funcall(self, rb_intern("debugger_handler"), 3,
         rb_cx,
         rb_script,
         rb_pc
@@ -176,7 +176,7 @@ static JSTrapStatus throw_hook(JSContext *UNUSED(js), JSScript *UNUSED(script),
 {
   VALUE self = (VALUE)rb;
   VALUE rb_bytecode = jsop_to_symbol(*pc);
-  return NUM2INT(rb_funcall(self, rb_intern("throw_hook"), 1, rb_bytecode));
+  return (JSTrapStatus)NUM2INT(rb_funcall(self, rb_intern("throw_hook"), 1, rb_bytecode));
 }
 
 static JSBool debug_error_hook(JSContext *UNUSED(js), const char *message,
@@ -190,7 +190,7 @@ static JSBool debug_error_hook(JSContext *UNUSED(js), const char *message,
 
 static VALUE allocate(VALUE klass)
 {
-  JSDebugHooks* debug = calloc(1L, sizeof(JSDebugHooks));
+  JSDebugHooks* debug = (JSDebugHooks*)calloc(1L, sizeof(JSDebugHooks));
   VALUE self = Data_Wrap_Struct(klass, 0, 0, debug);
 
   debug->interruptHandler = interrupt_handler;
@@ -226,9 +226,9 @@ void init_Johnson_SpiderMonkey_Debugger(VALUE spidermonkey)
 
   /* This is the debugging hooks used with SpiderMonkey. */
   debugger_class = rb_define_class_under(spidermonkey, "Debugger", rb_cObject);
-  rb_define_private_method(debugger_class, "frame_pc", frame_pc, 2);
-  rb_define_private_method(debugger_class, "line_number", line_number, 3);
-  rb_define_private_method(debugger_class, "file_name", file_name, 2);
+  rb_define_private_method(debugger_class, "frame_pc", (ruby_callback)frame_pc, 2);
+  rb_define_private_method(debugger_class, "line_number", (ruby_callback)line_number, 3);
+  rb_define_private_method(debugger_class, "file_name", (ruby_callback)file_name, 2);
 
   rb_define_alloc_func(debugger_class, allocate);
 }

@@ -101,7 +101,7 @@ JSBool call_ruby_from_js2(JohnsonRuntime* runtime, VALUE* retval, VALUE self, ID
 
 static bool autovivified_p(VALUE UNUSED(ruby_context), VALUE self, char* name)
 {
-  return RTEST(rb_funcall(Johnson_SpiderMonkey_JSLandProxy(), rb_intern("autovivified?"), 2,
+  return RTEST(rb_funcall(Johnson_TraceMonkey_JSLandProxy(), rb_intern("autovivified?"), 2,
     self, rb_str_new2(name)));
 }
 
@@ -143,7 +143,7 @@ static bool attribute_p(VALUE self, char* name)
     }
   }
 
-  return RTEST(rb_funcall(Johnson_SpiderMonkey_JSLandProxy(),
+  return RTEST(rb_funcall(Johnson_TraceMonkey_JSLandProxy(),
     rb_intern("js_property?"), 2, self, ID2SYM(rb_id)));
 }
 
@@ -236,7 +236,7 @@ static JSBool get(JSContext* js_context, JSObject* obj, jsval id, jsval* retval)
   
   else if (autovivified_p(ruby_context, self, name))
   {
-    JCHECK(call_ruby_from_js(runtime, retval, Johnson_SpiderMonkey_JSLandProxy(),
+    JCHECK(call_ruby_from_js(runtime, retval, Johnson_TraceMonkey_JSLandProxy(),
       rb_intern("autovivified"), 2, self, rb_str_new2(name)));
   }
 
@@ -361,7 +361,7 @@ static JSBool set(JSContext* js_context, JSObject* obj, jsval id, jsval* value)
   }
   else
   {
-    JCHECK(call_ruby_from_js(runtime, NULL, Johnson_SpiderMonkey_JSLandProxy(), rb_intern("autovivify"), 
+    JCHECK(call_ruby_from_js(runtime, NULL, Johnson_TraceMonkey_JSLandProxy(), rb_intern("autovivify"), 
       3, self, ruby_key, ruby_value));
   }
 
@@ -388,7 +388,7 @@ static JSBool construct(JSContext* js_context, JSObject* UNUSED(obj), uintN argc
   for (i = 0; i < argc; ++i)
     rb_ary_push(args, CONVERT_TO_RUBY(runtime, argv[i]));
     
-  JCHECK(call_ruby_from_js(runtime, retval, Johnson_SpiderMonkey_JSLandProxy(),
+  JCHECK(call_ruby_from_js(runtime, retval, Johnson_TraceMonkey_JSLandProxy(),
     rb_intern("send_with_possible_block"), 3, klass, ID2SYM(rb_intern("new")), args));
   JRETURN;
 }
@@ -478,7 +478,7 @@ static JSBool method_missing(JSContext* js_context, JSObject* obj, uintN argc, j
   VALUE args;
   JCHECK(call_ruby_from_js2(runtime, &args, CONVERT_TO_RUBY(runtime, argv[1]), rb_intern("to_a"), 0));
 
-  JCHECK(call_ruby_from_js(runtime, retval, Johnson_SpiderMonkey_JSLandProxy(),
+  JCHECK(call_ruby_from_js(runtime, retval, Johnson_TraceMonkey_JSLandProxy(),
     rb_intern("send_with_possible_block"), 3, self, ID2SYM(ruby_id), args));
 
   JRETURN;
@@ -505,7 +505,7 @@ static JSBool call(JSContext* js_context, JSObject* UNUSED(obj), uintN argc, jsv
   for (i = 0; i < argc; ++i)
     rb_ary_push(args, CONVERT_TO_RUBY(runtime, argv[i]));
   
-  JCHECK(call_ruby_from_js(runtime, retval, Johnson_SpiderMonkey_JSLandProxy(),
+  JCHECK(call_ruby_from_js(runtime, retval, Johnson_TraceMonkey_JSLandProxy(),
     rb_intern("send_with_possible_block"), 3, self, ID2SYM(rb_intern("call")), args));
   JRETURN;
 }
@@ -577,7 +577,7 @@ JSBool make_js_land_proxy(JohnsonRuntime* runtime, VALUE value, jsval* retval)
     
     // FIXME: hack; should happen in Rubyland
     if (T_STRUCT == TYPE(value))
-      rb_funcall(Johnson_SpiderMonkey_JSLandProxy(),
+      rb_funcall(Johnson_TraceMonkey_JSLandProxy(),
         rb_intern("treat_all_properties_as_methods"), 1, value);
 
     bool callable_p = Qtrue == rb_funcall(value,

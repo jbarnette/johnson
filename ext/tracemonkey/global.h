@@ -1,7 +1,7 @@
-#ifndef JOHNSON_SPIDERMONKEY_GLOBAL_H
-#define JOHNSON_SPIDERMONKEY_GLOBAL_H
+#ifndef JOHNSON_TRACEMONKEY_GLOBAL_H
+#define JOHNSON_TRACEMONKEY_GLOBAL_H
 
-#include "spidermonkey.h"
+#include "tracemonkey.h"
 #include "context.h"
 #include "runtime.h"
 

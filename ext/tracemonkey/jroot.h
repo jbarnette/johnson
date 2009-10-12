@@ -4,7 +4,7 @@
 #define _JROOT_NAMESIZE 200L
 #define _JROOT_ERRSIZE 500L
 
-#define _JROOT_ROOT (void*)(1)
+#define _JROOT_ROOT (void(*)(JSContext*, void*))(1)
 
 #define OUR_CONTEXT(js_context) \
   ({ \
@@ -112,6 +112,22 @@
     } \
   } while (0)
 
+#define JPROTECT_T(T, func, data)                  \
+  ({ \
+    int _state; \
+    const VALUE _old_errinfo = ruby_errinfo; \
+    const VALUE _result = rb_protect((func), (data), &_state); \
+    if (_state) \
+    { \
+      REMOVE_JROOTS; \
+      if (_jroot_ruby) \
+        rb_jump_tag(_state); \
+      else \
+        return (T)report_ruby_error_in_js(OUR_RUNTIME(_jroot_context), _state, _old_errinfo); \
+    } \
+    _result; \
+  })
+
 #define JPROTECT(func, data) \
   ({ \
     int _state; \
@@ -168,6 +184,7 @@
 
 
 #define ARGLIST1(a)             _data->a
+#define ARGLIST1T(T,a)          ((T)_data->a)
 #define ARGLIST2(a, b)          _data->a, _data->b
 #define ARGLIST3(a, b, c)       _data->a, _data->b, _data->c
 #define ARGLIST4(a, b, c, d)    _data->a, _data->b, _data->c, _data->d
@@ -192,6 +209,7 @@
 #define RUBY_WRAPPER_ARG(name, args...) ({ name ## _args _x = { args }; LONG2FIX((long)(&_x) >> 2); })
 #define RUBY_WRAPPER(name) name ## _invoke
 #define CALL_RUBY_WRAPPER(name, args...) JPROTECT(RUBY_WRAPPER(name), RUBY_WRAPPER_ARG(name, args))
+#define CALL_RUBY_WRAPPER_T(name, T, args...) JPROTECT_T(T, RUBY_WRAPPER(name), RUBY_WRAPPER_ARG(name, args))
 
 
 #endif

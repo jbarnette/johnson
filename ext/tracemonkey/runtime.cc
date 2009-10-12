@@ -27,7 +27,7 @@ static JSTrapStatus trap_handler( JSContext *context,
 {
   PREPARE_JROOTS(context, 0);
   VALUE block = (VALUE)block_closure;
-  RB_FUNCALL_0(block, rb_intern("call"));
+  RB_FUNCALL_0T(block, rb_intern("call"), JSTrapStatus);
   return JSTRAP_CONTINUE;
 }
 
@@ -330,7 +330,7 @@ JSContext* johnson_get_current_context(JohnsonRuntime * runtime)
   return context->js;
 }
 
-static int proxy_cleanup_enumerator(JSHashEntry *entry, int i, void* arg)
+static int proxy_cleanup_enumerator(JSHashEntry *entry, int /* i */, void* arg)
 {
   JohnsonRuntime *runtime = (JohnsonRuntime*)(arg);
   // entry->key is jsval; entry->value is RubyLandProxy*
@@ -364,7 +364,7 @@ static void deallocate(JohnsonRuntime* runtime)
 
 static VALUE allocate(VALUE klass)
 {
-  JohnsonRuntime* runtime = calloc(1L, sizeof(JohnsonRuntime));
+  JohnsonRuntime* runtime = (JohnsonRuntime*)calloc(1L, sizeof(JohnsonRuntime));
   return Data_Wrap_Struct(klass, 0, deallocate, runtime);
 }
 
@@ -381,16 +381,16 @@ void init_Johnson_SpiderMonkey_Runtime(VALUE spidermonkey)
   VALUE klass = rb_define_class_under(spidermonkey, "Runtime", johnson_runtime);
 
   rb_define_alloc_func(klass, allocate);
-  rb_define_private_method(klass, "initialize_native", initialize_native, 1);
+  rb_define_private_method(klass, "initialize_native", (ruby_callback)initialize_native, 1);
 
-  rb_define_method(klass, "global", global, 0);
-  rb_define_method(klass, "debugger=", set_debugger, 1);
-  rb_define_method(klass, "gc", gc, 0);
+  rb_define_method(klass, "global", (ruby_callback)global, 0);
+  rb_define_method(klass, "debugger=", (ruby_callback)set_debugger, 1);
+  rb_define_method(klass, "gc", (ruby_callback)gc, 0);
 #ifdef JS_GC_ZEAL
-  rb_define_method(klass, "gc_zeal=", set_gc_zeal, 1);
+  rb_define_method(klass, "gc_zeal=", (ruby_callback)set_gc_zeal, 1);
 #endif
-  rb_define_method(klass, "evaluate_compiled_script", evaluate_compiled_script, 1);
-  rb_define_private_method(klass, "native_compile", native_compile, 3);
-  rb_define_method(klass, "set_trap", set_trap, 3);
-  rb_define_private_method(klass, "clear_trap", clear_trap, 2);
+  rb_define_method(klass, "evaluate_compiled_script", (ruby_callback)evaluate_compiled_script, 1);
+  rb_define_private_method(klass, "native_compile", (ruby_callback)native_compile, 3);
+  rb_define_method(klass, "set_trap", (ruby_callback)set_trap, 3);
+  rb_define_private_method(klass, "clear_trap", (ruby_callback)clear_trap, 2);
 }

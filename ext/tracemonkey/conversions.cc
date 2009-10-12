@@ -31,7 +31,7 @@ static JSBool convert_symbol_to_js(JohnsonRuntime* runtime, VALUE symbol, jsval*
   PREPARE_JROOTS(context, 2);
 
   VALUE to_s = CALL_RUBY_WRAPPER(rb_funcall_0, symbol, RB_INTERN("to_s"), 0);
-  CALL_RUBY_WRAPPER(rb_string_value, &to_s);
+  CALL_RUBY_WRAPPER(rb_string_value, (VALUE)&to_s);
   jsval name = STRING_TO_JSVAL(JS_NewStringCopyN(context, StringValuePtr(to_s), (size_t) StringValueLen(to_s)));
 
   JROOT(name);
@@ -52,7 +52,7 @@ static JSBool convert_regexp_to_js(JohnsonRuntime* runtime, VALUE regexp, jsval*
   JSContext * context = johnson_get_current_context(runtime);
   PREPARE_JROOTS(context, 0);
   VALUE source = rb_funcall(regexp, RB_INTERN("source"), 0);
-  CALL_RUBY_WRAPPER(rb_string_value, &source);
+  CALL_RUBY_WRAPPER(rb_string_value, (VALUE)&source);
   jsint options = (jsint)(NUM2INT(rb_funcall(regexp, RB_INTERN("options"), 0)));
 
   JSObject* obj = JS_NewRegExpObject(context,
@@ -113,12 +113,12 @@ JSBool convert_to_js(JohnsonRuntime* runtime, VALUE ruby, jsval* retval)
 
     case T_STRING:
       {
-        CALL_RUBY_WRAPPER(rb_string_value, &ruby);
+        CALL_RUBY_WRAPPER(rb_string_value, (VALUE)&ruby);
         const char * src = StringValuePtr(ruby);
         const size_t srclen = StringValueLen(ruby);
         size_t dstlen = 0;
         JCHECK(JS_DecodeBytes(context, src, srclen, NULL, &dstlen));
-        jschar* dstchars = JS_malloc(context, sizeof(jschar) * (1 + dstlen));
+        jschar* dstchars = (jschar*)JS_malloc(context, sizeof(jschar) * (1 + dstlen));
         JCHECK(dstchars);
         JCHECK(JS_DecodeBytes(context, src, srclen, dstchars, &dstlen));
         JSString* str = JS_NewUCString(context, dstchars, dstlen);
@@ -185,7 +185,7 @@ VALUE convert_js_string_to_ruby(JohnsonRuntime* runtime, JSString* str)
   size_t srclen = JS_GetStringLength(str);
   size_t dstlen = 0;
   JCHECK(JS_EncodeCharacters(context, src, srclen, NULL, &dstlen));
-  char* dst = JS_malloc(context, sizeof(char) * (1 + dstlen));
+  char* dst = (char*)JS_malloc(context, sizeof(char) * (1 + dstlen));
   JCHECK(dst);
   JCHECK(JS_EncodeCharacters(context, src, srclen, dst, &dstlen));
   // This will leak dst if rb_str_new raises
@@ -256,7 +256,7 @@ VALUE convert_to_ruby(JohnsonRuntime* runtime, jsval js)
       JRETURN_RUBY(Qnil);
       
     case JSTYPE_FUNCTION: 
-    case JSTYPE_OBJECT:
+    case JSTYPE_OBJECT: {
       if (OBJECT_TO_JSVAL(runtime->global) == js)
         // global gets special treatment, since the Prelude might not be loaded
         JRETURN_RUBY(CALL_RUBY_WRAPPER(make_ruby_land_proxy, runtime, js, "GlobalProxy"));
@@ -276,7 +276,8 @@ VALUE convert_to_ruby(JohnsonRuntime* runtime, jsval js)
         JRETURN_RUBY(CALL_RUBY_WRAPPER(convert_regexp_to_ruby, runtime, js));
     
       JRETURN_RUBY(CALL_RUBY_WRAPPER(make_ruby_land_proxy, runtime, js, LEAKY_ROOT_NAME("RubyLandProxy", JS_GetStringBytes(JS_ValueToString(context, js)))));
-        
+    }
+
     case JSTYPE_BOOLEAN:
       JRETURN_RUBY(JSVAL_TRUE == js ? Qtrue : Qfalse);
       

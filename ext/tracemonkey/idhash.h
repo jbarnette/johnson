@@ -1,7 +1,7 @@
-#ifndef JOHNSON_SPIDERMONKEY_IDHASH_H
-#define JOHNSON_SPIDERMONKEY_IDHASH_H
+#ifndef JOHNSON_TRACEMONKEY_IDHASH_H
+#define JOHNSON_TRACEMONKEY_IDHASH_H
 
-#include "spidermonkey.h"
+#include "tracemonkey.h"
 
 JSHashTable* create_id_hash();
 

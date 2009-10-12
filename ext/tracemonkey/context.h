@@ -1,7 +1,7 @@
-#ifndef JOHNSON_SPIDERMONKEY_CONTEXT_H
-#define JOHNSON_SPIDERMONKEY_CONTEXT_H
+#ifndef JOHNSON_TRACEMONKEY_CONTEXT_H
+#define JOHNSON_TRACEMONKEY_CONTEXT_H
 
-#include "spidermonkey.h"
+#include "tracemonkey.h"
 
 #define MAX_EXCEPTION_MESSAGE_SIZE 2048L
 
@@ -13,7 +13,7 @@ typedef struct {
   
 } JohnsonContext;
 
-void init_Johnson_SpiderMonkey_Context(VALUE spidermonkey);
-VALUE Johnson_SpiderMonkey_JSLandProxy();
+void init_Johnson_TraceMonkey_Context(VALUE tracemonkey);
+VALUE Johnson_TraceMonkey_JSLandProxy();
 
 #endif

@@ -8,6 +8,7 @@
 
 #include "jsapi.h"
 #include "jshash.h"
+#include "jsobj.h"
 #include "jsregexp.h"
 
 #include "jroot.h"
@@ -25,5 +26,7 @@
 #  define UNUSED(name) name
 # endif
 #endif
+
+typedef VALUE(*ruby_callback)(...);
 
 #endif

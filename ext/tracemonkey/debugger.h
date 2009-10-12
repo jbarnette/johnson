@@ -1,10 +1,10 @@
-#ifndef JOHNSON_SPIDERMONKEY_DEBUGGER_H
-#define JOHNSON_SPIDERMONKEY_DEBUGGER_H
+#ifndef JOHNSON_TRACEMONKEY_DEBUGGER_H
+#define JOHNSON_TRACEMONKEY_DEBUGGER_H
 
-#include "spidermonkey.h"
+#include "tracemonkey.h"
 #include "jsdbgapi.h"
 
-void init_Johnson_SpiderMonkey_Debugger(VALUE spidermonkey);
+void init_Johnson_TraceMonkey_Debugger(VALUE tracemonkey);
 bool ruby_value_is_debugger(VALUE maybe_debugger);
 
 #endif

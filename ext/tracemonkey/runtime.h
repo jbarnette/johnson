@@ -1,7 +1,7 @@
-#ifndef JOHNSON_SPIDERMONKEY_RUNTIME_H
-#define JOHNSON_SPIDERMONKEY_RUNTIME_H
+#ifndef JOHNSON_TRACEMONKEY_RUNTIME_H
+#define JOHNSON_TRACEMONKEY_RUNTIME_H
 
-#include "spidermonkey.h"
+#include "tracemonkey.h"
 
 //#define LEAK_ROOT_NAMES
 
@@ -22,6 +22,6 @@ typedef struct {
 } JohnsonRuntime;
 
 JSContext* johnson_get_current_context(JohnsonRuntime* runtime);
-void init_Johnson_SpiderMonkey_Runtime(VALUE spidermonkey);
+void init_Johnson_TraceMonkey_Runtime(VALUE tracemonkey);
 
 #endif
