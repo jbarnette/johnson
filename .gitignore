@@ -23,9 +23,4 @@ tags
 
 /ext/tracemonkey/immutable_node.cc
 /lib/johnson/tracemonkey/*.bundle
-
-
-# SMP: REMOVE 
-
-/save
-/vendor/tbd
+/lib/johnson/tracemonkey/*.so

@@ -25,6 +25,7 @@ end
 
 libjs = Dir[tracemonkey_dir + "/**/libjs_static.a"].first
 $LOCAL_LIBS << libjs
+$LIBS += " -lstdc++ "
 
 dir_config "johnson/tracemonkey"
 
