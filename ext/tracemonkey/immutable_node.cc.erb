@@ -119,6 +119,18 @@ static VALUE begin_index(VALUE self) {
 
 /*
  * call-seq:
+ *   pn_unsed
+ *
+ * Returns the used flag as a bool
+ */
+static VALUE pn_used(VALUE self) {
+  ImmutableNodeContext * ctx;
+  Data_Get_Struct(self, ImmutableNodeContext, ctx);
+  return ctx->node->pn_used ? Qtrue : Qfalse;
+}
+
+/*
+ * call-seq:
  *   pn_arity
  *
  * Returns the arity of the node as a symbol.
@@ -505,6 +517,7 @@ void init_Johnson_TraceMonkey_Immutable_Node(VALUE tracemonkey)
   rb_define_singleton_method(cNode, "parse_io", (ruby_callback)parse_io, -1);
   rb_define_method(cNode, "line", (ruby_callback)line, 0);
   rb_define_method(cNode, "index", (ruby_callback)begin_index, 0);
+  rb_define_method(cNode, "pn_used", (ruby_callback)pn_used, 0);
   rb_define_method(cNode, "pn_arity", (ruby_callback)pn_arity, 0);
   rb_define_method(cNode, "pn_type", (ruby_callback)pn_type, 0);
   rb_define_method(cNode, "pn_expr", (ruby_callback)data_pn_expr, 0);

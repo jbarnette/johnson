@@ -6,7 +6,7 @@ module Johnson #:nodoc:
         when :pn_list
           handle_list(visitor)
         when :pn_name
-          if pn_expr
+          if !pn_used && pn_expr
             m = {
               :tok_colon  => :visit_Label,
               :tok_name   => :visit_AssignExpr,
