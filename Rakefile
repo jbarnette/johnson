@@ -24,8 +24,8 @@ Hoe.spec "johnson" do
 
   clean_globs    << "ext/**/Makefile"
   clean_globs    << "ext/**/*.{o,so,bundle,a,log}"
-  clean_globs    << "ext/spidermonkey/immutable_node.c"
-  clean_globs    << "ext/tracemonkey/immutable_node.cc"
+  # clean_globs    << "ext/spidermonkey/immutable_node.c"
+  # clean_globs    << "ext/tracemonkey/immutable_node.cc"
   clean_globs    << "lib/johnson/spidermonkey.bundle"
   clean_globs    << "lib/johnson/tracemonkey.bundle"
   clean_globs    << "tmp"
@@ -104,17 +104,19 @@ INTERPRETERS.each do |interpreter|
     jsops = jsops interpreter
     tokens = tokens interpreter
     template.result(binding)
-    # File.open(generated_node, "wb") { |f| f.write template.result(binding) }
+    File.open(generated_node, "wb") { |f| f.write template.result(binding) }
   end
 
   task :"immutable_node:#{interpreter}" => generated_node
-
-  file "ext/#{interpreter}/extconf.rb" => generated_node
 
   task :"test:#{interpreter}" do
     tests = Dir["test/**/generic/**/*_test.rb"] + Dir["test/**/#{interpreter}/**/*_test.rb"]
     tests.map! { |t| %(require "#{t}";) }
     ruby "#{Hoe::RUBY_FLAGS} -rrubygems -rjohnson -rjohnson/#{interpreter} -e '#{tests.join("; ")}' #{FILTER}"
+  end
+
+  task :"file:#{generated_node}" => generated_node do
+    print generated_node, "\n"
   end
 
   task :test => :"test:#{interpreter}"
@@ -123,7 +125,6 @@ end
 
 task :package        => generated_nodes
 task :check_manifest => generated_nodes
-
 
 # Local Variables:
 # mode:ruby

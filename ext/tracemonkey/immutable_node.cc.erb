@@ -4,11 +4,7 @@ static VALUE cNode;
 
 static void deallocate(ImmutableNodeContext* context)
 {
-  if (context->pc)
-  {
-    js_FinishParseContext(context->js, context->pc);
-    free(context->pc);
-  }
+  delete context->pc;
 
   JS_DestroyContext(context->js);
   JS_DestroyRuntime(context->runtime);
@@ -17,7 +13,7 @@ static void deallocate(ImmutableNodeContext* context)
 
 static VALUE allocate(VALUE klass)
 {
-  ImmutableNodeContext * context = calloc(1L, sizeof(ImmutableNodeContext));
+  ImmutableNodeContext* context = (ImmutableNodeContext*)calloc(1L, sizeof(ImmutableNodeContext));
 
   VALUE self = Data_Wrap_Struct(klass, 0, deallocate, context);
 
@@ -31,7 +27,7 @@ static VALUE allocate(VALUE klass)
  * call-seq:
  *   parse_io(stream, filename=nil, line_number=0)
  *
- * Parses an IO object, returning a native spidermonkey parse tree.
+ * Parses an IO object, returning a native tracemonkey parse tree.
  */
 static VALUE parse_io(int argc, VALUE *argv, VALUE klass) {
   VALUE self = allocate(klass);
@@ -40,7 +36,7 @@ static VALUE parse_io(int argc, VALUE *argv, VALUE klass) {
   ImmutableNodeContext* context;
   Data_Get_Struct(self, ImmutableNodeContext, context);
 
-  assert(context->pc = calloc(1L, sizeof(JSParseContext)));
+  assert(context->pc = new JSCompiler(context->js) );
 
   rb_scan_args( argc, argv, "12", &stream, &filename, &linenum );
   
@@ -56,16 +52,23 @@ static VALUE parse_io(int argc, VALUE *argv, VALUE klass) {
   char* filenamez = RTEST(filename) ? StringValueCStr(filename) : NULL;
   int linenumi = RTEST(linenum) ? NUM2INT(linenum) : 1;
 
+  
+  assert(context->pc->init(chars,length,NULL,filenamez,(unsigned)linenumi));
+  /*
   assert(js_InitParseContext(context->js, context->pc, 
       NULL,
       chars,
       length,
       NULL, filenamez, (unsigned)linenumi));
+  */
   JS_SetVersion(context->js, JSVERSION_LATEST);
 
+  context->node = context->pc->parse( JS_NewObject(context->js, NULL, NULL, NULL) );
+  /*
   context->node = js_ParseScript(context->js, 
       JS_NewObject(context->js, NULL, NULL, NULL),
       context->pc);
+  */
   if(JS_IsExceptionPending(context->js)) {
     jsval exception, message, file_name, line_number;
     JS_GetPendingException(context->js, &exception);
@@ -323,7 +326,7 @@ static VALUE data_pn_extra(VALUE self) {
 
   Data_Get_Struct(self, ImmutableNodeContext, ctx);
 
-  return UINT2NUM((unsigned long)(ctx->node->pn_extra));
+  return UINT2NUM((unsigned long)(ctx->node->pn_xflags));
 }
 
 /*
@@ -350,7 +353,7 @@ static VALUE regexp(VALUE self) {
   jsval result;
 
   Data_Get_Struct(self, ImmutableNodeContext, ctx);
-  js_regexp_toString(ctx->js, ctx->node->pn_pob->object, &result);
+  js_regexp_toString(ctx->js, ctx->node->pn_objbox->object, &result);
   return rb_str_new2(JS_GetStringBytes(JSVAL_TO_STRING(result)));
 }
 
@@ -366,8 +369,8 @@ static VALUE function_name(VALUE self) {
   JSObject * object;
 
   Data_Get_Struct(self, ImmutableNodeContext, ctx);
-  object = ctx->node->pn_funpob->object;
-  f = (JSFunction *)JS_GetPrivate(ctx->js, ctx->node->pn_funpob->object);
+  object = ctx->node->pn_funbox->object;
+  f = (JSFunction *)JS_GetPrivate(ctx->js, ctx->node->pn_funbox->object);
 
   if(f->atom) {
     return rb_str_new2(JS_GetStringBytes(ATOM_TO_STRING(f->atom)));
@@ -391,8 +394,8 @@ static VALUE function_args(VALUE self) {
   int i;
 
   Data_Get_Struct(self, ImmutableNodeContext, ctx);
-  object = ctx->node->pn_funpob->object;
-  f = (JSFunction *)JS_GetPrivate(ctx->js, ctx->node->pn_funpob->object);
+  object = ctx->node->pn_funbox->object;
+  f = (JSFunction *)JS_GetPrivate(ctx->js, ctx->node->pn_funbox->object);
 
   func_args = rb_ary_new2((long)f->nargs);
   if(f->nargs > 0) {
@@ -418,8 +421,8 @@ static VALUE function_body(VALUE self) {
   JSObject * object;
 
   Data_Get_Struct(self, ImmutableNodeContext, ctx);
-  object = ctx->node->pn_funpob->object;
-  f = (JSFunction *)JS_GetPrivate(ctx->js, ctx->node->pn_funpob->object);
+  object = ctx->node->pn_funbox->object;
+  f = (JSFunction *)JS_GetPrivate(ctx->js, ctx->node->pn_funbox->object);
 
   if(ctx->node->pn_body) {
     ImmutableNodeContext *roc;
@@ -488,15 +491,15 @@ VALUE jsop_to_symbol(JSUint32 jsop)
   return UINT2NUM((unsigned long)(jsop));
 }
 
-void init_Johnson_SpiderMonkey_Immutable_Node(VALUE spidermonkey)
+void init_Johnson_TraceMonkey_Immutable_Node(VALUE tracemonkey)
 {
   /* HACK:  These comments are *only* to make RDoc happy.
   VALUE johnson = rb_define_module("Johnson");
-  VALUE spidermonkey = rb_define_module_under(johnson, "SpiderMonkey");
+  VALUE tracemonkey = rb_define_module_under(johnson, "TraceMonkey");
   */
 
   /* ImmutableNode class. */
-  cNode = rb_define_class_under(spidermonkey, "ImmutableNode", rb_cObject);
+  cNode = rb_define_class_under(tracemonkey, "ImmutableNode", rb_cObject);
 
   rb_define_alloc_func(cNode, allocate);
   rb_define_singleton_method(cNode, "parse_io", (ruby_callback)parse_io, -1);
