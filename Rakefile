@@ -6,6 +6,37 @@ require "hoe"
 gem "rake-compiler", "~> 0.6"
 require "rake/extensiontask"
 
+FILTER = ENV['FILTER'] || ENV['TESTOPTS']
+
+INTERPRETERS = [ "spidermonkey", "tracemonkey" ]
+
+SUFFIXES = {}
+SUFFIXES[ "spidermonkey" ] = "c"
+SUFFIXES[ "tracemonkey" ] = "cc"
+
+generated_nodes = []
+
+INTERPRETERS.each do |interpreter|
+
+  suffix = SUFFIXES[interpreter]
+  
+  generated_nodes << "ext/#{interpreter}/immutable_node.#{suffix}"
+  
+  generated_node = "ext/#{interpreter}/immutable_node.#{suffix}"
+  
+  file generated_node => "ext/#{interpreter}/immutable_node.#{suffix}.erb"  do |t|
+    template = ERB.new(File.open(t.prerequisites.first, "rb") { |x| x.read })
+    jsops = jsops interpreter
+    tokens = tokens interpreter
+    template.result(binding)
+    File.open(generated_node, "wb") { |f| f.write template.result(binding) }
+  end
+
+  task :"compile:#{interpreter}" => generated_node
+  task :compile => :"compile:#{interpreter}"
+
+end
+
 Hoe.plugin :debugging, :doofus, :git
 
 Hoe.spec "johnson" do
@@ -24,8 +55,8 @@ Hoe.spec "johnson" do
 
   clean_globs    << "ext/**/Makefile"
   clean_globs    << "ext/**/*.{o,so,bundle,a,log}"
-  # clean_globs    << "ext/spidermonkey/immutable_node.c"
-  # clean_globs    << "ext/tracemonkey/immutable_node.cc"
+  clean_globs    << "ext/spidermonkey/immutable_node.c"
+  clean_globs    << "ext/tracemonkey/immutable_node.cc"
   clean_globs    << "lib/johnson/spidermonkey.bundle"
   clean_globs    << "lib/johnson/tracemonkey.bundle"
   clean_globs    << "tmp"
@@ -41,6 +72,10 @@ Hoe.spec "johnson" do
   end
 end
 
+task(:test).clear
+
+task :test => :compile
+
 task :clean do
   Dir.chdir "vendor/spidermonkey" do
     sh "make clean -f Makefile.ref" unless Dir["**/libjs.a"].empty?
@@ -50,8 +85,6 @@ task :clean do
     sh "make clean -f Makefile.ref" unless Dir["**/libjs.a"].empty?
   end
 end
-
-task :test => :compile
 
 require "erb"
 
@@ -80,49 +113,18 @@ def tokens interpreter
   toks.uniq
 end
 
-generated_nodes = []
-
-task(:test).clear
-
 task :"test:default" do
   ruby %(#{Hoe::RUBY_FLAGS} -rrubygems -rjohnson -e 'require "test/johnson/generic/default_test"' #{FILTER})
 end
 
 task :test => :"test:default"
 
-INTERPRETERS = [ "spidermonkey", "tracemonkey" ]
-FILTER = ENV['FILTER'] || ENV['TESTOPTS']
-
-SUFFIXES = {}
-SUFFIXES[ "spidermonkey" ] = "c"
-SUFFIXES[ "tracemonkey" ] = "cc"
-
 INTERPRETERS.each do |interpreter|
-
-  suffix = SUFFIXES[interpreter]
-  
-  generated_nodes << "ext/#{interpreter}/immutable_node.#{suffix}"
-  
-  generated_node = "ext/#{interpreter}/immutable_node.#{suffix}"
-  
-  file generated_node => "ext/#{interpreter}/immutable_node.#{suffix}.erb"  do |t|
-    template = ERB.new(File.open(t.prerequisites.first, "rb") { |x| x.read })
-    jsops = jsops interpreter
-    tokens = tokens interpreter
-    template.result(binding)
-    File.open(generated_node, "wb") { |f| f.write template.result(binding) }
-  end
-
-  task :"immutable_node:#{interpreter}" => generated_node
 
   task :"test:#{interpreter}" do
     tests = Dir["test/**/generic/**/*_test.rb"] + Dir["test/**/#{interpreter}/**/*_test.rb"]
     tests.map! { |t| %(require "#{t}";) }
     ruby "#{Hoe::RUBY_FLAGS} -rrubygems -rjohnson -rjohnson/#{interpreter} -e '#{tests.join("; ")}' #{FILTER}"
-  end
-
-  task :"file:#{generated_node}" => generated_node do
-    print generated_node, "\n"
   end
 
   task :test => :"test:#{interpreter}"
