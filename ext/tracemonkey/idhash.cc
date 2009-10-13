@@ -2,7 +2,7 @@
 
 static JSHashNumber key_hash(const void *key)
 {
-  return (JSHashNumber)key;
+  return (JSHashNumber)(unsigned long)key;
 }
 
 static intN comparator(const void *v1, const void *v2)
