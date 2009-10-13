@@ -39,7 +39,7 @@ end
 
 Hoe.plugin :debugging, :doofus, :git
 
-Hoe.spec "johnson" do
+Hoe.spec "smparkes.johnson" do
   developer "John Barnette",   "jbarnette@rubyforge.org"
   developer "Aaron Patterson", "aaron.patterson@gmail.com"
   developer "Yehuda Katz",     "wycats@gmail.com"
@@ -49,7 +49,7 @@ Hoe.spec "johnson" do
   self.history_file             = "CHANGELOG.rdoc"
   self.readme_file              = "README.rdoc"
   self.spec_extras[:extensions] = %w(ext/spidermonkey/extconf.rb 
-                                     ext/spidermonkey/extconf.rb)
+                                     ext/tracemonkey/extconf.rb)
 
   extra_dev_deps << ["rake-compiler", "~> 0.6"]
 
