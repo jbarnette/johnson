@@ -16,6 +16,10 @@ require "johnson/nodes"
 module Johnson
   VERSION = "1.1.2"
 
+  def self.version
+    VERSION
+  end
+
   ###
   # Evaluate the given JavaScript +expression+ in a new runtime, after
   # setting the given +vars+ into the global object.
@@ -41,4 +45,9 @@ module Johnson
     rt.load(*files)
     rt
   end
+  
+  def self.runtimes
+    Runtime.runtimes
+  end
+
 end

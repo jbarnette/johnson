@@ -120,6 +120,9 @@ module Johnson
     @runtimes = []
 
     class << self
+
+      attr_reader :runtimes
+
       private
 
       def default

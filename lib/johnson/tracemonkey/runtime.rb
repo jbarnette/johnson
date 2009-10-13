@@ -1,6 +1,10 @@
 module Johnson #:nodoc:
   module TraceMonkey #:nodoc:
     class Runtime < Johnson::Runtime # native
+      def version
+        TraceMonkey::VERSION
+      end
+
       CONTEXT_MAP_KEY = :johnson_context_map
 
       attr_reader :traps
