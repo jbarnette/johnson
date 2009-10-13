@@ -2,7 +2,13 @@ require File.expand_path(File.join(File.dirname(__FILE__), "helper"))
 
 class TryTest < Johnson::NodeTestCase
   def test_try_finally
-    assert_sexp([[:try,
+    assert_sexp(
+      [[:try,
+        [[:var, [[:assign, [:name, "x"], [:lit, 10]]]]],
+        nil,
+        [[:var, [[:op_equal, [:name, "x"], [:lit, 20]]]]]
+      ]],
+      [[:try,
         [[:var, [[:assign, [:name, "x"], [:lit, 10]]]]],
         nil,
         [[:var, [[:assign, [:name, "x"], [:lit, 20]]]]]
@@ -14,8 +20,17 @@ class TryTest < Johnson::NodeTestCase
   end
 
   def test_try_catch
-    assert_sexp([
-    [:try,
+    assert_sexp(
+    [[:try,
+      [[:var, [[:assign, [:name, "x"], [:lit, 10]]]]],
+      [[:catch, [:name, "a"], nil,
+      [
+        [:var, [[:op_equal, [:name, "x"], [:lit, 20]]]],
+        [:postfix_inc, [:name, "x"]]
+      ]
+      ]],
+    nil]],
+    [[:try,
       [[:var, [[:assign, [:name, "x"], [:lit, 10]]]]],
       [[:catch, [:name, "a"], nil,
       [
@@ -30,8 +45,23 @@ class TryTest < Johnson::NodeTestCase
   end
 
   def test_try_multi_catch
-    assert_sexp([
-      [:try,
+    assert_sexp(
+      [[:try,
+        [[:var, [[:assign, [:name, "x"], [:lit, 10]]]]],
+      [
+        [:catch, [:name, "a"], [:true],
+        [
+          [:var, [[:op_equal, [:name, "x"], [:lit, 20]]]],
+          [:postfix_inc, [:name, "x"]]
+        ]],
+        [:catch, [:name, "b"], [:true],
+        [
+          [:var, [[:op_equal, [:name, "x"], [:lit, 20]]]],
+          [:postfix_inc, [:name, "x"]]
+        ]]
+      ],
+      nil]],
+      [[:try,
         [[:var, [[:assign, [:name, "x"], [:lit, 10]]]]],
       [
         [:catch, [:name, "a"], [:true],
