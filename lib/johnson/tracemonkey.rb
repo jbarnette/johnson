@@ -1,3 +1,4 @@
+require "johnson"
 
 # the native TraceMonkey extension
 require "johnson/tracemonkey/tracemonkey"
