@@ -95,7 +95,6 @@ lib/johnson/visitors/ecma_visitor.rb
 lib/johnson/visitors/enumerating_visitor.rb
 lib/johnson/visitors/sexp_visitor.rb
 lib/johnson/visitors/visitor.rb
-p
 test/generic/johnson_test.rb
 test/generic/parser_test.rb
 test/helper.rb
