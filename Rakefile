@@ -84,6 +84,12 @@ generated_nodes = []
 
 task(:test).clear
 
+task :"test:default" do
+  ruby %(#{Hoe::RUBY_FLAGS} -rrubygems -rjohnson -e 'require "test/johnson/generic/default_test"' #{FILTER})
+end
+
+task :test => :"test:default"
+
 INTERPRETERS = [ "spidermonkey", "tracemonkey" ]
 FILTER = ENV['FILTER'] || ENV['TESTOPTS']
 
@@ -122,12 +128,6 @@ INTERPRETERS.each do |interpreter|
   task :test => :"test:#{interpreter}"
 
 end
-
-task :"test:default" do
-  ruby %(#{Hoe::RUBY_FLAGS} -rrubygems -rjohnson -e 'require "test/johnson/generic/default_test"' #{FILTER})
-end
-
-task :test => :"test:default"
 
 task :package        => generated_nodes
 task :check_manifest => generated_nodes
