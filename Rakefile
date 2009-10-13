@@ -123,6 +123,12 @@ INTERPRETERS.each do |interpreter|
 
 end
 
+task :"test:default" do
+  ruby %(#{Hoe::RUBY_FLAGS} -rrubygems -rjohnson -e 'require "test/johnson/generic/default_test"' #{FILTER})
+end
+
+task :test => :"test:default"
+
 task :package        => generated_nodes
 task :check_manifest => generated_nodes
 
