@@ -34,4 +34,4 @@ dir_config "johnson/tracemonkey"
 find_header "jsautocfg.h", File.dirname(libjs)
 find_header "jsapi.h", tracemonkey_dir
 
-create_makefile "johnson/tracemonkey"
+create_makefile "johnson/tracemonkey/tracemonkey"
