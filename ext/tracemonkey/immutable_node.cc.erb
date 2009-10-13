@@ -437,12 +437,32 @@ static VALUE function_body(VALUE self) {
   f = (JSFunction *)JS_GetPrivate(ctx->js, ctx->node->pn_funbox->object);
 
   if(ctx->node->pn_body) {
+    
+    /* in some cases the args can be in the body node ...
+       for now, throwing the args away, not sure if this should be combined with
+       function_args
+    */
+    
+    JSParseNode* body = ctx->node->pn_body;
+    
+    switch(body->pn_type) {
+    case TOK_ARGSBODY:
+      JSParseNode* list = body->pn_kid;
+      /* skip the args; the body lc is the last element in the list */
+      while(list->pn_next){
+        list = list->pn_next;
+      }
+      body = list;
+      break;
+    }
+
     ImmutableNodeContext *roc;
     VALUE node = Data_Make_Struct(cNode, ImmutableNodeContext, NULL, NULL, roc);
     roc->js = ctx->js;
-    roc->node = ctx->node->pn_body;
+    roc->node = body;
     return node;
   }
+
   return Qnil;
 }
 
