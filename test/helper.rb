@@ -53,12 +53,30 @@ module Johnson
       @parser = Johnson::Parser
     end
   
-    def assert_sexp(expected, actual)
-      assert_equal(expected, actual.to_sexp)
+    def assert_includes enumerable, element
+      if !enumerable.include?( element )
+        flunk element.to_s + " not in [" + enumerable.map { |e| e.to_s }.join(" ") + "]"
+      end
+  end
+
+    def assert_sexp(*args)
+      if args.length == 2
+        assert_equal(args[0],args[1].to_sexp)
+      else
+        expected = args[0,args.length-1]
+        actual = args.last
+        assert_includes expected, actual.to_sexp
+      end
     end
 
-    def assert_ecma(expected, actual)
-      assert_equal(expected, actual.to_ecma)
+    def assert_ecma(*args)
+      if args.length == 2
+        assert_equal(args[0],args[1].to_ecma)
+      else
+        expected = args[0,args.length-1]
+        actual = args.last
+        assert_includes expected, actual.to_ecma
+      end
     end
   end
 end
