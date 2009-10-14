@@ -54,12 +54,12 @@ Hoe.spec "smparkes.johnson" do
   extra_dev_deps << ["rake-compiler", "~> 0.6"]
 
   clean_globs    << "ext/**/Makefile"
-  clean_globs    << "ext/**/*.{o,so,bundle,a,log}"
-  clean_globs    << "vendor/**/*.{o,so,bundle,a,log}"
+  clean_globs    << "ext/**/*.{o,so,dylib,bundle,a,log}"
+  clean_globs    << "vendor/**/*.{o,so,dylib,bundle,a,log}"
   clean_globs    << "ext/spidermonkey/immutable_node.c"
   clean_globs    << "ext/tracemonkey/immutable_node.cc"
-  clean_globs    << "lib/johnson/spidermonkey.bundle"
-  clean_globs    << "lib/johnson/tracemonkey.bundle"
+  clean_globs    << "lib/johnson/spidermonkey/spidermonkey.bundle"
+  clean_globs    << "lib/johnson/tracemonkey/tracemonkey.bundle"
   clean_globs    << "tmp"
   clean_globs    << "vendor/spidermonkey/**/*.OBJ"
   clean_globs    << "vendor/tracemonkey/**/*.OBJ"
