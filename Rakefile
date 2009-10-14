@@ -55,6 +55,7 @@ Hoe.spec "smparkes.johnson" do
 
   clean_globs    << "ext/**/Makefile"
   clean_globs    << "ext/**/*.{o,so,bundle,a,log}"
+  clean_globs    << "vendor/**/*.{o,so,bundle,a,log}"
   clean_globs    << "ext/spidermonkey/immutable_node.c"
   clean_globs    << "ext/tracemonkey/immutable_node.cc"
   clean_globs    << "lib/johnson/spidermonkey.bundle"
