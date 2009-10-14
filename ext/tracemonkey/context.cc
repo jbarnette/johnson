@@ -57,7 +57,7 @@ initialize_native(VALUE self, VALUE rb_runtime, VALUE UNUSED(options))
     // If it does, use it. If not,
     if (!global)
       // create one of our global objects.
-      global = johnson_create_global_object(context->js);
+      global = johnson_create_global_object(context->js,NULL);
 
     // Manually set the context's global object.
     JS_SetGlobalObject(context->js, global);

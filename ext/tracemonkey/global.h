@@ -6,6 +6,7 @@
 #include "runtime.h"
 
 // NOTE: one of the FEW places a context should be passed around
-JSObject* johnson_create_global_object(JSContext* context);
+JSObject* johnson_create_global_object(JSContext* context,
+                                            JSObject* proto);
 
 #endif
