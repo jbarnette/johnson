@@ -460,7 +460,7 @@ void init_Johnson_TraceMonkey_Runtime(VALUE tracemonkey)
 
   rb_define_method(klass, "global", (ruby_callback)global, 0);
   rb_define_method(klass, "new_global", (ruby_callback)new_global, 1);
-  rb_define_method(klass, "global=", (ruby_callback)global, 1);
+  rb_define_method(klass, "global=", (ruby_callback)set_global, 1);
   rb_define_method(klass, "debugger=", (ruby_callback)set_debugger, 1);
   rb_define_method(klass, "gc", (ruby_callback)gc, 0);
 #ifdef JS_GC_ZEAL
