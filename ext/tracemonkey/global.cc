@@ -34,7 +34,7 @@ static JSClass OurGlobalClass = {
   JSCLASS_NO_OPTIONAL_MEMBERS
 };
 
-JSObject* johnson_create_global_object(JSContext* context, JSObject* proto)
+JSObject* johnson_create_global_object(JSContext* context)
 {
-  return JS_NewObject(context, &OurGlobalClass, proto, NULL);
+  return JS_NewObject(context, &OurGlobalClass, NULL, NULL);
 }
