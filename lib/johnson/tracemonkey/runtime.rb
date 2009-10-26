@@ -35,9 +35,15 @@ module Johnson #:nodoc:
         contexts[self.object_id] ||= Context.new(self)
       end
 
+      def evaluate(script, filename = nil, linenum = nil, global=nil, scope=nil)
+        return nil if script.nil?
+        compiled_script = compile(script, filename, linenum, global)
+        evaluate_compiled_script(compiled_script, scope)
+      end
+
       alias :evaluate_compiled_script_without_clearing_traps :evaluate_compiled_script
-      def evaluate_compiled_script script
-        evaluate_compiled_script_without_clearing_traps(script)
+      def evaluate_compiled_script script, scope=nil
+        evaluate_compiled_script_without_clearing_traps(script,scope)
       ensure
         @traps.each do |trap_tuple|
           clear_trap(*trap_tuple)
@@ -46,10 +52,10 @@ module Johnson #:nodoc:
 
       ###
       # Compile +script+ with +filename+ and +linenum+
-      def compile(script, filename=nil, linenum=nil)
+      def compile(script, filename=nil, linenum=nil, global=nil)
         filename ||= 'none'
         linenum  ||= 1
-        native_compile(script, filename, linenum)
+        native_compile(script, filename, linenum, global)
       end
 
       class << self
