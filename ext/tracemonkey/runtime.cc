@@ -1,5 +1,6 @@
 #include "runtime.h"
 #include "global.h"
+#include "split_global.h"
 #include "idhash.h"
 #include "conversions.h"
 #include "debugger.h"
@@ -19,20 +20,15 @@ static VALUE global(VALUE self)
   return convert_to_ruby(runtime, OBJECT_TO_JSVAL(runtime->global));
 }
 
-static VALUE new_global(VALUE self, VALUE ruby)
+static VALUE new_global(VALUE self)
 {
   JohnsonRuntime* runtime;
   Data_Get_Struct(self, JohnsonRuntime, runtime);
   JSContext * context = johnson_get_current_context(runtime);
 
-  PREPARE_RUBY_JROOTS(context, 1);
+  PREPARE_RUBY_JROOTS(context, 0);
   
-  jsval proto;
-
-  JCHECK(convert_to_js(runtime,ruby,&proto));
-  JROOT(proto);
-
-  JSObject* new_global_object = johnson_create_global_object(context, JSVAL_TO_OBJECT(proto));
+  JSObject* new_global_object = johnson_create_global_object(context);
 
   JRETURN_RUBY(convert_to_ruby(runtime, OBJECT_TO_JSVAL(new_global_object)));
 }
@@ -54,6 +50,37 @@ static VALUE set_global(VALUE self, VALUE ruby)
   JS_SetGlobalObject( context, runtime->global );
 
   JRETURN_RUBY(ruby);
+}
+
+static VALUE new_split_global_outer(VALUE self)
+{
+  JohnsonRuntime* runtime;
+  Data_Get_Struct(self, JohnsonRuntime, runtime);
+  JSContext * context = johnson_get_current_context(runtime);
+
+  PREPARE_RUBY_JROOTS(context, 0);
+  
+  JSObject* new_split_global_outer_object = johnson_create_split_global_outer_object(context);
+
+  JRETURN_RUBY(convert_to_ruby(runtime, OBJECT_TO_JSVAL(new_split_global_outer_object)));
+}
+
+static VALUE new_split_global_inner(VALUE self, VALUE ruby_outer)
+{
+  JohnsonRuntime* runtime;
+  Data_Get_Struct(self, JohnsonRuntime, runtime);
+  JSContext * context = johnson_get_current_context(runtime);
+
+  PREPARE_RUBY_JROOTS(context, 1);
+
+  jsval outer;
+
+  JCHECK(convert_to_js(runtime,ruby_outer,&outer));
+  JROOT(outer);
+
+  JSObject* new_inner_object = johnson_create_split_global_inner_object(context,JSVAL_TO_OBJECT(outer));
+  
+  JRETURN_RUBY(convert_to_ruby(runtime, OBJECT_TO_JSVAL(new_inner_object)));
 }
 
 static VALUE get_parent(VALUE self, VALUE ruby)
@@ -159,7 +186,8 @@ static VALUE set_trap(VALUE self, VALUE script, VALUE linenum, VALUE block)
  * Compile the JavaScript code in +script_string+, marked as originating
  * from +filename+ starting at +linenum+.
  */
-static VALUE native_compile(VALUE self, VALUE script, VALUE filename, VALUE linenum)
+
+static VALUE native_compile(VALUE self, VALUE script, VALUE filename, VALUE linenum, VALUE ruby_global)
 {
   JohnsonRuntime* runtime;
   Data_Get_Struct(self, JohnsonRuntime, runtime);
@@ -167,9 +195,17 @@ static VALUE native_compile(VALUE self, VALUE script, VALUE filename, VALUE line
   JSContext * context = johnson_get_current_context(runtime);
   JohnsonContext * johnson_context = OUR_CONTEXT(context);
 
+  JSObject* global = runtime->global;
+
+  if ( ruby_global != Qnil ) {
+    jsval js_global;
+    convert_to_js(runtime, ruby_global, &js_global);
+    global = JSVAL_TO_OBJECT(js_global);
+  }
+
   JSScript * compiled_js = JS_CompileScript(
       context,
-      runtime->global,
+      global,
       StringValuePtr(script),
       (size_t)StringValueLen(script),
       StringValueCStr(filename),
@@ -187,6 +223,11 @@ static VALUE native_compile(VALUE self, VALUE script, VALUE filename, VALUE line
       RAISE_JS_ERROR(self, johnson_context->ex);
       return Qnil;
     }
+
+    // TM returns NULL with no exception on OOM: see the disccusion near JS_ReportOutOfMemory in
+    // https://developer.mozilla.org/En/SpiderMonkey/JSAPI_User_Guide
+    
+    rb_raise(rb_eRuntimeError, "Tracemonkey reported out of memory.");
   }
 
   JSObject * script_object = JS_NewScriptObject(context, compiled_js);
@@ -201,7 +242,7 @@ static VALUE native_compile(VALUE self, VALUE script, VALUE filename, VALUE line
  * Evaluate previously compiled +script_proxy+, returning the final
  * result from that script.
  */
-static VALUE evaluate_compiled_script(VALUE self, VALUE compiled_script)
+static VALUE evaluate_compiled_script(VALUE self, VALUE compiled_script, VALUE ruby_scope)
 {
   JohnsonRuntime* runtime;
 
@@ -223,8 +264,16 @@ static VALUE evaluate_compiled_script(VALUE self, VALUE compiled_script)
 
   JSScript * js_script = (JSScript *)JS_GetPrivate(context, JSVAL_TO_OBJECT(compiled_js));
 
+  JSObject* scope = runtime->global;
+
+  if ( ruby_scope != Qnil ) {
+    jsval js_scope;
+    convert_to_js(runtime, ruby_scope, &js_scope);
+    scope = JSVAL_TO_OBJECT(js_scope);
+  }
+
   jsval js;
-  JSBool ok = JS_ExecuteScript(context, runtime->global, js_script, &js);
+  JSBool ok = JS_ExecuteScript(context, scope, js_script, &js);
 
   if (!ok)
   {
@@ -369,7 +418,7 @@ initialize_native(VALUE self, VALUE UNUSED(options))
   JohnsonRuntime* runtime;
   Data_Get_Struct(self, JohnsonRuntime, runtime);
 
-  if ((runtime->js = JS_NewRuntime(0x100000))
+  if ((runtime->js = JS_NewRuntime(0x1000000))
     && (runtime->jsids = create_id_hash())
     && (runtime->rbids = create_id_hash()))
   {
@@ -459,15 +508,19 @@ void init_Johnson_TraceMonkey_Runtime(VALUE tracemonkey)
   rb_define_private_method(klass, "initialize_native", (ruby_callback)initialize_native, 1);
 
   rb_define_method(klass, "global", (ruby_callback)global, 0);
-  rb_define_method(klass, "new_global", (ruby_callback)new_global, 1);
+  rb_define_method(klass, "new_global", (ruby_callback)new_global, 0);
   rb_define_method(klass, "global=", (ruby_callback)set_global, 1);
+
+  rb_define_method(klass, "new_split_global_outer", (ruby_callback)new_split_global_outer, 0);
+  rb_define_method(klass, "new_split_global_inner", (ruby_callback)new_split_global_inner, 1);
+
   rb_define_method(klass, "debugger=", (ruby_callback)set_debugger, 1);
   rb_define_method(klass, "gc", (ruby_callback)gc, 0);
 #ifdef JS_GC_ZEAL
   rb_define_method(klass, "gc_zeal=", (ruby_callback)set_gc_zeal, 1);
 #endif
-  rb_define_method(klass, "evaluate_compiled_script", (ruby_callback)evaluate_compiled_script, 1);
-  rb_define_private_method(klass, "native_compile", (ruby_callback)native_compile, 3);
+  rb_define_method(klass, "evaluate_compiled_script", (ruby_callback)evaluate_compiled_script, 2);
+  rb_define_private_method(klass, "native_compile", (ruby_callback)native_compile, 4);
   rb_define_method(klass, "set_trap", (ruby_callback)set_trap, 3);
   rb_define_private_method(klass, "clear_trap", (ruby_callback)clear_trap, 2);
 
