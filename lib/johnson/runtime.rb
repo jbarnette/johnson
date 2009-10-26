@@ -75,7 +75,6 @@ module Johnson
       evaluate_compiled_script(compiled_script)
     end
 
-
     ###
     # The JavaScript unique Global Object.
     def global
@@ -106,14 +105,14 @@ module Johnson
     ###
     # Compile the JavaScript source in +script+. If supplied, the script
     # is marked as starting on line +linenum+ of +filename+.
-    def compile(script, filename=nil, linenum=nil)
+    def compile(script, filename=nil, linenum=nil, global=nil)
       raise NotImplementedError
     end
 
     ###
     # Evaluates the given JS script, that should have been returned by a
     # previous call to #compile().
-    def evaluate_compiled_script(script)
+    def evaluate_compiled_script(script,scope=nil)
       raise NotImplementedError
     end
 
