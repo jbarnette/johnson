@@ -20,38 +20,6 @@ static VALUE global(VALUE self)
   return convert_to_ruby(runtime, OBJECT_TO_JSVAL(runtime->global));
 }
 
-static VALUE new_global(VALUE self)
-{
-  JohnsonRuntime* runtime;
-  Data_Get_Struct(self, JohnsonRuntime, runtime);
-  JSContext * context = johnson_get_current_context(runtime);
-
-  PREPARE_RUBY_JROOTS(context, 0);
-  
-  JSObject* new_global_object = johnson_create_global_object(context);
-
-  JRETURN_RUBY(convert_to_ruby(runtime, OBJECT_TO_JSVAL(new_global_object)));
-}
-
-static VALUE set_global(VALUE self, VALUE ruby)
-{
-  JohnsonRuntime* runtime;
-  Data_Get_Struct(self, JohnsonRuntime, runtime);
-  JSContext * context = johnson_get_current_context(runtime);
-
-  PREPARE_RUBY_JROOTS(context, 1);
-  
-  jsval new_value;
-
-  JCHECK(convert_to_js(runtime,ruby,&new_value));
-  JROOT(new_value);
-
-  runtime->global = JSVAL_TO_OBJECT(new_value);
-  JS_SetGlobalObject( context, runtime->global );
-
-  JRETURN_RUBY(ruby);
-}
-
 static VALUE new_split_global_outer(VALUE self)
 {
   JohnsonRuntime* runtime;
@@ -59,7 +27,7 @@ static VALUE new_split_global_outer(VALUE self)
   JSContext * context = johnson_get_current_context(runtime);
 
   PREPARE_RUBY_JROOTS(context, 0);
-  
+
   JSObject* new_split_global_outer_object = johnson_create_split_global_outer_object(context);
 
   JRETURN_RUBY(convert_to_ruby(runtime, OBJECT_TO_JSVAL(new_split_global_outer_object)));
@@ -81,44 +49,6 @@ static VALUE new_split_global_inner(VALUE self, VALUE ruby_outer)
   JSObject* new_inner_object = johnson_create_split_global_inner_object(context,JSVAL_TO_OBJECT(outer));
   
   JRETURN_RUBY(convert_to_ruby(runtime, OBJECT_TO_JSVAL(new_inner_object)));
-}
-
-static VALUE get_parent(VALUE self, VALUE ruby)
-{
-  JohnsonRuntime* runtime;
-  Data_Get_Struct(self, JohnsonRuntime, runtime);
-  JSContext * context = johnson_get_current_context(runtime);
-
-  PREPARE_RUBY_JROOTS(context, 1);
-  
-  jsval object;
-
-  JCHECK(convert_to_js(runtime,ruby,&object));
-  JROOT(object);
-
-  JSObject* parent = JS_GetParent( context, JSVAL_TO_OBJECT(object) );
-
-  JRETURN_RUBY(convert_to_ruby(runtime, OBJECT_TO_JSVAL(parent)));
-}
-
-static VALUE set_parent(VALUE self, VALUE ruby, VALUE the_parent)
-{
-  JohnsonRuntime* runtime;
-  Data_Get_Struct(self, JohnsonRuntime, runtime);
-  JSContext * context = johnson_get_current_context(runtime);
-
-  PREPARE_RUBY_JROOTS(context, 2);
-  
-  jsval object, parent;
-
-  JCHECK(convert_to_js(runtime,ruby,&object));
-  JROOT(object);
-  JCHECK(convert_to_js(runtime,the_parent,&parent));
-  JROOT(parent);
-
-  JSBool v = JS_SetParent(context, JSVAL_TO_OBJECT(object), JSVAL_TO_OBJECT(parent));
-
-  JRETURN_RUBY(v == JS_TRUE ? Qtrue : Qfalse);
 }
 
 static JSTrapStatus trap_handler( JSContext *context,
@@ -508,8 +438,6 @@ void init_Johnson_TraceMonkey_Runtime(VALUE tracemonkey)
   rb_define_private_method(klass, "initialize_native", (ruby_callback)initialize_native, 1);
 
   rb_define_method(klass, "global", (ruby_callback)global, 0);
-  rb_define_method(klass, "new_global", (ruby_callback)new_global, 0);
-  rb_define_method(klass, "global=", (ruby_callback)set_global, 1);
 
   rb_define_method(klass, "new_split_global_outer", (ruby_callback)new_split_global_outer, 0);
   rb_define_method(klass, "new_split_global_inner", (ruby_callback)new_split_global_inner, 1);
@@ -523,7 +451,4 @@ void init_Johnson_TraceMonkey_Runtime(VALUE tracemonkey)
   rb_define_private_method(klass, "native_compile", (ruby_callback)native_compile, 4);
   rb_define_method(klass, "set_trap", (ruby_callback)set_trap, 3);
   rb_define_private_method(klass, "clear_trap", (ruby_callback)clear_trap, 2);
-
-  rb_define_method(klass, "get_parent", (ruby_callback)get_parent, 1);
-  rb_define_method(klass, "set_parent", (ruby_callback)set_parent, 2);
 }
