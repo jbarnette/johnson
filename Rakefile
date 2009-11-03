@@ -39,7 +39,7 @@ end
 
 Hoe.plugin :debugging, :doofus, :git
 
-Hoe.spec "smparkes.johnson" do
+Hoe.spec "smparkes-johnson" do
   developer "John Barnette",   "jbarnette@rubyforge.org"
   developer "Aaron Patterson", "aaron.patterson@gmail.com"
   developer "Yehuda Katz",     "wycats@gmail.com"
