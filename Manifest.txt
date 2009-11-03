@@ -52,6 +52,8 @@ ext/tracemonkey/ruby_land_proxy.cc
 ext/tracemonkey/ruby_land_proxy.h
 ext/tracemonkey/runtime.cc
 ext/tracemonkey/runtime.h
+ext/tracemonkey/split_global.cc
+ext/tracemonkey/split_global.h
 ext/tracemonkey/tracemonkey.cc
 ext/tracemonkey/tracemonkey.h
 lib/johnson.rb
@@ -158,6 +160,7 @@ test/johnson/tracemonkey/immutable_node_test.rb
 test/johnson/tracemonkey/js_land_proxy_test.rb
 test/johnson/tracemonkey/ruby_land_proxy_test.rb
 test/johnson/tracemonkey/runtime_test.rb
+test/johnson/tracemonkey/split_global_test.rb
 vendor/spidermonkey/.cvsignore
 vendor/spidermonkey/Makefile.in
 vendor/spidermonkey/Makefile.ref
