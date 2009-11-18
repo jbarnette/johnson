@@ -256,6 +256,9 @@ VALUE convert_to_ruby(JohnsonRuntime* runtime, jsval js)
       JRETURN_RUBY(Qnil);
       
     case JSTYPE_FUNCTION: 
+#if JS_HAS_XML_SUPPORT
+    case JSTYPE_XML:
+#endif JS_HAS_XML_SUPPORT
     case JSTYPE_OBJECT: {
       if (OBJECT_TO_JSVAL(runtime->global) == js)
         // global gets special treatment, since the Prelude might not be loaded

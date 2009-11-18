@@ -24,3 +24,5 @@ tags
 /ext/tracemonkey/immutable_node.cc
 /lib/johnson/tracemonkey/*.bundle
 /lib/johnson/tracemonkey/*.so
+
+/*johnson-*gem
