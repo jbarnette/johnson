@@ -3,8 +3,6 @@
 /tmp
 
 /ext/spidermonkey/*.bundle
-/ext/spidermonkey/*.bundle
-
 /ext/spidermonkey/Makefile
 /ext/spidermonkey/*.log
 /ext/spidermonkey/immutable_node.c
