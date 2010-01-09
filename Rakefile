@@ -66,10 +66,12 @@ Hoe.spec "smparkes-johnson" do
 
   Rake::ExtensionTask.new "spidermonkey", spec do |ext|
     ext.lib_dir = "lib/johnson/spidermonkey"
+    ext.source_pattern = "*.{c,h}"
   end
 
   Rake::ExtensionTask.new "tracemonkey", spec do |ext|
     ext.lib_dir = "lib/johnson/tracemonkey"
+    ext.source_pattern = "*.{cc,h}"
   end
 end
 
