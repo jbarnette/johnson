@@ -5,8 +5,11 @@ module Johnson
 
     PRELUDE_PATH = File.expand_path File.dirname(__FILE__) +
       "/js/prelude.js" # :nodoc:
+    CORE_PATH = File.expand_path File.dirname(__FILE__) +
+      "/js/core.js" # :nodoc:
 
     PRELUDE = IO.read PRELUDE_PATH # :nodoc:
+    CORE = IO.read CORE_PATH # :nodoc:
 
     ###
     # Deprecated: Previously, returned the underlying JavaScript engine
@@ -45,6 +48,7 @@ module Johnson
       evaluate PRELUDE, PRELUDE_PATH, 1
       global.Johnson.runtime = self
       global['Ruby'] = Object
+      evaluate CORE, CORE_PATH, 1
     end
 
     ###
