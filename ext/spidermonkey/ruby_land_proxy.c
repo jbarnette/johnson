@@ -450,7 +450,7 @@ call_function_property(int argc, VALUE* argv, VALUE self)
   JROOT(function);
 
   // should never be anything but a function
-  if (!JS_ObjectIsFunction(context, function))
+  if (!JS_ObjectIsFunction(context, JSVAL_TO_OBJECT(function)))
     JERROR("Specified property \"%s\" isn't a function.", StringValueCStr(name));
 
   REMOVE_JROOTS;

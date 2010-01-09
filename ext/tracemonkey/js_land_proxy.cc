@@ -559,17 +559,22 @@ static void finalize(JSContext* js_context, JSObject* obj)
 
 JSBool make_js_land_proxy(JohnsonRuntime* runtime, VALUE value, jsval* retval)
 {
-  *retval = (jsval)JS_HashTableLookup(runtime->rbids, (void *)value);
-  
-  if (*retval)
+  jsval base_value = (jsval)JS_HashTableLookup(runtime->rbids, (void *)value);
+
+  JSContext * context = johnson_get_current_context(runtime);
+  PREPARE_JROOTS(context, 2);
+
+  jsval johnson = JSVAL_NULL;
+  JCHECK(evaluate_js_property_expression(runtime, "Johnson", &johnson));
+  JROOT(johnson);
+
+  if (base_value)
   {
-    return JS_TRUE;
+    JCHECK(JS_CallFunctionName(context, JSVAL_TO_OBJECT(johnson), "applyConversions", 1, &base_value, retval));
+    JRETURN;
   }
   else
   {
-    JSContext * context = johnson_get_current_context(runtime);
-    PREPARE_JROOTS(context, 1);
-
     JSObject *jsobj;
     
     JSClass *klass = &JSLandProxyClass;
@@ -596,14 +601,19 @@ JSBool make_js_land_proxy(JohnsonRuntime* runtime, VALUE value, jsval* retval)
     JCHECK(JS_DefineFunction(context, jsobj, "toArray", to_array, 0, 0));
     JCHECK(JS_DefineFunction(context, jsobj, "toString", to_string, 0, 0));
 
-    *retval = OBJECT_TO_JSVAL(jsobj);
+    base_value = OBJECT_TO_JSVAL(jsobj);
 
-    // put the proxy OID in the id map
-    JCHECK(JS_HashTableAdd(runtime->rbids, (void *)value, (void *)(*retval)));
-    
     // root the ruby value for GC
     VALUE ruby_runtime = (VALUE)JS_GetRuntimePrivate(runtime->js);
     rb_funcall(ruby_runtime, rb_intern("add_gcthing"), 1, value);
+
+    jsval wrapped_value = JSVAL_NULL;
+    JCHECK(JS_CallFunctionName(context, JSVAL_TO_OBJECT(johnson), "applyWrappers", 1, &base_value, &wrapped_value));
+
+    // put the proxy OID in the id map
+    JCHECK(JS_HashTableAdd(runtime->rbids, (void *)value, (void *)(wrapped_value)));
+    
+    JCHECK(JS_CallFunctionName(context, JSVAL_TO_OBJECT(johnson), "applyConversions", 1, &wrapped_value, retval));
 
     JRETURN;
   }

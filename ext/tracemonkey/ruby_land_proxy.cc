@@ -522,6 +522,13 @@ VALUE apply_wrappers(VALUE proxy)
   return rb_funcall(johnson_proxy, rb_intern("apply_wrappers"), 1, proxy);
 }
 
+VALUE apply_conversions(VALUE proxy)
+{
+  VALUE johnson = rb_const_get(rb_mKernel, rb_intern("Johnson"));
+  VALUE johnson_proxy = rb_const_get(johnson, rb_intern("RubyLandProxy"));
+  return rb_funcall(johnson_proxy, rb_intern("apply_conversions"), 1, proxy);
+}
+
 JSBool unwrap_ruby_land_proxy(JohnsonRuntime* runtime, VALUE wrapped, jsval* retval)
 {
   JSContext * context = johnson_get_current_context(runtime);
@@ -543,7 +550,7 @@ VALUE make_ruby_land_proxy(JohnsonRuntime* runtime, jsval value, const char* roo
   if (our_proxy)
   {
     // if we already have a proxy, return it
-    return our_proxy->self;
+    return apply_conversions(our_proxy->self);
   }
   else
   {    
@@ -572,7 +579,7 @@ VALUE make_ruby_land_proxy(JohnsonRuntime* runtime, jsval value, const char* roo
 
     our_proxy->self = final_proxy;
 
-    JRETURN_RUBY(final_proxy);
+    JRETURN_RUBY(JPROTECT(apply_conversions, final_proxy));
   }
 }
 
