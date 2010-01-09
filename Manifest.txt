@@ -60,6 +60,7 @@ lib/johnson.rb
 lib/johnson/cli.rb
 lib/johnson/cli/options.rb
 lib/johnson/error.rb
+lib/johnson/js/core.js
 lib/johnson/js/cli.js
 lib/johnson/js/prelude.js
 lib/johnson/nodes.rb
@@ -113,6 +114,7 @@ test/johnson/generic/conversions/string_test.rb
 test/johnson/generic/conversions/struct_test.rb
 test/johnson/generic/conversions/symbol_test.rb
 test/johnson/generic/conversions/thread_test.rb
+test/johnson/generic/custom_conversions_test.rb
 test/johnson/generic/default_test.rb
 test/johnson/generic/error_test.rb
 test/johnson/generic/extensions_test.rb

@@ -24,6 +24,22 @@ module Johnson #:nodoc:
       def wrappers
         @wrappers ||= []
       end
+
+      def apply_conversions(proxy)
+        conversions.each do |(conversion, test)|
+          if test.call(proxy)
+            converted = conversion.call(proxy)
+            return converted unless converted.eql? proxy
+          end
+        end
+        proxy
+      end
+      def add_conversion(conversion, &test)
+        conversions << [conversion, test]
+      end
+      def conversions
+        @conversions ||= []
+      end
     end
 
     module Callable
@@ -40,7 +56,23 @@ module Johnson #:nodoc:
       end
     end
 
+    module ProxyHelper
+      def self.wrap(proxy, result)
+        result.extend self
+        result.javascript_proxy = proxy
+        result
+      end
+
+      attr_accessor :javascript_proxy
+    end
+
     add_wrapper Callable
+
+    # JS wrapper => Ruby original
+    add_conversion lambda {|o| o.wrappedRuby } do |o| o.respond_to? :wrappedRuby end
+
+    # JS Date => Ruby DateTime
+    add_conversion lambda {|o| ProxyHelper.wrap(o, DateTime.parse(o.toUTCString)) } do |o| o.respond_to? :setUTCMilliseconds end
 
     include Enumerable
 
