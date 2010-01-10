@@ -1,3 +1,5 @@
+require "stackdeck"
+
 require "generator"
 
 # the 'public' interface

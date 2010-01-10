@@ -9,7 +9,7 @@
   do {\
     JohnsonRuntime * _rt = NULL;\
     Data_Get_Struct(rb_runtime, JohnsonRuntime, _rt);\
-    rb_funcall(CLASS_OF(rb_runtime), rb_intern("raise_js_exception"), 1,\
+    rb_funcall(rb_runtime, rb_intern("raise_js_exception"), 1,\
       convert_to_ruby(_rt, ex)); \
   } while(0)
 

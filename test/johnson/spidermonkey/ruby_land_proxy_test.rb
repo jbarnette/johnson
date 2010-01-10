@@ -220,20 +220,24 @@ module Johnson
       end
 
       def test_raises_in_js
-        @runtime["foo"] = lambda { raise RuntimeError.new("an exception") }
+        original = RuntimeError.new("an exception")
+        @runtime["foo"] = lambda { raise original }
         raised = @runtime.evaluate "x = null; try { foo(); } catch(ex) { x = ex; }; x"
-        assert_equal "#<RuntimeError: an exception>", raised.message
+        assert_kind_of RuntimeError, raised
+        assert_equal original, raised
+        assert_equal "an exception", raised.message
       end
 
       def test_uncaught_exceptions_have_decent_stack_trace
         @runtime["foo"] = lambda { raise RuntimeError.new("an exception") }
         line_number = __LINE__ - 1 # reference to previous line
         begin
-          @runtime.evaluate "foo()"
-        rescue Exception => e
-          assert_equal "#<RuntimeError: an exception> at (none):1", e.message
-          assert_match %r/none:1\b/, e.backtrace[0]
-          assert_match %r/#{__FILE__}:#{line_number}\b/, e.backtrace[1]
+          @runtime.evaluate "foo()", "myfile", 7
+        rescue RuntimeError => e
+          assert_equal "an exception", e.message
+          first_js_frame = e.stack_deck.detect {|q| q.language == 'JavaScript' }
+          assert_equal "myfile:7", "#{first_js_frame.filename}:#{first_js_frame.lineno}"
+          assert_match %r/#{__FILE__}:#{line_number}\b/, e.stack_deck[0].to_s
         else
           flunk "exception was not raised"
         end

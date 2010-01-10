@@ -64,24 +64,6 @@ module Johnson #:nodoc:
           Johnson::TraceMonkey::ImmutableNode.parse_io( *args )
         end
 
-        def raise_js_exception(jsex)
-          raise jsex if Exception === jsex
-          raise Johnson::Error.new(jsex.to_s) unless Johnson::TraceMonkey::RubyLandProxy === jsex
-
-          stack = jsex.stack rescue nil
-
-          message = jsex['message'] || jsex.to_s
-          at = "(#{jsex['fileName']}):#{jsex['lineNumber']}"
-          ex = Johnson::Error.new("#{message} at #{at}")
-          if stack
-            js_caller = stack.split("\n").find_all { |x| x != '@:0' }
-            ex.set_backtrace(js_caller + caller)
-          else
-            ex.set_backtrace(caller)
-          end
-
-          raise ex
-        end
       end
 
       private

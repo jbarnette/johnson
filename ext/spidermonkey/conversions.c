@@ -333,8 +333,15 @@ JSBool report_ruby_error_in_js(JohnsonRuntime* runtime, int state, VALUE old_err
         VALUE local_error = ruby_errinfo;
         ruby_errinfo = old_errinfo;
 
-        local_error = rb_funcall(local_error, rb_intern("inspect"), 0);
-        JS_ReportError(context, StringValuePtr(local_error));
+        if (rb_funcall(local_error, rb_intern("respond_to?"), 1, ID2SYM(rb_intern("copy_ruby_stack_to_deck"))))
+          rb_funcall(local_error, rb_intern("copy_ruby_stack_to_deck"), 0);
+
+        VALUE rb_runtime = (VALUE)JS_GetRuntimePrivate(runtime->js);
+        rb_iv_set(local_error, "@js_stack", rb_funcall(rb_runtime, rb_intern("current_stack"), 0));
+
+        jsval js_error;
+        convert_to_js(runtime, local_error, &js_error);
+        JS_SetPendingException(context, js_error);
 
         return JS_FALSE ;
       }

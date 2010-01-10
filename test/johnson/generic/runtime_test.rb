@@ -87,7 +87,8 @@ module Johnson
       break_ex = nil
       @runtime['note_error'] = lambda {|ex| break_ex = ex }
       @runtime.evaluate_compiled_script(script)
-      assert_match(/ArgumentError: Test/, break_ex.message)
+      assert_kind_of(ArgumentError, break_ex)
+      assert_equal('Test', break_ex.message)
       assert_equal(6, break_times)
       assert_equal(2, @runtime['some_number'])
     end

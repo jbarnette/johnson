@@ -51,6 +51,7 @@ Hoe.spec "smparkes-johnson" do
   self.spec_extras[:extensions] = %w(ext/spidermonkey/extconf.rb 
                                      ext/tracemonkey/extconf.rb)
 
+  extra_deps << ["stackdeck", "~> 0.1"]
   extra_dev_deps << ["rake-compiler", "~> 0.6"]
 
   clean_globs    << "ext/**/Makefile"
