@@ -60,8 +60,8 @@ lib/johnson.rb
 lib/johnson/cli.rb
 lib/johnson/cli/options.rb
 lib/johnson/error.rb
-lib/johnson/js/core.js
 lib/johnson/js/cli.js
+lib/johnson/js/core.js
 lib/johnson/js/prelude.js
 lib/johnson/nodes.rb
 lib/johnson/nodes/binary_node.rb

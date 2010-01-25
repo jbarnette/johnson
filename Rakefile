@@ -38,8 +38,9 @@ INTERPRETERS.each do |interpreter|
 end
 
 Hoe.plugin :debugging, :doofus, :git
+Hoe.plugins.delete :rubyforge
 
-Hoe.spec "smparkes-johnson" do
+Hoe.spec "johnson" do
   developer "John Barnette",   "jbarnette@rubyforge.org"
   developer "Aaron Patterson", "aaron.patterson@gmail.com"
   developer "Yehuda Katz",     "wycats@gmail.com"
@@ -59,8 +60,7 @@ Hoe.spec "smparkes-johnson" do
   clean_globs    << "vendor/**/*.{o,so,dylib,bundle,a,log}"
   clean_globs    << "ext/spidermonkey/immutable_node.c"
   clean_globs    << "ext/tracemonkey/immutable_node.cc"
-  clean_globs    << "lib/johnson/spidermonkey/spidermonkey.bundle"
-  clean_globs    << "lib/johnson/tracemonkey/tracemonkey.bundle"
+  clean_globs    << "lib/johnson/**/*.{bundle,so}"
   clean_globs    << "tmp"
   clean_globs    << "vendor/spidermonkey/**/*.OBJ"
   clean_globs    << "vendor/tracemonkey/**/*.OBJ"
