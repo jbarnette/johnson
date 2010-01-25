@@ -7,6 +7,7 @@ gem "rake-compiler", "~> 0.6"
 require "rake/extensiontask"
 
 Hoe.plugin :debugging, :doofus, :git
+Hoe.plugins.delete :rubyforge
 
 Hoe.spec "johnson" do
   developer "John Barnette",   "jbarnette@rubyforge.org"
