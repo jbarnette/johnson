@@ -10,7 +10,7 @@ Mozilla SpiderMonkey JavaScript runtime as a C extension.
 
 == Examples
 
-    # FIXME: write some decent examples
+    # FIX: write some decent examples
     require "johnson"
 
     Johnson.evaluate("4 + 4") # => 8
@@ -19,10 +19,6 @@ Mozilla SpiderMonkey JavaScript runtime as a C extension.
 == Installation
 
     $ gem install johnson
-
-=== TODO
-
-* Stop freaking segfaulting.
 
 == License
 
