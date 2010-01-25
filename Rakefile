@@ -25,7 +25,7 @@ Hoe.spec "johnson" do
   clean_globs    << "ext/**/Makefile"
   clean_globs    << "ext/**/*.{o,so,bundle,a,log}"
   clean_globs    << "ext/spidermonkey/immutable_node.c"
-  clean_globs    << "lib/johnson/spidermonkey.bundle"
+  clean_globs    << "lib/johnson/**/*.{bundle,so}"
   clean_globs    << "tmp"
   clean_globs    << "vendor/spidermonkey/**/*.OBJ"
 

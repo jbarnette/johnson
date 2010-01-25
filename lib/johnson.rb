@@ -17,7 +17,7 @@ require "johnson/nodes"
 require "johnson/spidermonkey"
 
 module Johnson
-  VERSION = "1.1.2"
+  VERSION = "1.2.0"
 
   ###
   # Evaluate the given JavaScript +expression+ in a new runtime, after

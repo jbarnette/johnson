@@ -11,6 +11,8 @@
 
 /lib/johnson/spidermonkey/*.bundle
 /lib/johnson/spidermonkey/*.so
+/lib/johnson/*.bundle
+/lib/johnson/*.so
 
 /vendor/spidermonkey/*.OBJ
 
