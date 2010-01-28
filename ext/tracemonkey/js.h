@@ -6,13 +6,16 @@
 
 // Changes from js.cpp:
 
-// The newer moz sources override thisobject. The code is commented out below.
-// The current interpreter seems to do inner/outer incorrectly
-// in one place with that callback in place. Deserves relooking at
-// when upgrading to new SM.
+// The newer moz sources override thisobject. That code is commented
+// out below. There's a bug (https://bugzilla.mozilla.org/show_bug.cgi?id=542864) that
+// makes getters work incorrectly against split globals, which is fatal to some downstream stuff.
+// Hopefully can revert to moz sources when this is fixed.
 
-// Changes from js.cpp: Equality does more checking; I think the
-// original checking is wrong (if you want inner == outer)
+// Equality does more checking; this should === outer, but because of the patch above, it doesn't.
+// Remove when this is handled correctly.
+
+// The net of the above is that 'this' in an inner context will not be outer, which means the inner
+// object might possibly escape. A corner case that hasn't affected any downstream code at this point.
 
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -335,6 +338,7 @@ static JSExtendedClass split_global_class = {
     NULL, NULL, NULL, NULL, NULL
 };
 
+#if 0
 static JSBool
 split_equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
 {
@@ -355,6 +359,31 @@ split_equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
     *bp = (cpx == ourCpx);
     return JS_TRUE;
 }
+#else
+static JSBool
+split_equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
+{
+    *bp = JS_FALSE;
+    if (JSVAL_IS_PRIMITIVE(v))
+        return JS_TRUE;
+
+    JSObject *obj2 = JSVAL_TO_OBJECT(v);
+    if (JS_GET_CLASS(cx, obj2) != &split_global_class.base)
+        return JS_TRUE;
+
+    ComplexObject *cpx = (ComplexObject *) JS_GetPrivate(cx, obj2);
+    ComplexObject *ourCpx = (ComplexObject *) JS_GetPrivate(cx, obj);
+
+    if( cpx == ourCpx ) {
+      *bp = JS_TRUE;
+    } else if ( cpx->inner ) {
+      *bp = ( cpx->inner == obj && ourCpx->outer == obj2);
+    } else {
+      *bp = ( cpx->outer == obj && ourCpx->inner == obj2);
+    }
+    return JS_TRUE;
+}
+#endif
 
 JSObject *
 split_create_outer(JSContext *cx)
