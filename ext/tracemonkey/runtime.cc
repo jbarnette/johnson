@@ -348,7 +348,7 @@ initialize_native(VALUE self, VALUE UNUSED(options))
   JohnsonRuntime* runtime;
   Data_Get_Struct(self, JohnsonRuntime, runtime);
 
-  if ((runtime->js = JS_NewRuntime(0x1000000))
+  if ((runtime->js = JS_NewRuntime(0x2000000))
     && (runtime->jsids = create_id_hash())
     && (runtime->rbids = create_id_hash()))
   {

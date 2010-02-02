@@ -302,6 +302,10 @@ split_getObjectOps(JSContext *cx, JSClass *clasp)
         memcpy(&split_objectops, &js_ObjectOps, sizeof split_objectops);
         /* see note above */
         /* split_objectops.thisObject = split_thisObject; */
+
+        /* see https://bugzilla.mozilla.org/show_bug.cgi?id=542858 */
+        split_objectops.call = NULL;
+        split_objectops.construct = NULL;
     }
 
     return &split_objectops;
