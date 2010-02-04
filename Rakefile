@@ -63,7 +63,18 @@ Hoe.spec "johnson" do
   clean_globs    << "lib/johnson/**/*.{bundle,so}"
   clean_globs    << "tmp"
   clean_globs    << "vendor/spidermonkey/**/*.OBJ"
-  clean_globs    << "vendor/tracemonkey/**/*.OBJ"
+
+  clean_globs    << "vendor/tracemonkey/**/.deps"
+  clean_globs    << "vendor/tracemonkey/dist"
+  clean_globs    << "vendor/tracemonkey/**/Makefile"
+  clean_globs    << "vendor/tracemonkey/unallmakefiles"
+  clean_globs    << "vendor/tracemonkey/config.{cache,status}"
+  clean_globs    << "vendor/tracemonkey/config/{autoconf,myconfig,myrules}.mk"
+  clean_globs    << "vendor/tracemonkey/config/{nfspwd,nsinstall,revdepth}"
+  clean_globs    << "vendor/tracemonkey/{host_jskwgen,host_jsoplengen,js}"
+  clean_globs    << "vendor/tracemonkey/{{,shell/}js,js-config,js-config.h}"
+  clean_globs    << "vendor/tracemonkey/{jsautocfg.h,jsautokw.h,jsautooplen.h}"
+  clean_globs    << "vendor/tracemonkey/{jscpucfg,mozilla-config.h}"
 
   Rake::ExtensionTask.new "spidermonkey", spec do |ext|
     ext.lib_dir = "lib/johnson/spidermonkey"
