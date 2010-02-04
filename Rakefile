@@ -45,6 +45,7 @@ Hoe.spec "johnson" do
   developer "Aaron Patterson", "aaron.patterson@gmail.com"
   developer "Yehuda Katz",     "wycats@gmail.com"
   developer "Matthew Draper",  "matthew@trebex.net"
+  developer "Steven Parkes",   "smparkes@smparkes.net"
 
   self.extra_rdoc_files         = FileList["*.rdoc"]
   self.history_file             = "CHANGELOG.rdoc"

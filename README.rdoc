@@ -25,7 +25,8 @@ Mozilla SpiderMonkey JavaScript runtime as a C extension.
 Copyright 2008-2010 John Barnette,
 Aaron Patterson,
 Yehuda Katz,
-Matthew Draper
+Matthew Draper,
+Steven Parkes
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the

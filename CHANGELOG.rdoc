@@ -1,3 +1,11 @@
+=== 2.0.0.pre0 / 2010-02-04
+
+* Pass exceptions unmolested, with full backtraces.
+* support E4X objects, at least as generic objects
+* add suport for passing global to #compile and scope to #evaluate
+* add support for spidermonkey split global objects
+* integrate spidermonkey/tracemonkey from FireFox 3.5 build (includes JIT)
+
 === 1.2.0 / 2010-01-25
 
 * Add an API for registering custom conversions.
