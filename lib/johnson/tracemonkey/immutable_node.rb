@@ -194,9 +194,10 @@ module Johnson #:nodoc:
           handle_eqop(visitor)
         when :tok_colon
           m = {
-            :jsop_getter  => :visit_GetterProperty,
-            :jsop_setter  => :visit_SetterProperty,
-            :jsop_nop     => :visit_Property
+            :jsop_getter   => :visit_GetterProperty,
+            :jsop_setter   => :visit_SetterProperty,
+            :jsop_nop      => :visit_Property,
+            :jsop_initprop => :visit_Property
           }[pn_op]
           raise "Unknown assign op #{pn_op}" unless m
           visitor.send(m, self)
