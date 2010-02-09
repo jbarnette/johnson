@@ -46,7 +46,7 @@ ext/tracemonkey/immutable_node.cc
 ext/tracemonkey/immutable_node.cc.erb
 ext/tracemonkey/immutable_node.h
 ext/tracemonkey/jroot.h
-ext/tracemonkey/js.h
+ext/tracemonkey/js.cc
 ext/tracemonkey/js_land_proxy.cc
 ext/tracemonkey/js_land_proxy.h
 ext/tracemonkey/ruby_land_proxy.cc
@@ -4595,7 +4595,6 @@ vendor/tracemonkey/xpconnect/tests/chrome/Makefile.in
 vendor/tracemonkey/xpconnect/tests/chrome/bug503926.xul
 vendor/tracemonkey/xpconnect/tests/chrome/test_bug500931.xul
 vendor/tracemonkey/xpconnect/tests/chrome/test_bug503926.xul
-vendor/tracemonkey/xpconnect/tests/chrome/test_bug533596.xul
 vendor/tracemonkey/xpconnect/tests/components/Makefile.in
 vendor/tracemonkey/xpconnect/tests/components/xpctest_array.cpp
 vendor/tracemonkey/xpconnect/tests/components/xpctest_attributes.cpp

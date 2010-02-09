@@ -7,6 +7,8 @@
 #include "jroot.h"
 #include "ruby_land_proxy.h"
 
+#include "split_global.h"
+
 /*
  * call-seq:
  *   global()

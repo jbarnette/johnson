@@ -2,20 +2,17 @@
  * vim: set ts=8 sw=4 et tw=99:
  */
 
-// liberally copied from mozilla shell source (js.cpp) (MPL 1.1/GPL 2.0/LGPL 2.1)
+// liberally copied from mozilla shell source (shell/js.cpp) (MPL 1.1/GPL 2.0/LGPL 2.1)
 
-// Changes from js.cpp:
+// Changes from shell/js.cpp:
 
-// The newer moz sources override thisobject. That code is commented
-// out below. There's a bug (https://bugzilla.mozilla.org/show_bug.cgi?id=542864) that
-// makes getters work incorrectly against split globals, which is fatal to some downstream stuff.
-// Hopefully can revert to moz sources when this is fixed.
+// There's a bug (https://bugzilla.mozilla.org/show_bug.cgi?id=542864) that
+// makes getters work incorrectly against split globals, which is
+// fatal to some downstream stuff. Patch from that bug applied.
 
-// Equality does more checking; this should === outer, but because of the patch above, it doesn't.
-// Remove when this is handled correctly.
+// export split_create_inner and split_create_outer
 
-// The net of the above is that 'this' in an inner context will not be outer, which means the inner
-// object might possibly escape. A corner case that hasn't affected any downstream code at this point.
+#include "split_global.h"
 
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -64,10 +61,10 @@ typedef struct ComplexObject {
     JSObject *outer;
 } ComplexObject;
 
-static JSObject *
+JSObject *
 split_create_outer(JSContext *cx);
 
-static JSObject *
+JSObject *
 split_create_inner(JSContext *cx, JSObject *outer);
 
 static ComplexObject *
@@ -80,13 +77,30 @@ split_addProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     jsid asId;
 
     cpx = split_get_private(cx, obj);
+
     if (!cpx)
         return JS_TRUE;
     if (!cpx->isInner && cpx->inner) {
         /* Make sure to define this property on the inner object. */
-        if (!JS_ValueToId(cx, *vp, &asId))
-            return JS_FALSE;
-        return JS_DefinePropertyById(cx, cpx->inner, asId, *vp, NULL, NULL, JSPROP_ENUMERATE);
+
+        /* Patched. See https://bugzilla.mozilla.org/show_bug.cgi?id=542864 */
+
+        JSPropertyOp setter = 0;
+        JSPropertyOp getter = 0;
+        uintN attrs = 0;
+        JSBool found;
+
+        JS_GetPropertyAttrsGetterAndSetterById(cx, obj, id, &attrs, &found, &getter, &setter);
+
+        if (attrs&(JSPROP_GETTER|JSPROP_SETTER)) {
+            asId = id;
+        } else {
+            if (!JS_ValueToId(cx, *vp, &asId)) {
+                return JS_FALSE;
+            }
+        }
+        
+        return JS_DefinePropertyById(cx, cpx->inner, asId, *vp, getter, setter, attrs | JSPROP_ENUMERATE);
     }
     return JS_TRUE;
 }
@@ -302,6 +316,7 @@ split_getObjectOps(JSContext *cx, JSClass *clasp)
         memcpy(&split_objectops, &js_ObjectOps, sizeof split_objectops);
         /* see note above */
         /* split_objectops.thisObject = split_thisObject; */
+        split_objectops.thisObject = split_thisObject;
 
         /* see https://bugzilla.mozilla.org/show_bug.cgi?id=542858 */
         split_objectops.call = NULL;
@@ -342,7 +357,7 @@ static JSExtendedClass split_global_class = {
     NULL, NULL, NULL, NULL, NULL
 };
 
-#if 0
+#if 1
 static JSBool
 split_equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
 {
@@ -417,7 +432,7 @@ split_create_outer(JSContext *cx)
     return obj;
 }
 
-static JSObject *
+JSObject *
 split_create_inner(JSContext *cx, JSObject *outer)
 {
     ComplexObject *cpx, *outercpx;
