@@ -16,7 +16,7 @@ require "johnson/visitors"
 require "johnson/nodes"
 
 module Johnson
-  VERSION = "2.0.0.pre1"
+  VERSION = "2.0.0.pre2"
 
   def self.version
     VERSION
