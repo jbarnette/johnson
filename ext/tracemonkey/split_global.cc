@@ -1,7 +1,5 @@
 #include "split_global.h"
 
-#include "js.h"
-
 JSObject* johnson_create_split_global_outer_object(JSContext* cx)
 {
   JSObject* outer = split_create_outer(cx);
