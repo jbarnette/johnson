@@ -137,8 +137,11 @@ class ParserTest < Test::Unit::TestCase
       [[:var,
         [[:assign, [:name, "a"], [:paren, [:lit, 10]]]]
       ]],
+      [[:var,
+        [[:assign, [:name, "a"], [:lit, 10]]]
+      ]],
       @parser.parse('var a = (10);'))
-    assert_ecma('var a = (10);', @parser.parse('var a = (10);'))
+    assert_ecma('var a = (10);', 'var a = 10;', @parser.parse('var a = (10);'))
   end
 
   def test_parser_var_ints
@@ -266,11 +269,30 @@ class ParserTest < Test::Unit::TestCase
                 @parser.parse('var foo = 10, bar = 1.1'))
   end
 
-  def assert_sexp(expected, node)
-    assert_equal(expected, node.to_sexp)
+  def assert_includes enumerable, element
+    if !enumerable.include?( element )
+      flunk element.to_s + " not in [" + enumerable.map { |e| e.to_s }.join(" ") + "]"
+    end
   end
 
-  def assert_ecma(expected, node)
-    assert_equal(expected, node.to_ecma)
+  def assert_sexp(*args)
+    if args.length == 2
+      assert_equal(args[0],args[1].to_sexp)
+    else
+      expected = args[0,args.length-1]
+      actual = args.last
+      assert_includes expected, actual.to_sexp
+    end
   end
+
+  def assert_ecma(*args)
+    if args.length == 2
+      assert_equal(args[0],args[1].to_ecma)
+    else
+      expected = args[0,args.length-1]
+      actual = args.last
+      assert_includes expected, actual.to_ecma
+    end
+  end
+
 end

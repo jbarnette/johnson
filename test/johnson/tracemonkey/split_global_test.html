@@ -1,0 +1,18 @@
+<html>
+<head>
+<title>none</title>
+<script type="text/javascript">
+  this.__defineGetter__("foo",function(){return"fooy";});
+  a = this.foo;
+  b = foo;
+  console.debug(this);
+  console.debug(window);
+  console.debug(this.foo);
+  console.debug(foo);
+  console.debug(this === this);
+  console.debug(this === window);
+</script>
+</head>
+<body>
+</body>
+</html>
