@@ -1,3 +1,9 @@
+=== 2.0.0.pre1 / 2010-02-11
+
+* Split global fix; covers all known issues
+* Fix build so enabling SM debugging doesn't cause SEGVs
+* bring in patched SM 1.9.2 (from Firefox 3.6)
+
 === 2.0.0.pre0 / 2010-02-04
 
 * Pass exceptions unmolested, with full backtraces.
