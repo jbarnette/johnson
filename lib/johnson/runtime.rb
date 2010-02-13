@@ -168,7 +168,7 @@ module Johnson
 
       def default
         if @runtimes.empty?
-          require "johnson/spidermonkey"
+          require "johnson/tracemonkey"
         end
         @runtimes[0]
       end

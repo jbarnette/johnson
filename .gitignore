@@ -2,21 +2,9 @@
 /pkg
 /tmp
 
-/ext/spidermonkey/*.bundle
-/ext/spidermonkey/Makefile
-/ext/spidermonkey/*.log
-/ext/spidermonkey/immutable_node.c
-/ext/spidermonkey/*.o
-/ext/spidermonkey/*.so
-
-/lib/johnson/spidermonkey/*.bundle
-/lib/johnson/spidermonkey/*.so
 /lib/johnson/*.bundle
 /lib/johnson/*.so
 
-/vendor/spidermonkey/*.OBJ
-
-/vendor/spidermonkey/editline/*.OBJ
 .*.swp
 tags
 .DS_Store
@@ -24,5 +12,3 @@ tags
 /ext/tracemonkey/immutable_node.cc
 /lib/johnson/tracemonkey/*.bundle
 /lib/johnson/tracemonkey/*.so
-
-/*johnson-*gem
