@@ -1,9 +1,9 @@
 require "rubygems"
 
-gem "hoe", "~> 2.3"
+gem "hoe", "~> 2.5"
 require "hoe"
 
-gem "rake-compiler", "~> 0.6"
+gem "rake-compiler", "~> 0.7"
 require "rake/extensiontask"
 
 FILTER = ENV['FILTER'] || ENV['TESTOPTS']
@@ -23,7 +23,8 @@ INTERPRETERS.each do |interpreter|
   
   generated_node = "ext/#{interpreter}/immutable_node.#{suffix}"
   
-  file generated_node => "ext/#{interpreter}/immutable_node.#{suffix}.erb"  do |t|
+  file generated_node => ["ext/#{interpreter}/immutable_node.#{suffix}.erb",
+                          "vendor/#{interpreter}/.git"] do |t|
     template = ERB.new(File.open(t.prerequisites.first, "rb") { |x| x.read })
     jsops = jsops interpreter
     tokens = tokens interpreter
@@ -98,8 +99,13 @@ Hoe.spec "johnson" do
   end
 end
 
-task(:test).clear
+file "vendor/tracemonkey/.git" do
+  sh "git submodule update --init"
+end
 
+task :compile => "vendor/tracemonkey/.git"
+
+task(:test).clear
 task :test => :compile
 
 task :clean do
