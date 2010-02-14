@@ -8,10 +8,9 @@ require "rake/extensiontask"
 
 FILTER = ENV['FILTER'] || ENV['TESTOPTS']
 
-INTERPRETERS = [ "spidermonkey", "tracemonkey" ]
+INTERPRETERS = [ "tracemonkey" ]
 
 SUFFIXES = {}
-SUFFIXES[ "spidermonkey" ] = "c"
 SUFFIXES[ "tracemonkey" ] = "cc"
 
 generated_nodes = []
@@ -50,8 +49,7 @@ Hoe.spec "johnson" do
   self.extra_rdoc_files         = FileList["*.rdoc"]
   self.history_file             = "CHANGELOG.rdoc"
   self.readme_file              = "README.rdoc"
-  self.spec_extras[:extensions] = %w(ext/spidermonkey/extconf.rb 
-                                     ext/tracemonkey/extconf.rb)
+  self.spec_extras[:extensions] = %w(ext/tracemonkey/extconf.rb)
 
   extra_deps << ["stackdeck", "~> 0.1"]
   extra_dev_deps << ["rake-compiler", "~> 0.6"]
@@ -59,11 +57,9 @@ Hoe.spec "johnson" do
   clean_globs    << "ext/**/Makefile"
   clean_globs    << "ext/**/*.{o,so,dylib,bundle,a,log}"
   clean_globs    << "vendor/**/*.{o,so,dylib,bundle,a,log}"
-  clean_globs    << "ext/spidermonkey/immutable_node.c"
   clean_globs    << "ext/tracemonkey/immutable_node.cc"
   clean_globs    << "lib/johnson/**/*.{bundle,so}"
   clean_globs    << "tmp"
-  clean_globs    << "vendor/spidermonkey/**/*.OBJ"
 
   clean_globs    << "vendor/tracemonkey/**/.deps"
   clean_globs    << "vendor/tracemonkey/dist"
@@ -96,11 +92,6 @@ Hoe.spec "johnson" do
   clean_globs    << "vendor/tracemonkey/{lirasm,shell,tests}/Makefile"
   clean_globs    << "vendor/tracemonkey/unallmakefiles"
 
-  Rake::ExtensionTask.new "spidermonkey", spec do |ext|
-    ext.lib_dir = "lib/johnson/spidermonkey"
-    ext.source_pattern = "*.{c,h}"
-  end
-
   Rake::ExtensionTask.new "tracemonkey", spec do |ext|
     ext.lib_dir = "lib/johnson/tracemonkey"
     ext.source_pattern = "*.{cc,h}"
@@ -112,10 +103,6 @@ task(:test).clear
 task :test => :compile
 
 task :clean do
-  Dir.chdir "vendor/spidermonkey" do
-    sh "make clean -f Makefile.ref" unless Dir["**/libjs.a"].empty?
-  end
-
   Dir.chdir "vendor/tracemonkey" do
     sh "make clean -f Makefile.ref" unless Dir["**/libjs.a"].empty?
   end
