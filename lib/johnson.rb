@@ -1,3 +1,4 @@
+require 'date'
 require "generator"
 
 # the 'public' interface
