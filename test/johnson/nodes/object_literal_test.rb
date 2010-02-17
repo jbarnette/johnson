@@ -1,4 +1,4 @@
-require File.expand_path(File.join(File.dirname(__FILE__), "/../../helper"))
+require "helper"
 
 class ObjectLiteralTest < Johnson::NodeTestCase
   def test_object_literal

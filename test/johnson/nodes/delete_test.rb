@@ -1,4 +1,4 @@
-require File.expand_path(File.join(File.dirname(__FILE__), "/../../helper"))
+require "helper"
 
 class DeleteNodeTest < Johnson::NodeTestCase
   def test_delete_sexp

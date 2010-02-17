@@ -1,4 +1,4 @@
-require File.expand_path(File.join(File.dirname(__FILE__), "/../../helper"))
+require "helper"
 
 class LetNodeTest < Johnson::NodeTestCase
   def test_let_to_sexp

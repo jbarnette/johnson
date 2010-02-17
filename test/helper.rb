@@ -29,12 +29,12 @@ module Johnson
       #@runtime.delegate.gc_zeal = 2
       #@runtime.delegate.debugger = Johnson::SpiderMonkey::Debugger.new(TestLogger.new)
     end
-    
+
     def assert_js(expression, options={})
       runtime = options[:runtime] || @runtime
       assert(runtime.evaluate(expression), "Expected JS expression [#{expression}] to be true.")
     end
-    
+
     def assert_js_equal(expected, expression, options={})
       runtime = options.delete(:runtime) || @runtime
       options.each { |k, v| runtime[k.to_s] = v }
@@ -45,13 +45,13 @@ module Johnson
   class NodeTestCase < Test::Unit::TestCase
     include GCTearDown
     include Johnson::Nodes
-  
+
     undef :default_test if method_defined? :default_test
-    
+
     def setup
       @parser = Johnson::Parser
     end
-  
+
     def assert_sexp(expected, actual)
       assert_equal(expected, actual.to_sexp)
     end

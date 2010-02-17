@@ -1,4 +1,4 @@
-require File.expand_path(File.join(File.dirname(__FILE__), "/../../helper"))
+require "helper"
 
 class IfTest < Johnson::NodeTestCase
   def test_if_no_else
