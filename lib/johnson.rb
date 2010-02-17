@@ -1,5 +1,5 @@
 require "stackdeck"
-
+require 'date'
 require "generator"
 
 # the 'public' interface
