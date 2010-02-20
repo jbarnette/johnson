@@ -91,7 +91,7 @@ split_addProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         /*
         JSString* s = JS_ValueToString(cx, id);
         char* c = JS_GetStringBytes(s);
-        if(strcmp(c,"document")==0){
+        if(strcmp(c,"Document")==0){
             fprintf(stderr,"%s\n",c );
         }
         */
@@ -103,15 +103,11 @@ split_addProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
         JS_GetPropertyAttrsGetterAndSetterById(cx, obj, id, &attrs, &found, &getter, &setter);
 
-        if (attrs&(JSPROP_GETTER|JSPROP_SETTER)) {
-            asId = id;
-        } else {
-            if (!JS_ValueToId(cx, *vp, &asId)) {
-                return JS_FALSE;
-            }
+        if (!JS_ValueToId(cx, *vp, &asId)) {
+            return JS_FALSE;
         }
         
-        return JS_DefinePropertyById(cx, cpx->inner, asId, *vp, getter, setter, attrs | JSPROP_ENUMERATE);
+        return JS_DefinePropertyById(cx, cpx->inner, id, asId, getter, setter, attrs | JSPROP_ENUMERATE);
     }
     return JS_TRUE;
 }
