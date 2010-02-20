@@ -1,5 +1,5 @@
-#ifndef JOHNSON_SPIDERMONKEY_H
-#define JOHNSON_SPIDERMONKEY_H
+#ifndef JOHNSON_TRACEMONKEY_H
+#define JOHNSON_TRACEMONKEY_H
 
 #include <assert.h>
 #include <stdarg.h>
