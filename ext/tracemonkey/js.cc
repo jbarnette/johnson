@@ -291,6 +291,12 @@ split_mark(JSContext *cx, JSObject *obj, void *arg)
 
     cpx = (ComplexObject *) JS_GetPrivate(cx, obj);
 
+    /*
+    if (!cpx->isInner) {
+        fprintf(stderr,"mark %016x\n", obj);
+    }
+    */
+
     if (!cpx->isInner && cpx->inner) {
         if (trace_mark) fprintf(stderr,"mark inner %016x\n", cpx->inner);
         /* Mark the inner object. */
