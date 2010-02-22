@@ -36,5 +36,8 @@ static JSClass OurGlobalClass = {
 
 JSObject* johnson_create_global_object(JSContext* context)
 {
-  return JS_NewObject(context, &OurGlobalClass, NULL, NULL);
+  JSObject* obj = JS_NewObject(context, &OurGlobalClass, NULL, NULL);
+  JS_SetParent(context, obj, NULL);
+  JS_SetPrototype(context, obj, NULL);
+  return obj;
 }

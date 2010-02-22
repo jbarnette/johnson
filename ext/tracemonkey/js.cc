@@ -70,6 +70,9 @@ split_create_inner(JSContext *cx, JSObject *outer);
 static ComplexObject *
 split_get_private(JSContext *cx, JSObject *obj);
 
+int trace_split = 0;
+int trace_mark = 0;
+
 static JSBool
 split_addProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
@@ -85,6 +88,14 @@ split_addProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
         /* Patched. See https://bugzilla.mozilla.org/show_bug.cgi?id=542864 */
 
+        /*
+        JSString* s = JS_ValueToString(cx, id);
+        char* c = JS_GetStringBytes(s);
+        if(strcmp(c,"Document")==0){
+            fprintf(stderr,"%s\n",c );
+        }
+        */
+
         JSPropertyOp setter = 0;
         JSPropertyOp getter = 0;
         uintN attrs = 0;
@@ -92,15 +103,11 @@ split_addProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
         JS_GetPropertyAttrsGetterAndSetterById(cx, obj, id, &attrs, &found, &getter, &setter);
 
-        if (attrs&(JSPROP_GETTER|JSPROP_SETTER)) {
-            asId = id;
-        } else {
-            if (!JS_ValueToId(cx, *vp, &asId)) {
-                return JS_FALSE;
-            }
+        if (!JS_ValueToId(cx, *vp, &asId)) {
+            return JS_FALSE;
         }
         
-        return JS_DefinePropertyById(cx, cpx->inner, asId, *vp, getter, setter, attrs | JSPROP_ENUMERATE);
+        return JS_DefinePropertyById(cx, cpx->inner, id, asId, getter, setter, attrs | JSPROP_ENUMERATE);
     }
     return JS_TRUE;
 }
@@ -271,6 +278,7 @@ split_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
 static void
 split_finalize(JSContext *cx, JSObject *obj)
 {
+    if (trace_split) fprintf(stderr,"finalize %016x\n", obj);
     JS_free(cx, JS_GetPrivate(cx, obj));
 }
 
@@ -279,9 +287,18 @@ split_mark(JSContext *cx, JSObject *obj, void *arg)
 {
     ComplexObject *cpx;
 
+    if (trace_mark) fprintf(stderr,"mark %016x\n", obj);
+
     cpx = (ComplexObject *) JS_GetPrivate(cx, obj);
 
+    /*
+    if (!cpx->isInner) {
+        fprintf(stderr,"mark %016x\n", obj);
+    }
+    */
+
     if (!cpx->isInner && cpx->inner) {
+        if (trace_mark) fprintf(stderr,"mark inner %016x\n", cpx->inner);
         /* Mark the inner object. */
         JS_MarkGCThing(cx, cpx->inner, "ComplexObject.inner", arg);
     }
@@ -357,7 +374,6 @@ static JSExtendedClass split_global_class = {
     NULL, NULL, NULL, NULL, NULL
 };
 
-#if 1
 static JSBool
 split_equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
 {
@@ -378,31 +394,6 @@ split_equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
     *bp = (cpx == ourCpx);
     return JS_TRUE;
 }
-#else
-static JSBool
-split_equality(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
-{
-    *bp = JS_FALSE;
-    if (JSVAL_IS_PRIMITIVE(v))
-        return JS_TRUE;
-
-    JSObject *obj2 = JSVAL_TO_OBJECT(v);
-    if (JS_GET_CLASS(cx, obj2) != &split_global_class.base)
-        return JS_TRUE;
-
-    ComplexObject *cpx = (ComplexObject *) JS_GetPrivate(cx, obj2);
-    ComplexObject *ourCpx = (ComplexObject *) JS_GetPrivate(cx, obj);
-
-    if( cpx == ourCpx ) {
-      *bp = JS_TRUE;
-    } else if ( cpx->inner ) {
-      *bp = ( cpx->inner == obj && ourCpx->outer == obj2);
-    } else {
-      *bp = ( cpx->outer == obj && ourCpx->inner == obj2);
-    }
-    return JS_TRUE;
-}
-#endif
 
 JSObject *
 split_create_outer(JSContext *cx)
@@ -429,6 +420,8 @@ split_create_outer(JSContext *cx)
         return NULL;
     }
 
+    if (trace_split) fprintf(stderr,"outer %016x\n", obj);
+
     return obj;
 }
 
@@ -453,10 +446,14 @@ split_create_inner(JSContext *cx, JSObject *outer)
         JS_free(cx, cpx);
         return NULL;
     }
+    
+    JS_SetPrototype(cx,obj,NULL);
 
     outercpx = (ComplexObject *) JS_GetPrivate(cx, outer);
     outercpx->inner = obj;
     outercpx->frozen = JS_FALSE;
+
+    if (trace_split) fprintf(stderr,"inner %016x\n", obj);
 
     return obj;
 }

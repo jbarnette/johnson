@@ -22,6 +22,17 @@ static VALUE global(VALUE self)
   return convert_to_ruby(runtime, OBJECT_TO_JSVAL(runtime->global));
 }
 
+static VALUE new_global(VALUE self)
+{
+  JohnsonRuntime* runtime;
+  Data_Get_Struct(self, JohnsonRuntime, runtime);
+  JSContext * context = johnson_get_current_context(runtime);
+
+  PREPARE_RUBY_JROOTS(context, 0);
+  JSObject* obj = johnson_create_global_object(context);
+  JRETURN_RUBY(convert_to_ruby(runtime, OBJECT_TO_JSVAL(obj)));
+}
+
 static VALUE new_split_global_outer(VALUE self)
 {
   JohnsonRuntime* runtime;
@@ -51,6 +62,24 @@ static VALUE new_split_global_inner(VALUE self, VALUE ruby_outer)
   JSObject* new_inner_object = johnson_create_split_global_inner_object(context,JSVAL_TO_OBJECT(outer));
   
   JRETURN_RUBY(convert_to_ruby(runtime, OBJECT_TO_JSVAL(new_inner_object)));
+}
+
+static VALUE seal(VALUE self, VALUE ruby_object, VALUE deep)
+{
+  JohnsonRuntime* runtime;
+  Data_Get_Struct(self, JohnsonRuntime, runtime);
+  JSContext * context = johnson_get_current_context(runtime);
+
+  PREPARE_RUBY_JROOTS(context, 1);
+
+  jsval object;
+
+  JCHECK(convert_to_js(runtime,ruby_object,&object));
+  JROOT(object);
+
+  JSBool ok = JS_SealObject(context, JSVAL_TO_OBJECT(object), deep == Qfalse || deep == Qnil ? JS_FALSE : JS_TRUE);
+
+  JRETURN_RUBY(convert_to_ruby(runtime, ok ? JSVAL_TRUE : JSVAL_FALSE));
 }
 
 static JSTrapStatus trap_handler( JSContext *context,
@@ -251,6 +280,12 @@ set_gc_zeal(VALUE self, VALUE zeal)
 #endif
 
 /*
+void* from = 0;
+void* thing = 0;
+unsigned depth = 0;
+*/
+
+/*
  * call-seq:
  *   gc()
  *
@@ -265,6 +300,14 @@ gc(VALUE self)
   JSContext* context = johnson_get_current_context(runtime);
 
   JS_GC(context);
+
+/*
+  if(depth){
+    fprintf(stderr,"dumping\n");
+    JS_DumpHeap(context, stderr, from, 0, thing, depth, 0);
+    fprintf(stderr,"done\n");
+  }
+*/
 
   return Qnil;
 }
@@ -396,8 +439,14 @@ static int proxy_cleanup_enumerator(JSHashEntry *entry, int /* i */, void* arg)
   return 0;
 }
 
-static void deallocate(JohnsonRuntime* runtime)
+/*
+static VALUE destroy(VALUE self)
 {
+  JohnsonRuntime* runtime;
+  Data_Get_Struct(self, JohnsonRuntime, runtime);
+
+  fprintf(stderr,"destroy SM RT\n");
+
   // our gc callback can create ruby objects, so disable it
   JS_SetGCCallbackRT(runtime->js, NULL);
 
@@ -415,6 +464,35 @@ static void deallocate(JohnsonRuntime* runtime)
   JS_DestroyContext(cleanup);
 
   JS_DestroyRuntime(runtime->js);
+
+  runtime->js = 0;
+
+  return Qnil;
+}
+*/
+
+static void deallocate(JohnsonRuntime* runtime)
+{
+  if (runtime->js) {
+    // our gc callback can create ruby objects, so disable it
+    JS_SetGCCallbackRT(runtime->js, NULL);
+
+    JSContext *context  = NULL;
+    JSContext *iterator = NULL;
+
+    while ((context = JS_ContextIterator(runtime->js, &iterator)) != NULL) {
+      JS_SetContextPrivate(iterator, NULL);
+      JS_DestroyContext(iterator);
+      iterator = NULL;
+    }
+
+    JSContext* cleanup = JS_NewContext(runtime->js, 8192L);
+    JS_HashTableEnumerateEntries(runtime->jsids, proxy_cleanup_enumerator, runtime);
+    JS_DestroyContext(cleanup);
+
+    JS_DestroyRuntime(runtime->js);
+  }
+
   free(runtime);
 }
 
@@ -440,9 +518,12 @@ void init_Johnson_TraceMonkey_Runtime(VALUE tracemonkey)
   rb_define_private_method(klass, "initialize_native", (ruby_callback)initialize_native, 1);
 
   rb_define_method(klass, "global", (ruby_callback)global, 0);
+  rb_define_method(klass, "new_global", (ruby_callback)global, 0);
 
   rb_define_method(klass, "new_split_global_outer", (ruby_callback)new_split_global_outer, 0);
   rb_define_method(klass, "new_split_global_inner", (ruby_callback)new_split_global_inner, 1);
+
+  rb_define_method(klass, "seal", (ruby_callback)seal, 2);
 
   rb_define_method(klass, "debugger=", (ruby_callback)set_debugger, 1);
   rb_define_method(klass, "gc", (ruby_callback)gc, 0);
@@ -453,4 +534,6 @@ void init_Johnson_TraceMonkey_Runtime(VALUE tracemonkey)
   rb_define_private_method(klass, "native_compile", (ruby_callback)native_compile, 4);
   rb_define_method(klass, "set_trap", (ruby_callback)set_trap, 3);
   rb_define_private_method(klass, "clear_trap", (ruby_callback)clear_trap, 2);
+
+  // rb_define_private_method(klass, "_destroy", (ruby_callback)destroy, 0);
 }

@@ -31,8 +31,9 @@ module Johnson #:nodoc:
       end
 
       def current_context
-        contexts = (Thread.current[CONTEXT_MAP_KEY] ||= {})
-        contexts[self.object_id] ||= Context.new(self)
+        @thread_id ||= Thread.current.object_id
+        raise RuntimeError, "Johnson is not thread safe" if @thread_id != Thread.current.object_id
+        return @context ||= Context.new(self)
       end
 
       def evaluate(script, filename = nil, linenum = nil, global=nil, scope=nil)
