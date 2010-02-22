@@ -52,7 +52,7 @@ Hoe.spec "johnson" do
   self.readme_file              = "README.rdoc"
   self.spec_extras[:extensions] = %w(ext/tracemonkey/extconf.rb)
 
-  extra_deps << ["stackdeck", "~> 0.1"]
+  extra_deps << ["stackdeck", "~> 0.2"]
   extra_dev_deps << ["rake-compiler", "~> 0.6"]
 
   clean_globs    << "ext/**/Makefile"

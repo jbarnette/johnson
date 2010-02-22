@@ -124,37 +124,46 @@ module Johnson
       global.Johnson.getStack
     end
 
-    def parse_js_stack(ex, full_stack)
+    def parse_js_stack(full_stack, jsex=nil)
       full_js_stack = full_stack.split(/\n/)
       short_js_stack = current_stack.split(/\n/)
 
       upper, lower = StackDeck.split_list(full_js_stack, short_js_stack)
-      upper.map {|s| StackDeck::Frame::JavaScript.parse(s) }
+      stack = upper.map {|s| StackDeck::Frame::JavaScript.parse(s) }
+
+      if jsex
+        top = StackDeck::Frame::JavaScript.new(nil, jsex['fileName'], jsex['lineNumber'])
+        stack.unshift top unless top.same_line?(stack.first)
+      end
+
+      stack
     end
     private :parse_js_stack
 
     def raise_js_exception(jsex)
+      exception_source = caller(2)
+
       case jsex
       when Exception
         if stack = jsex.send(:remove_instance_variable, :@js_stack)
-          jsex.higher_stack_deck.concat parse_js_stack(jsex, stack)
+          jsex.append_to_stack_deck parse_js_stack(stack)
         end
         raise jsex
       when String
         ex = Johnson::Error.new(jsex)
+        ex.set_backtrace exception_source
       when Johnson::RubyLandProxy
         ex = Johnson::Error.new(jsex['message'] || jsex.to_s, jsex)
+        ex.set_backtrace exception_source
+
         if stack = jsex['stack']
-          stack = parse_js_stack(ex, stack)
-          top = StackDeck::Frame::JavaScript.new(nil, jsex['fileName'], jsex['lineNumber'])
-          stack.unshift top unless top.same_line?(stack.first)
-          ex.higher_stack_deck.concat stack
+          ex.append_to_stack_deck parse_js_stack(stack, jsex)
         end
       else
         ex = Johnson::Error.new(jsex.inspect)
+        ex.set_backtrace exception_source
       end
 
-      ex.set_backtrace caller(2)
       raise ex
     end
 
