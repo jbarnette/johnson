@@ -247,8 +247,10 @@ static VALUE evaluate_compiled_script(VALUE self, VALUE compiled_script, VALUE r
 
     if (johnson_context->ex) {
       RAISE_JS_ERROR(self, johnson_context->ex);
-      return Qnil;
+    } else {
+      rb_raise(rb_eNoMemError,"spidermonkey ran out of memory");
     }
+    return Qnil;
   }
 
   return convert_to_ruby(runtime, js);
@@ -279,11 +281,11 @@ set_gc_zeal(VALUE self, VALUE zeal)
 }
 #endif
 
-/*
+#ifdef DEBUG
 void* from = 0;
 void* thing = 0;
 unsigned depth = 0;
-*/
+#endif DEBUG
 
 /*
  * call-seq:
@@ -301,13 +303,13 @@ gc(VALUE self)
 
   JS_GC(context);
 
-/*
+#ifdef DEBUG
   if(depth){
     fprintf(stderr,"dumping\n");
     JS_DumpHeap(context, stderr, from, 0, thing, depth, 0);
     fprintf(stderr,"done\n");
   }
-*/
+#endif
 
   return Qnil;
 }
@@ -382,18 +384,23 @@ JSBool gc_callback(JSContext *context, JSGCStatus status)
 
 /**
  * call-seq:
- *   initialize_native(options)
+ *   initialize_native(size, options)
  *
  * Create the underlying TraceMonkey runtime. This must be called
  * first, and only once. Called by +initialize+ by default.
  */
 static VALUE
-initialize_native(VALUE self, VALUE UNUSED(options))
+initialize_native(VALUE self, VALUE size, VALUE UNUSED(options))
 {
   JohnsonRuntime* runtime;
   Data_Get_Struct(self, JohnsonRuntime, runtime);
 
-  if ((runtime->js = JS_NewRuntime(0x2000000))
+  size_t s = NUM2INT(size);
+  if (s == 0) {
+    s = 0x2000000;
+  }
+
+  if ((runtime->js = JS_NewRuntime(s))
     && (runtime->jsids = create_id_hash())
     && (runtime->rbids = create_id_hash()))
   {
@@ -515,7 +522,7 @@ void init_Johnson_TraceMonkey_Runtime(VALUE tracemonkey)
   VALUE klass = rb_define_class_under(tracemonkey, "Runtime", johnson_runtime);
 
   rb_define_alloc_func(klass, allocate);
-  rb_define_private_method(klass, "initialize_native", (ruby_callback)initialize_native, 1);
+  rb_define_private_method(klass, "initialize_native", (ruby_callback)initialize_native, 2);
 
   rb_define_method(klass, "global", (ruby_callback)global, 0);
   rb_define_method(klass, "new_global", (ruby_callback)global, 0);

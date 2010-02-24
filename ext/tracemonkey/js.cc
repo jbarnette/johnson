@@ -278,7 +278,7 @@ split_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
 static void
 split_finalize(JSContext *cx, JSObject *obj)
 {
-    if (trace_split) fprintf(stderr,"finalize %016x\n", obj);
+    if (trace_split) fprintf(stderr,"finalize 0x%08x\n", obj);
     JS_free(cx, JS_GetPrivate(cx, obj));
 }
 
@@ -287,9 +287,9 @@ split_mark(JSContext *cx, JSObject *obj, void *arg)
 {
     ComplexObject *cpx;
 
-    if (trace_mark) fprintf(stderr,"mark %016x\n", obj);
-
     cpx = (ComplexObject *) JS_GetPrivate(cx, obj);
+
+    if (trace_mark) fprintf(stderr,"mark  0x%08x %s\n", obj, cpx->isInner ? "" : "outer");
 
     /*
     if (!cpx->isInner) {
@@ -298,7 +298,7 @@ split_mark(JSContext *cx, JSObject *obj, void *arg)
     */
 
     if (!cpx->isInner && cpx->inner) {
-        if (trace_mark) fprintf(stderr,"mark inner %016x\n", cpx->inner);
+        // if (trace_mark) fprintf(stderr,"mark inner 0x%08x\n", cpx->inner);
         /* Mark the inner object. */
         JS_MarkGCThing(cx, cpx->inner, "ComplexObject.inner", arg);
     }
@@ -420,7 +420,7 @@ split_create_outer(JSContext *cx)
         return NULL;
     }
 
-    if (trace_split) fprintf(stderr,"outer %016x\n", obj);
+    if (trace_split) fprintf(stderr,"outer 0x%08x\n", obj);
 
     return obj;
 }
@@ -453,7 +453,7 @@ split_create_inner(JSContext *cx, JSObject *outer)
     outercpx->inner = obj;
     outercpx->frozen = JS_FALSE;
 
-    if (trace_split) fprintf(stderr,"inner %016x\n", obj);
+    if (trace_split) fprintf(stderr,"inner 0x%08x 0x%08x\n", outer, obj);
 
     return obj;
 }

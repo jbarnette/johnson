@@ -26,8 +26,11 @@ module Johnson
      # this is deprecated; instead, just create an instance of that
      # engine's runtime directly.
      #
+     # options passed to the underlying runtime
+     #   Use size to specify heap limit
+     #
      # :call-seq:
-     #   new(runtime_class=nil)
+     #   new(runtime_class=nil, options)
      #
      def self.new(*args)
        return super if self < Johnson::Runtime
@@ -35,12 +38,10 @@ module Johnson
        delegate = args.first
        if delegate.is_a? Class
          delegate.new
-       elsif delegate
+       elsif !delegate.nil? && !delegate.is_a?( Hash )
          delegate
-       elsif
-         v = default.new( *args )
-         raise "hell" if !v
-         v
+       else
+         default.new( *args )
        end
      end
 
