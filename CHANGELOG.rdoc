@@ -1,3 +1,15 @@
+=== 2.0.0.pre2 / 2010-02-23
+
+* Raise NoMemoryError as appropriate; acccept a size parameter or env variable for runtime size
+* pull latest 1.9.2 SM
+* Allow ruby code to create new gobal objects and add preliminary seal support
+* Clear parent and prototype on new globals
+* Cooperate with StackDeck's new backtrace-manipulating ways.
+* remove thread ref to context (allows collection)
+* Bump Hoe and Rake Compiler deps. Automatically grab submodules.
+* Remove the old spidermonkey extension.
+* Fix include guard for base TM header [Quin Hoxie]
+
 === 2.0.0.pre1 / 2010-02-11
 
 * Split global fix; covers all known issues
