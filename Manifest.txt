@@ -165,6 +165,7 @@ vendor/tracemonkey/build/autoconf/match-dir.sh
 vendor/tracemonkey/build/autoconf/moznbytetype.m4
 vendor/tracemonkey/build/autoconf/mozprog.m4
 vendor/tracemonkey/build/autoconf/nspr.m4
+vendor/tracemonkey/build/autoconf/pkg.m4
 vendor/tracemonkey/build/cygwin-wrapper
 vendor/tracemonkey/build/hcc
 vendor/tracemonkey/build/hcpp
@@ -1336,6 +1337,8 @@ vendor/tracemonkey/tests/ecma/Math/15.8.2.8.js
 vendor/tracemonkey/tests/ecma/Math/15.8.2.9.js
 vendor/tracemonkey/tests/ecma/Math/jstests.list
 vendor/tracemonkey/tests/ecma/Math/shell.js
+vendor/tracemonkey/tests/ecma/NativeObjects/browser.js
+vendor/tracemonkey/tests/ecma/NativeObjects/jstests.list
 vendor/tracemonkey/tests/ecma/NativeObjects/shell.js
 vendor/tracemonkey/tests/ecma/Number/15.7.1.js
 vendor/tracemonkey/tests/ecma/Number/15.7.2.js
@@ -2180,6 +2183,8 @@ vendor/tracemonkey/tests/js1_3/inherit/proto_9.js
 vendor/tracemonkey/tests/js1_3/inherit/shell.js
 vendor/tracemonkey/tests/js1_3/jsref.js
 vendor/tracemonkey/tests/js1_3/jstests.list
+vendor/tracemonkey/tests/js1_3/misc/browser.js
+vendor/tracemonkey/tests/js1_3/misc/jstests.list
 vendor/tracemonkey/tests/js1_3/misc/shell.js
 vendor/tracemonkey/tests/js1_3/regress/delete-001.js
 vendor/tracemonkey/tests/js1_3/regress/function-001-n.js
