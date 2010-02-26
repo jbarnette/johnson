@@ -12,7 +12,7 @@ module Johnson #:nodoc:
         @debugger = nil
         @gcthings = {}
         @traps = []
-        size = (options[:size] || options["size"] || ENV["JOHNSON_HEAP_SIZE"] || 0x2000000).to_i
+        size = (options[:size] || options["size"] || Integer(ENV["JOHNSON_HEAP_SIZE"] || 0x2000000))
         options.delete(:size)
         initialize_native(size, options)
         super()
