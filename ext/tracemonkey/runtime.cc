@@ -19,7 +19,9 @@ static VALUE global(VALUE self)
 {
   JohnsonRuntime* runtime;
   Data_Get_Struct(self, JohnsonRuntime, runtime);
-  return convert_to_ruby(runtime, OBJECT_TO_JSVAL(runtime->global));
+  JSContext * context = johnson_get_current_context(runtime);
+  PREPARE_RUBY_JROOTS(context, 0);
+  JRETURN_RUBY(CONVERT_TO_RUBY(runtime, OBJECT_TO_JSVAL(runtime->global)));
 }
 
 static VALUE new_global(VALUE self)
@@ -30,7 +32,7 @@ static VALUE new_global(VALUE self)
 
   PREPARE_RUBY_JROOTS(context, 0);
   JSObject* obj = johnson_create_global_object(context);
-  JRETURN_RUBY(convert_to_ruby(runtime, OBJECT_TO_JSVAL(obj)));
+  JRETURN_RUBY(CONVERT_TO_RUBY(runtime, OBJECT_TO_JSVAL(obj)));
 }
 
 static VALUE new_split_global_outer(VALUE self)
@@ -43,7 +45,7 @@ static VALUE new_split_global_outer(VALUE self)
 
   JSObject* new_split_global_outer_object = johnson_create_split_global_outer_object(context);
 
-  JRETURN_RUBY(convert_to_ruby(runtime, OBJECT_TO_JSVAL(new_split_global_outer_object)));
+  JRETURN_RUBY(CONVERT_TO_RUBY(runtime, OBJECT_TO_JSVAL(new_split_global_outer_object)));
 }
 
 static VALUE new_split_global_inner(VALUE self, VALUE ruby_outer)
@@ -61,7 +63,7 @@ static VALUE new_split_global_inner(VALUE self, VALUE ruby_outer)
 
   JSObject* new_inner_object = johnson_create_split_global_inner_object(context,JSVAL_TO_OBJECT(outer));
   
-  JRETURN_RUBY(convert_to_ruby(runtime, OBJECT_TO_JSVAL(new_inner_object)));
+  JRETURN_RUBY(CONVERT_TO_RUBY(runtime, OBJECT_TO_JSVAL(new_inner_object)));
 }
 
 static VALUE seal(VALUE self, VALUE ruby_object, VALUE deep)
@@ -253,7 +255,8 @@ static VALUE evaluate_compiled_script(VALUE self, VALUE compiled_script, VALUE r
     return Qnil;
   }
 
-  return convert_to_ruby(runtime, js);
+  PREPARE_RUBY_JROOTS(context, 0);
+  JRETURN_RUBY(CONVERT_TO_RUBY(runtime, js));
 }
 
 #ifdef JS_GC_ZEAL
@@ -525,7 +528,7 @@ void init_Johnson_TraceMonkey_Runtime(VALUE tracemonkey)
   rb_define_private_method(klass, "initialize_native", (ruby_callback)initialize_native, 2);
 
   rb_define_method(klass, "global", (ruby_callback)global, 0);
-  rb_define_method(klass, "new_global", (ruby_callback)global, 0);
+  rb_define_method(klass, "new_global", (ruby_callback)new_global, 0);
 
   rb_define_method(klass, "new_split_global_outer", (ruby_callback)new_split_global_outer, 0);
   rb_define_method(klass, "new_split_global_inner", (ruby_callback)new_split_global_inner, 1);

@@ -99,35 +99,37 @@ JSBool call_ruby_from_js2(JohnsonRuntime* runtime, VALUE* retval, VALUE self, ID
   return okay;
 }
 
-static bool autovivified_p(VALUE UNUSED(ruby_context), VALUE self, char* name)
+static bool autovivified_p(VALUE UNUSED(ruby_context), VALUE self, VALUE name)
 {
   return RTEST(rb_funcall(Johnson_TraceMonkey_JSLandProxy(), rb_intern("autovivified?"), 2,
-    self, rb_str_new2(name)));
+    self, name));
 }
 
-static bool const_p(VALUE self, char* name)
+static bool const_p(VALUE self, VALUE name)
 {
+  
   return rb_obj_is_kind_of(self, rb_cModule)
-    && rb_is_const_id(rb_intern(name))
-    && RTEST( rb_funcall(self, rb_intern("const_defined?"), 1, ID2SYM(rb_intern(name))) );
+    && rb_sym_interned_p(name)
+    && rb_is_const_id(rb_to_id(name))
+    && RTEST( rb_funcall(self, rb_intern("const_defined?"), 1, ID2SYM(rb_to_id(name))) );
 }
 
-static bool global_p(char* name)
+static bool global_p(VALUE name)
 {
-  return *name == '$' && rb_ary_includes(rb_f_global_variables(), rb_str_new2(name));
+  return *StringValueCStr(name) == '$' && rb_ary_includes(rb_f_global_variables(), name);
 }
 
-static bool method_p(VALUE self, char* name)
+static bool method_p(VALUE self, VALUE name)
 {
-  return RTEST( rb_funcall(self, rb_intern("respond_to?"), 1, ID2SYM(rb_intern(name))) );
+  return RTEST( rb_funcall(self, rb_intern("respond_to?"), 1, ID2SYM(rb_to_id(name))) );
 }
 
-static bool attribute_p(VALUE self, char* name)
+static bool attribute_p(VALUE self, VALUE name)
 {
   if (!method_p(self, name))
     return false;
 
-  VALUE rb_id = rb_intern(name);
+  VALUE rb_id = rb_to_id(name);
   VALUE rb_method = rb_funcall(self, rb_intern("method"), 1, ID2SYM(rb_id));
 
   if (TYPE(rb_method) == T_DATA)
@@ -152,37 +154,62 @@ static bool indexable_p(VALUE self)
   return RTEST(rb_funcall(self, rb_intern("respond_to?"), 1, ID2SYM(rb_intern("[]"))));
 }
 
-static bool has_key_p(VALUE self, char* name)
+static bool has_key_p(VALUE self, VALUE name)
 {
   return RTEST(rb_funcall(self, rb_intern("respond_to?"), 1, ID2SYM(rb_intern("[]"))))
     && RTEST(rb_funcall(self, rb_intern("respond_to?"), 1, ID2SYM(rb_intern("key?"))))
-    && RTEST(rb_funcall(self, rb_intern("key?"), 1, rb_str_new2(name)));
+    && RTEST(rb_funcall(self, rb_intern("key?"), 1, name));
 }
 
-static bool respond_to_p(JSContext* js_context, JSObject* obj, char* name)
-{
-  VALUE ruby_context = (VALUE)JS_GetContextPrivate(js_context);
+static VALUE respond_to_p_invoke(VALUE args) {
+  VALUE ruby_context = rb_ary_shift(args);
+  VALUE self = rb_ary_shift(args);
+  VALUE name = rb_ary_shift(args);
 
-  JohnsonContext* context;
-  Data_Get_Struct(ruby_context, JohnsonContext, context);
-
-  VALUE self = (VALUE)JS_GetInstancePrivate(
-    context->js, obj, JS_GET_CLASS(context->js, obj), NULL);
-
-  if (!self) return false;
-
-  return autovivified_p(ruby_context, self, name)
+  return ( autovivified_p(ruby_context, self, name)
     || const_p(self, name)
     || global_p(name)
     || attribute_p(self, name)
     || method_p(self, name)
-    || has_key_p(self, name);
+    || has_key_p(self, name) ) ? Qtrue : Qfalse;
 }
 
-static jsval evaluate_js_property_expression(JohnsonRuntime * runtime, const char * property, jsval* retval) {
-  JSContext * context = johnson_get_current_context(runtime);
+static bool respond_to_p(JSContext* js_context, JSObject* obj, char* name)
+{
+  VALUE old_errinfo = ruby_errinfo;
+
+  VALUE ruby_runtime = (VALUE)JS_GetRuntimePrivate(JS_GetRuntime(js_context));
+  JohnsonRuntime* runtime;
+  Data_Get_Struct(ruby_runtime, JohnsonRuntime, runtime);
+
+  VALUE self =
+    (VALUE)JS_GetInstancePrivate(js_context, obj, JS_GET_CLASS(js_context, obj), NULL);
+
+  if (!self) return false;
+  
+  VALUE args = rb_ary_new2(3);
+
+  VALUE ruby_context = (VALUE)JS_GetContextPrivate(js_context);
+
+  rb_ary_store(args, 0, ruby_context);
+  rb_ary_store(args, 1, self);
+  rb_ary_store(args, 2, rb_str_new2(name));
+
+  int state;
+
+  VALUE result = rb_protect(respond_to_p_invoke,args,&state);
+
+  if (state)
+    return report_ruby_error_in_js(runtime, state, old_errinfo);
+
+  return result == Qtrue;
+}
+
+static jsval evaluate_js_property_expression(JohnsonRuntime * runtime,
+                                                   JSContext * js_context,
+                                                   const char * property, jsval* retval) {
   assert(strlen(property) < INT_MAX);
-  return JS_EvaluateScript(context, runtime->global,
+  return JS_EvaluateScript(js_context, runtime->global,
       property, (unsigned int)strlen(property), "johnson:evaluate_js_property_expression", 1,
       retval);
 }
@@ -222,19 +249,20 @@ static JSBool get(JSContext* js_context, JSObject* obj, jsval id, jsval* retval)
   }
   
   char* name = JS_GetStringBytes(JSVAL_TO_STRING(id));
-  VALUE ruby_id = rb_intern(name);
+  VALUE name_value = rb_str_new2(name);
+  VALUE ruby_id = rb_to_id(name_value);
 
   // FIXME: we should probably just JS_DefineProperty this, and it shouldn't be enumerable
   
   if (!strcasecmp("__iterator__", name)) {
-    JCHECK(evaluate_js_property_expression(runtime, "Johnson.Generator.create", retval));
+    JCHECK(evaluate_js_property_expression(runtime, js_context, "Johnson.Generator.create", retval));
   }
   
   // if the Ruby object has a dynamic js property with a key
   // matching the property we're looking for, pull the value out of
   // that map.
   
-  else if (autovivified_p(ruby_context, self, name))
+  else if (autovivified_p(ruby_context, self, name_value))
   {
     JCHECK(call_ruby_from_js(runtime, retval, Johnson_TraceMonkey_JSLandProxy(),
       rb_intern("autovivified"), 2, self, rb_str_new2(name)));
@@ -243,14 +271,14 @@ static JSBool get(JSContext* js_context, JSObject* obj, jsval id, jsval* retval)
   // if the Ruby object is a Module or Class and has a matching
   // const defined, return the converted result of const_get
   
-  else if (const_p(self, name))
+  else if (const_p(self, name_value))
   {
     JCHECK(call_ruby_from_js(runtime, retval, self, rb_intern("const_get"),
       1, ID2SYM(ruby_id)));
   }  
 
   // otherwise, if it's a global, return the global
-  else if (global_p(name))
+  else if (global_p(name_value))
   {
     JCHECK(convert_to_js(runtime, rb_gv_get(name), retval));
   }
@@ -258,7 +286,7 @@ static JSBool get(JSContext* js_context, JSObject* obj, jsval id, jsval* retval)
   // otherwise, if the Ruby object has a an attribute method matching
   // the property we're trying to get, call it and return the converted result
   
-  else if (attribute_p(self, name))
+  else if (attribute_p(self, name_value))
   {
     JCHECK(call_ruby_from_js(runtime, retval, self, ruby_id, 0));
   }
@@ -266,7 +294,7 @@ static JSBool get(JSContext* js_context, JSObject* obj, jsval id, jsval* retval)
   // otherwise, if the Ruby object quacks sorta like a hash (it responds to
   // "[]" and "key?"), index it by key and return the converted result
   
-  else if (has_key_p(self, name))
+  else if (has_key_p(self, name_value))
   {
     JCHECK(call_ruby_from_js(runtime, retval, self, rb_intern("[]"), 1, rb_str_new2(name)));
   }
@@ -277,7 +305,7 @@ static JSBool get(JSContext* js_context, JSObject* obj, jsval id, jsval* retval)
   // FIXME: this should really wrap the Method  for 'name' in a JS class
   // rather than generating a wrapper Proc
   
-  else if (method_p(self, name))
+  else if (method_p(self, name_value))
   {
     JCHECK(call_ruby_from_js(runtime, retval, self, rb_intern("method"), 1, rb_str_new2(name)));
   }
@@ -405,7 +433,15 @@ static JSBool resolve(JSContext *js_context, JSObject *obj, jsval id, uintN UNUS
   
   char* name = JS_GetStringBytes(JS_ValueToString(js_context, id));
 
-  if (respond_to_p(js_context, obj, name))
+  bool v = respond_to_p(js_context, obj, name);
+
+  if (JS_IsExceptionPending(js_context)) {
+    assert(!_jroot_ruby);
+    REMOVE_JROOTS;
+    return JS_FALSE;
+  }
+
+  if (v)
   {
     JCHECK(JS_DefineProperty(js_context, obj, name, JSVAL_VOID,
         get_and_destroy_resolved_property, set, JSPROP_ENUMERATE));
@@ -512,8 +548,9 @@ static JSBool call(JSContext* js_context, JSObject* UNUSED(obj), uintN argc, jsv
 
 bool js_value_is_proxy(JohnsonRuntime* MAYBE_UNUSED(runtime), jsval maybe_proxy)
 {
+  JSContext* js_context = johnson_get_current_context(runtime);
   JSClass* klass = JS_GET_CLASS(
-      johnson_get_current_context(runtime),
+      js_context,
       JSVAL_TO_OBJECT(maybe_proxy));  
   
   return &JSLandProxyClass == klass
@@ -565,7 +602,7 @@ JSBool make_js_land_proxy(JohnsonRuntime* runtime, VALUE value, jsval* retval)
   PREPARE_JROOTS(context, 2);
 
   jsval johnson = JSVAL_NULL;
-  JCHECK(evaluate_js_property_expression(runtime, "Johnson", &johnson));
+  JCHECK(evaluate_js_property_expression(runtime, context, "Johnson", &johnson));
   JROOT(johnson);
 
   if (base_value)
@@ -618,3 +655,8 @@ JSBool make_js_land_proxy(JohnsonRuntime* runtime, VALUE value, jsval* retval)
     JRETURN;
   }
 }
+
+// Local Variables:
+// c-basic-offset:2
+// tab-width:2
+// End:
