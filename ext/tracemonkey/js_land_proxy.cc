@@ -99,34 +99,59 @@ JSBool call_ruby_from_js2(JohnsonRuntime* runtime, VALUE* retval, VALUE self, ID
   return okay;
 }
 
-static bool autovivified_p(VALUE self, VALUE name, ID UNUSED(id))
+static VALUE autovivified_p(VALUE self, VALUE name, ID id);
+
+DECLARE_RUBY_WRAPPER(autovivified_p, VALUE self; VALUE name; ID id);
+DEFINE_RUBY_WRAPPER(autovivified_p, autovivified_p, ARGLIST3(self, name, id));
+
+static VALUE autovivified_p(VALUE self, VALUE name, ID UNUSED(id))
 {
   return RTEST(rb_funcall(Johnson_TraceMonkey_JSLandProxy(), rb_intern("autovivified?"), 2,
-    self, name));
+    self, name)) ? Qtrue : Qfalse;
 }
 
-static bool const_p(VALUE self, VALUE UNUSED(name), VALUE id)
+static VALUE const_p(VALUE self, VALUE name, ID id);
+
+DECLARE_RUBY_WRAPPER(const_p, VALUE self; VALUE name; ID id);
+DEFINE_RUBY_WRAPPER(const_p, const_p, ARGLIST3(self, name, id));
+
+static VALUE const_p(VALUE self, VALUE UNUSED(name), VALUE id)
 {
   
-  return rb_obj_is_kind_of(self, rb_cModule)
+  return (rb_obj_is_kind_of(self, rb_cModule)
     && rb_is_const_id(id)
-    && RTEST( rb_funcall(self, rb_intern("const_defined?"), 1, ID2SYM(id) ));
+    && RTEST( rb_funcall(self, rb_intern("const_defined?"), 1, ID2SYM(id) )))  ? Qtrue : Qfalse;
 }
 
-static bool global_p(VALUE name, ID UNUSED(id))
+static VALUE global_p(VALUE name);
+
+DECLARE_RUBY_WRAPPER(global_p, VALUE name);
+DEFINE_RUBY_WRAPPER(global_p, global_p, ARGLIST1(name));
+
+static VALUE global_p(VALUE name)
 {
-  return *StringValueCStr(name) == '$' && rb_ary_includes(rb_f_global_variables(), name);
+  return (*StringValueCStr(name) == '$' && rb_ary_includes(rb_f_global_variables(), name)) ? Qtrue : Qfalse;
 }
 
-static bool method_p(VALUE self, VALUE UNUSED(name), ID id)
+static VALUE method_p(VALUE self, VALUE name, ID id);
+
+DECLARE_RUBY_WRAPPER(method_p, VALUE self; VALUE name; ID id);
+DEFINE_RUBY_WRAPPER(method_p, method_p, ARGLIST3(self, name, id));
+
+static VALUE method_p(VALUE self, VALUE UNUSED(name), ID id)
 {
-  return RTEST( rb_funcall(self, rb_intern("respond_to?"), 1, ID2SYM(id) ) );
+  return (RTEST( rb_funcall(self, rb_intern("respond_to?"), 1, ID2SYM(id) ) )) ? Qtrue : Qfalse;
 }
 
-static bool attribute_p(VALUE self, VALUE name, ID id)
+static VALUE attribute_p(VALUE self, VALUE name, ID id);
+
+DECLARE_RUBY_WRAPPER(attribute_p, VALUE self; VALUE name; ID id);
+DEFINE_RUBY_WRAPPER(attribute_p, attribute_p, ARGLIST3(self, name, id));
+
+static VALUE attribute_p(VALUE self, VALUE name, ID id)
 {
   if (!method_p(self, name, id))
-    return false;
+    return Qfalse;
 
   VALUE rb_id = id;
   VALUE rb_method = rb_funcall(self, rb_intern("method"), 1, ID2SYM(rb_id));
@@ -140,24 +165,34 @@ static bool attribute_p(VALUE self, VALUE name, ID id)
       Data_Get_Struct(rb_method, METHOD, method);
 
       if (method && nd_type(method->body) == NODE_IVAR)
-        return true;
+        return Qtrue;
     }
   }
 
-  return RTEST(rb_funcall(Johnson_TraceMonkey_JSLandProxy(),
-    rb_intern("js_property?"), 2, self, ID2SYM(rb_id)));
+  return (RTEST(rb_funcall(Johnson_TraceMonkey_JSLandProxy(),
+    rb_intern("js_property?"), 2, self, ID2SYM(rb_id)))) ? Qtrue : Qfalse;
 }
 
-static bool indexable_p(VALUE self)
+static VALUE indexable_p(VALUE self);
+
+DECLARE_RUBY_WRAPPER(indexable_p, VALUE self);
+DEFINE_RUBY_WRAPPER(indexable_p, indexable_p, ARGLIST1(self));
+
+static VALUE indexable_p(VALUE self)
 {
-  return RTEST(rb_funcall(self, rb_intern("respond_to?"), 1, ID2SYM(rb_intern("[]"))));
+  return (RTEST(rb_funcall(self, rb_intern("respond_to?"), 1, ID2SYM(rb_intern("[]"))))) ? Qtrue : Qfalse;
 }
 
-static bool has_key_p(VALUE self, VALUE name, ID UNUSED(id))
+static VALUE has_key_p(VALUE self, VALUE name, ID id);
+
+DECLARE_RUBY_WRAPPER(has_key_p, VALUE self; VALUE name; ID id);
+DEFINE_RUBY_WRAPPER(has_key_p, has_key_p, ARGLIST3(self, name, id));
+
+static VALUE has_key_p(VALUE self, VALUE name, ID UNUSED(id))
 {
-  return RTEST(rb_funcall(self, rb_intern("respond_to?"), 1, ID2SYM(rb_intern("[]"))))
+  return (RTEST(rb_funcall(self, rb_intern("respond_to?"), 1, ID2SYM(rb_intern("[]"))))
     && RTEST(rb_funcall(self, rb_intern("respond_to?"), 1, ID2SYM(rb_intern("key?"))))
-    && RTEST(rb_funcall(self, rb_intern("key?"), 1, name));
+    && RTEST(rb_funcall(self, rb_intern("key?"), 1, name))) ? Qtrue : Qfalse;
 }
 
 static VALUE respond_to_p(VALUE self, VALUE name, ID id);
@@ -167,12 +202,12 @@ DEFINE_RUBY_WRAPPER(respond_to_p, respond_to_p, ARGLIST3(self, name, id));
 
 static VALUE respond_to_p(VALUE self, VALUE name, ID id)
 {
-  return ( autovivified_p(self, name, id)
+  return (autovivified_p(self, name, id)
     || const_p(self, name, id)
-    || global_p(name, id)
+    || global_p(name)
     || attribute_p(self, name, id)
     || method_p(self, name, id)
-    || has_key_p(self, name, id) ) ? Qtrue : Qfalse;
+    || has_key_p(self, name, id)) ? Qtrue : Qfalse;
 }
 
 static jsval evaluate_js_property_expression(JohnsonRuntime * runtime,
@@ -210,7 +245,7 @@ static JSBool get(JSContext* js_context, JSObject* obj, jsval id, jsval* retval)
   
   if (JSVAL_IS_INT(id))
   {
-    if (indexable_p(self)) {
+    if (CALL_RUBY_WRAPPER(indexable_p,self)) {
       VALUE idx = INT2FIX(JSVAL_TO_INT(id));
       JCHECK(call_ruby_from_js(runtime, retval, self, rb_intern("[]"), 1, idx));
     }
@@ -232,7 +267,7 @@ static JSBool get(JSContext* js_context, JSObject* obj, jsval id, jsval* retval)
   // matching the property we're looking for, pull the value out of
   // that map.
   
-  else if (autovivified_p(self, name_value, ruby_id))
+  else if (CALL_RUBY_WRAPPER(autovivified_p, self, name_value, ruby_id))
   {
     JCHECK(call_ruby_from_js(runtime, retval, Johnson_TraceMonkey_JSLandProxy(),
       rb_intern("autovivified"), 2, self, rb_str_new2(name)));
@@ -241,14 +276,14 @@ static JSBool get(JSContext* js_context, JSObject* obj, jsval id, jsval* retval)
   // if the Ruby object is a Module or Class and has a matching
   // const defined, return the converted result of const_get
   
-  else if (const_p(self, name_value, ruby_id))
+  else if (CALL_RUBY_WRAPPER(const_p, self, name_value, ruby_id))
   {
     JCHECK(call_ruby_from_js(runtime, retval, self, rb_intern("const_get"),
       1, ID2SYM(ruby_id)));
   }  
 
   // otherwise, if it's a global, return the global
-  else if (global_p(name_value, ruby_id))
+  else if (CALL_RUBY_WRAPPER(global_p, name_value))
   {
     JCHECK(convert_to_js(runtime, rb_gv_get(name), retval));
   }
@@ -256,7 +291,7 @@ static JSBool get(JSContext* js_context, JSObject* obj, jsval id, jsval* retval)
   // otherwise, if the Ruby object has a an attribute method matching
   // the property we're trying to get, call it and return the converted result
   
-  else if (attribute_p(self, name_value, ruby_id))
+  else if (CALL_RUBY_WRAPPER(attribute_p, self, name_value, ruby_id))
   {
     JCHECK(call_ruby_from_js(runtime, retval, self, ruby_id, 0));
   }
@@ -264,7 +299,7 @@ static JSBool get(JSContext* js_context, JSObject* obj, jsval id, jsval* retval)
   // otherwise, if the Ruby object quacks sorta like a hash (it responds to
   // "[]" and "key?"), index it by key and return the converted result
   
-  else if (has_key_p(self, name_value, ruby_id))
+  else if (CALL_RUBY_WRAPPER(has_key_p, self, name_value, ruby_id))
   {
     JCHECK(call_ruby_from_js(runtime, retval, self, rb_intern("[]"), 1, rb_str_new2(name)));
   }
@@ -275,7 +310,7 @@ static JSBool get(JSContext* js_context, JSObject* obj, jsval id, jsval* retval)
   // FIXME: this should really wrap the Method  for 'name' in a JS class
   // rather than generating a wrapper Proc
   
-  else if (method_p(self, name_value, ruby_id))
+  else if (CALL_RUBY_WRAPPER(method_p, self, name_value, ruby_id))
   {
     JCHECK(call_ruby_from_js(runtime, retval, self, rb_intern("method"), 1, rb_str_new2(name)));
   }
@@ -317,7 +352,7 @@ static JSBool set(JSContext* js_context, JSObject* obj, jsval id, jsval* value)
   
   if (JSVAL_IS_INT(id))
   {
-    if (indexable_p(self))
+    if (CALL_RUBY_WRAPPER(indexable_p, self))
     {
       VALUE idx = INT2FIX(JSVAL_TO_INT(id));
       VALUE val = CONVERT_TO_RUBY(runtime, *value);
