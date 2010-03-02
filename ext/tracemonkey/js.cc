@@ -101,13 +101,13 @@ split_addProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         uintN attrs = 0;
         JSBool found;
 
-        JS_GetPropertyAttrsGetterAndSetterById(cx, obj, id, &attrs, &found, &getter, &setter);
-
-        if (!JS_ValueToId(cx, *vp, &asId)) {
+        if (!JS_ValueToId(cx, id, &asId)) {
             return JS_FALSE;
         }
         
-        return JS_DefinePropertyById(cx, cpx->inner, id, asId, getter, setter, attrs | JSPROP_ENUMERATE);
+        JS_GetPropertyAttrsGetterAndSetterById(cx, obj, asId, &attrs, &found, &getter, &setter);
+
+        return JS_DefinePropertyById(cx, cpx->inner, asId, *vp, getter, setter, attrs | JSPROP_ENUMERATE);
     }
     return JS_TRUE;
 }
