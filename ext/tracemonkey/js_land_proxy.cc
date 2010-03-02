@@ -99,37 +99,36 @@ JSBool call_ruby_from_js2(JohnsonRuntime* runtime, VALUE* retval, VALUE self, ID
   return okay;
 }
 
-static bool autovivified_p(VALUE UNUSED(ruby_context), VALUE self, VALUE name)
+static bool autovivified_p(VALUE self, VALUE name, ID UNUSED(id))
 {
   return RTEST(rb_funcall(Johnson_TraceMonkey_JSLandProxy(), rb_intern("autovivified?"), 2,
     self, name));
 }
 
-static bool const_p(VALUE self, VALUE name)
+static bool const_p(VALUE self, VALUE UNUSED(name), VALUE id)
 {
   
   return rb_obj_is_kind_of(self, rb_cModule)
-    && rb_sym_interned_p(name)
-    && rb_is_const_id(rb_to_id(name))
-    && RTEST( rb_funcall(self, rb_intern("const_defined?"), 1, ID2SYM(rb_to_id(name))) );
+    && rb_is_const_id(id)
+    && RTEST( rb_funcall(self, rb_intern("const_defined?"), 1, ID2SYM(id) ));
 }
 
-static bool global_p(VALUE name)
+static bool global_p(VALUE name, ID UNUSED(id))
 {
   return *StringValueCStr(name) == '$' && rb_ary_includes(rb_f_global_variables(), name);
 }
 
-static bool method_p(VALUE self, VALUE name)
+static bool method_p(VALUE self, VALUE UNUSED(name), ID id)
 {
-  return RTEST( rb_funcall(self, rb_intern("respond_to?"), 1, ID2SYM(rb_to_id(name))) );
+  return RTEST( rb_funcall(self, rb_intern("respond_to?"), 1, ID2SYM(id) ) );
 }
 
-static bool attribute_p(VALUE self, VALUE name)
+static bool attribute_p(VALUE self, VALUE name, ID id)
 {
-  if (!method_p(self, name))
+  if (!method_p(self, name, id))
     return false;
 
-  VALUE rb_id = rb_to_id(name);
+  VALUE rb_id = id;
   VALUE rb_method = rb_funcall(self, rb_intern("method"), 1, ID2SYM(rb_id));
 
   if (TYPE(rb_method) == T_DATA)
@@ -154,55 +153,26 @@ static bool indexable_p(VALUE self)
   return RTEST(rb_funcall(self, rb_intern("respond_to?"), 1, ID2SYM(rb_intern("[]"))));
 }
 
-static bool has_key_p(VALUE self, VALUE name)
+static bool has_key_p(VALUE self, VALUE name, ID UNUSED(id))
 {
   return RTEST(rb_funcall(self, rb_intern("respond_to?"), 1, ID2SYM(rb_intern("[]"))))
     && RTEST(rb_funcall(self, rb_intern("respond_to?"), 1, ID2SYM(rb_intern("key?"))))
     && RTEST(rb_funcall(self, rb_intern("key?"), 1, name));
 }
 
-static VALUE respond_to_p_invoke(VALUE args) {
-  VALUE ruby_context = rb_ary_shift(args);
-  VALUE self = rb_ary_shift(args);
-  VALUE name = rb_ary_shift(args);
+static VALUE respond_to_p(VALUE self, VALUE name, ID id);
 
-  return ( autovivified_p(ruby_context, self, name)
-    || const_p(self, name)
-    || global_p(name)
-    || attribute_p(self, name)
-    || method_p(self, name)
-    || has_key_p(self, name) ) ? Qtrue : Qfalse;
-}
+DECLARE_RUBY_WRAPPER(respond_to_p, VALUE self; VALUE name; ID id);
+DEFINE_RUBY_WRAPPER(respond_to_p, respond_to_p, ARGLIST3(self, name, id));
 
-static bool respond_to_p(JSContext* js_context, JSObject* obj, char* name)
+static VALUE respond_to_p(VALUE self, VALUE name, ID id)
 {
-  VALUE old_errinfo = ruby_errinfo;
-
-  VALUE ruby_runtime = (VALUE)JS_GetRuntimePrivate(JS_GetRuntime(js_context));
-  JohnsonRuntime* runtime;
-  Data_Get_Struct(ruby_runtime, JohnsonRuntime, runtime);
-
-  VALUE self =
-    (VALUE)JS_GetInstancePrivate(js_context, obj, JS_GET_CLASS(js_context, obj), NULL);
-
-  if (!self) return false;
-  
-  VALUE args = rb_ary_new2(3);
-
-  VALUE ruby_context = (VALUE)JS_GetContextPrivate(js_context);
-
-  rb_ary_store(args, 0, ruby_context);
-  rb_ary_store(args, 1, self);
-  rb_ary_store(args, 2, rb_str_new2(name));
-
-  int state;
-
-  VALUE result = rb_protect(respond_to_p_invoke,args,&state);
-
-  if (state)
-    return report_ruby_error_in_js(runtime, state, old_errinfo);
-
-  return result == Qtrue;
+  return ( autovivified_p(self, name, id)
+    || const_p(self, name, id)
+    || global_p(name, id)
+    || attribute_p(self, name, id)
+    || method_p(self, name, id)
+    || has_key_p(self, name, id) ) ? Qtrue : Qfalse;
 }
 
 static jsval evaluate_js_property_expression(JohnsonRuntime * runtime,
@@ -262,7 +232,7 @@ static JSBool get(JSContext* js_context, JSObject* obj, jsval id, jsval* retval)
   // matching the property we're looking for, pull the value out of
   // that map.
   
-  else if (autovivified_p(ruby_context, self, name_value))
+  else if (autovivified_p(self, name_value, ruby_id))
   {
     JCHECK(call_ruby_from_js(runtime, retval, Johnson_TraceMonkey_JSLandProxy(),
       rb_intern("autovivified"), 2, self, rb_str_new2(name)));
@@ -271,14 +241,14 @@ static JSBool get(JSContext* js_context, JSObject* obj, jsval id, jsval* retval)
   // if the Ruby object is a Module or Class and has a matching
   // const defined, return the converted result of const_get
   
-  else if (const_p(self, name_value))
+  else if (const_p(self, name_value, ruby_id))
   {
     JCHECK(call_ruby_from_js(runtime, retval, self, rb_intern("const_get"),
       1, ID2SYM(ruby_id)));
   }  
 
   // otherwise, if it's a global, return the global
-  else if (global_p(name_value))
+  else if (global_p(name_value, ruby_id))
   {
     JCHECK(convert_to_js(runtime, rb_gv_get(name), retval));
   }
@@ -286,7 +256,7 @@ static JSBool get(JSContext* js_context, JSObject* obj, jsval id, jsval* retval)
   // otherwise, if the Ruby object has a an attribute method matching
   // the property we're trying to get, call it and return the converted result
   
-  else if (attribute_p(self, name_value))
+  else if (attribute_p(self, name_value, ruby_id))
   {
     JCHECK(call_ruby_from_js(runtime, retval, self, ruby_id, 0));
   }
@@ -294,7 +264,7 @@ static JSBool get(JSContext* js_context, JSObject* obj, jsval id, jsval* retval)
   // otherwise, if the Ruby object quacks sorta like a hash (it responds to
   // "[]" and "key?"), index it by key and return the converted result
   
-  else if (has_key_p(self, name_value))
+  else if (has_key_p(self, name_value, ruby_id))
   {
     JCHECK(call_ruby_from_js(runtime, retval, self, rb_intern("[]"), 1, rb_str_new2(name)));
   }
@@ -305,7 +275,7 @@ static JSBool get(JSContext* js_context, JSObject* obj, jsval id, jsval* retval)
   // FIXME: this should really wrap the Method  for 'name' in a JS class
   // rather than generating a wrapper Proc
   
-  else if (method_p(self, name_value))
+  else if (method_p(self, name_value, ruby_id))
   {
     JCHECK(call_ruby_from_js(runtime, retval, self, rb_intern("method"), 1, rb_str_new2(name)));
   }
@@ -431,19 +401,17 @@ static JSBool resolve(JSContext *js_context, JSObject *obj, jsval id, uintN UNUS
   PREPARE_JROOTS(js_context, 1);
   JROOT(id);
   
-  char* name = JS_GetStringBytes(JS_ValueToString(js_context, id));
+  VALUE self =
+    (VALUE)JS_GetInstancePrivate(js_context, obj, JS_GET_CLASS(js_context, obj), NULL);
 
-  bool v = respond_to_p(js_context, obj, name);
+  char* cname = JS_GetStringBytes(JS_ValueToString(js_context, id));
 
-  if (JS_IsExceptionPending(js_context)) {
-    assert(!_jroot_ruby);
-    REMOVE_JROOTS;
-    return JS_FALSE;
-  }
+  VALUE name = rb_str_new2(cname);
+  ID ruby_id = rb_intern(cname);
 
-  if (v)
+  if (CALL_RUBY_WRAPPER(respond_to_p, self, name, ruby_id))
   {
-    JCHECK(JS_DefineProperty(js_context, obj, name, JSVAL_VOID,
+    JCHECK(JS_DefineProperty(js_context, obj, cname, JSVAL_VOID,
         get_and_destroy_resolved_property, set, JSPROP_ENUMERATE));
 
     *objp = obj;
