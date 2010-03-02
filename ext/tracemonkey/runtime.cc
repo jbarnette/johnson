@@ -66,8 +66,7 @@ static VALUE seal(VALUE self, VALUE ruby_object, VALUE deep)
 
   JROOT(object);
 
-  JCHECK(JS_SealObject(context, JSVAL_TO_OBJECT(object), RTEST(deep) ? JS_FALSE : JS_TRUE));
-
+  JCHECK(JS_SealObject(context, JSVAL_TO_OBJECT(object), RTEST(deep) ? JS_TRUE : JS_FALSE));
   JRETURN_RUBY(Qtrue);
 }
 
