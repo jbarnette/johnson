@@ -130,7 +130,7 @@ DEFINE_RUBY_WRAPPER(global_p, global_p, ARGLIST1(name));
 
 static VALUE global_p(VALUE name)
 {
-  return (*StringValueCStr(name) == '$' && rb_ary_includes(rb_f_global_variables(), name)) ? Qtrue : Qfalse;
+  return (*StringValuePtr(name) == '$' && rb_ary_includes(rb_f_global_variables(), name)) ? Qtrue : Qfalse;
 }
 
 static VALUE method_p(VALUE self, VALUE name, ID id);
@@ -245,7 +245,8 @@ static JSBool get(JSContext* js_context, JSObject* obj, jsval id, jsval* retval)
   
   if (JSVAL_IS_INT(id))
   {
-    if (CALL_RUBY_WRAPPER(indexable_p,self)) {
+    if (CALL_RUBY_WRAPPER(indexable_p, self))
+    {
       VALUE idx = INT2FIX(JSVAL_TO_INT(id));
       JCHECK(call_ruby_from_js(runtime, retval, self, rb_intern("[]"), 1, idx));
     }

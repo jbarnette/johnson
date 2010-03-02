@@ -20,8 +20,7 @@ static VALUE global(VALUE self)
   JohnsonRuntime* runtime;
   Data_Get_Struct(self, JohnsonRuntime, runtime);
   JSContext * context = johnson_get_current_context(runtime);
-  PREPARE_RUBY_JROOTS(context, 0);
-  JRETURN_RUBY(CONVERT_TO_RUBY(runtime, OBJECT_TO_JSVAL(runtime->global)));
+  return convert_to_ruby(runtime, OBJECT_TO_JSVAL(runtime->global));
 }
 
 static VALUE new_global(VALUE self)
@@ -29,10 +28,8 @@ static VALUE new_global(VALUE self)
   JohnsonRuntime* runtime;
   Data_Get_Struct(self, JohnsonRuntime, runtime);
   JSContext * context = johnson_get_current_context(runtime);
-
-  PREPARE_RUBY_JROOTS(context, 0);
   JSObject* obj = johnson_create_global_object(context);
-  JRETURN_RUBY(CONVERT_TO_RUBY(runtime, OBJECT_TO_JSVAL(obj)));
+  return convert_to_ruby(runtime, OBJECT_TO_JSVAL(obj));
 }
 
 static VALUE new_split_global_outer(VALUE self)
@@ -40,12 +37,8 @@ static VALUE new_split_global_outer(VALUE self)
   JohnsonRuntime* runtime;
   Data_Get_Struct(self, JohnsonRuntime, runtime);
   JSContext * context = johnson_get_current_context(runtime);
-
-  PREPARE_RUBY_JROOTS(context, 0);
-
   JSObject* new_split_global_outer_object = johnson_create_split_global_outer_object(context);
-
-  JRETURN_RUBY(CONVERT_TO_RUBY(runtime, OBJECT_TO_JSVAL(new_split_global_outer_object)));
+  return convert_to_ruby(runtime, OBJECT_TO_JSVAL(new_split_global_outer_object));
 }
 
 static VALUE new_split_global_inner(VALUE self, VALUE ruby_outer)
@@ -53,17 +46,10 @@ static VALUE new_split_global_inner(VALUE self, VALUE ruby_outer)
   JohnsonRuntime* runtime;
   Data_Get_Struct(self, JohnsonRuntime, runtime);
   JSContext * context = johnson_get_current_context(runtime);
-
-  PREPARE_RUBY_JROOTS(context, 1);
-
   jsval outer;
-
-  JCHECK(convert_to_js(runtime,ruby_outer,&outer));
-  JROOT(outer);
-
+  convert_to_js(runtime,ruby_outer,&outer);
   JSObject* new_inner_object = johnson_create_split_global_inner_object(context,JSVAL_TO_OBJECT(outer));
-  
-  JRETURN_RUBY(CONVERT_TO_RUBY(runtime, OBJECT_TO_JSVAL(new_inner_object)));
+  return convert_to_ruby(runtime, OBJECT_TO_JSVAL(new_inner_object));
 }
 
 static VALUE seal(VALUE self, VALUE ruby_object, VALUE deep)
@@ -77,11 +63,12 @@ static VALUE seal(VALUE self, VALUE ruby_object, VALUE deep)
   jsval object;
 
   JCHECK(convert_to_js(runtime,ruby_object,&object));
+
   JROOT(object);
 
-  JSBool ok = JS_SealObject(context, JSVAL_TO_OBJECT(object), deep == Qfalse || deep == Qnil ? JS_FALSE : JS_TRUE);
+  JCHECK(JS_SealObject(context, JSVAL_TO_OBJECT(object), RTEST(deep) ? JS_FALSE : JS_TRUE));
 
-  JRETURN_RUBY(convert_to_ruby(runtime, ok ? JSVAL_TRUE : JSVAL_FALSE));
+  JRETURN_RUBY(Qtrue);
 }
 
 static JSTrapStatus trap_handler( JSContext *context,
