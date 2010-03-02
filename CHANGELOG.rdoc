@@ -1,3 +1,9 @@
+=== 2.0.0.pre3 / 2010-03-02
+
+* convert/protect predicates so that exceptions don't cause stack-jumping SEGVs
+* various cleanup of ext functions
+* convert runtime size parameter correctly
+
 === 2.0.0.pre2 / 2010-02-23
 
 * Raise NoMemoryError as appropriate; acccept a size parameter or env variable for runtime size
