@@ -65,15 +65,27 @@ initialize_native(VALUE self, VALUE rb_runtime, VALUE UNUSED(options))
     JS_SetOperationCallback(context->js, operation_callback);
     JS_SetContextPrivate(context->js, (void *)self);
 
+    /* This is sleezy ... and won't work worth crap with threads
+       ... but what will? We could do this set everytime(!) we call
+       SM so the TOS will be accurate, but for now, we'll just
+       assume extra 500K is more than the stack is ever going to usefully grow
+    */
+
+    void* dummy;
+    jsuword stackBase = (jsuword)&stackBase;
+#if JS_STACK_GROWTH_DIRECTION > 0
+    jsuword stackLimit = stackBase + 500000;
+#else
+    jsuword stackLimit = stackBase - 500000;
+#endif
+    JS_SetThreadStackLimit(context->js, stackLimit);
+
     JS_SetOptions(context->js, JS_GetOptions(context->js)
 #ifdef JSOPTION_DONT_REPORT_UNCAUGHT
         | JSOPTION_DONT_REPORT_UNCAUGHT
 #endif
 #ifdef JSOPTION_VAROBJFIX
         | JSOPTION_VAROBJFIX
-#endif
-#ifdef JSOPTION_ATLINE
-        | JSOPTION_ATLINE
 #endif
 #ifdef JSOPTION_ATLINE
         | JSOPTION_ATLINE
