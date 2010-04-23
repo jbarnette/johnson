@@ -115,7 +115,7 @@
 #define JPROTECT_T(T, func, data)                  \
   ({ \
     int _state; \
-    const VALUE _old_errinfo = ruby_errinfo; \
+    const VALUE _old_errinfo = rb_errinfo(); \
     const VALUE _result = rb_protect((func), (data), &_state); \
     if (_state) \
     { \
@@ -131,7 +131,7 @@
 #define JPROTECT(func, data) \
   ({ \
     int _state; \
-    const VALUE _old_errinfo = ruby_errinfo; \
+    const VALUE _old_errinfo = rb_errinfo(); \
     const VALUE _result = rb_protect((func), (data), &_state); \
     if (_state) \
     { \

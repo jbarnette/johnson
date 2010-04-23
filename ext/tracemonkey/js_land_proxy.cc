@@ -60,7 +60,7 @@ static VALUE call_ruby_from_js_invoke(VALUE args)
 
 JSBool call_ruby_from_js_va(JohnsonRuntime* runtime, VALUE* result, VALUE self, ID id, int argc, va_list va)
 {
-  VALUE old_errinfo = ruby_errinfo;
+  VALUE old_errinfo = rb_errinfo();
   VALUE args = rb_ary_new2((long)argc + 2);
 
   long i;
@@ -164,8 +164,9 @@ static VALUE attribute_p(VALUE self, VALUE name, ID id)
       METHOD* method;
       Data_Get_Struct(rb_method, METHOD, method);
 
-      if (method && nd_type(method->body) == NODE_IVAR)
+      if (method && nd_type(method->body) == NODE_IVAR) {
         return Qtrue;
+      }
     }
   }
 

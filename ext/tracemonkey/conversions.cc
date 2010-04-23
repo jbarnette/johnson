@@ -83,20 +83,12 @@ JSBool convert_to_js(JohnsonRuntime* runtime, VALUE ruby, jsval* retval)
       JERROR("I don't know how to handle T_MATCH.");
       JRETURN;
 
-    case T_BLKTAG:
-      JERROR("I don't know how to handle T_BLKTAG.");
-      JRETURN;
-
     case T_NODE:
       JERROR("I don't know how to handle T_NODE | T_MASK.");
       JRETURN;
 
     case T_UNDEF:
       JERROR("I don't know how to handle T_UNDEF.");
-      JRETURN;
-
-    case T_VARMAP:
-      JERROR("I don't know how to handle T_VARMAP.");
       JRETURN;
 
     case T_NIL:
@@ -334,8 +326,8 @@ JSBool report_ruby_error_in_js(JohnsonRuntime* runtime, int state, VALUE old_err
   {
     case TAG_RAISE:
       {
-        VALUE local_error = ruby_errinfo;
-        ruby_errinfo = old_errinfo;
+        VALUE local_error = rb_errinfo();
+        rb_set_errinfo(old_errinfo);
 
         if (rb_funcall(local_error, rb_intern("respond_to?"), 1, ID2SYM(rb_intern("copy_ruby_stack_to_deck"))))
           rb_funcall(local_error, rb_intern("copy_ruby_stack_to_deck"), 0);

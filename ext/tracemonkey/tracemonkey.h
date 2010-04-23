@@ -14,7 +14,7 @@
 #include "jroot.h"
 
 #ifndef StringValueLen
-#define StringValueLen(v) (RSTRING(v)->len)
+#define StringValueLen(v) (RSTRING_LEN(v))
 #endif
 
 #ifndef UNUSED

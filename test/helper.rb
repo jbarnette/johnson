@@ -57,7 +57,7 @@ module Johnson
       if !enumerable.include?( element )
         flunk element.to_s + " not in [" + enumerable.map { |e| e.to_s }.join(" ") + "]"
       end
-  end
+    end
 
     def assert_sexp(*args)
       if args.length == 2
