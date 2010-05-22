@@ -627,7 +627,7 @@ JSBool make_js_land_proxy(JohnsonRuntime* runtime, VALUE value, jsval* retval)
         rb_intern("treat_all_properties_as_methods"), 1, value);
 
     bool callable_p = Qtrue == rb_funcall(value,
-      rb_intern("respond_to?"), 1, rb_str_new2("call"));
+      rb_intern("respond_to?"), 1, ID2SYM(rb_intern("call")));
       
     if (callable_p)
       klass = &JSLandCallableProxyClass;
