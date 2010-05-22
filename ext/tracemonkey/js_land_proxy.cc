@@ -156,6 +156,7 @@ static VALUE attribute_p(VALUE self, VALUE name, ID id)
   VALUE rb_id = id;
   VALUE rb_method = rb_funcall(self, rb_intern("method"), 1, ID2SYM(rb_id));
 
+#ifndef RUBINIUS
   if (TYPE(rb_method) == T_DATA)
   {
     VALUE klass = CLASS_OF(rb_method);
@@ -168,6 +169,7 @@ static VALUE attribute_p(VALUE self, VALUE name, ID id)
         return Qtrue;
     }
   }
+#endif
 
   return (RTEST(rb_funcall(Johnson_TraceMonkey_JSLandProxy(),
     rb_intern("js_property?"), 2, self, ID2SYM(rb_id)))) ? Qtrue : Qfalse;

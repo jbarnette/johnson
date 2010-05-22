@@ -8,6 +8,7 @@ bool js_value_is_proxy(JohnsonRuntime* runtime, jsval maybe_proxy);
 VALUE unwrap_js_land_proxy(JohnsonRuntime* runtime, jsval proxy);
 JSBool make_js_land_proxy(JohnsonRuntime* runtime, VALUE value, jsval* retval);
 
+#ifndef RUBINIUS
 #include "node.h"
 typedef struct {
   VALUE klass, rklass;
@@ -16,5 +17,6 @@ typedef struct {
   int safe_level;
   NODE *body;
 } METHOD;
+#endif
 
 #endif
