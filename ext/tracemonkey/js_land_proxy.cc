@@ -115,12 +115,12 @@ static VALUE const_p(VALUE self, VALUE name, ID id);
 DECLARE_RUBY_WRAPPER(const_p, VALUE self; VALUE name; ID id);
 DEFINE_RUBY_WRAPPER(const_p, const_p, ARGLIST3(self, name, id));
 
-static VALUE const_p(VALUE self, VALUE UNUSED(name), VALUE id)
+static VALUE const_p(VALUE self, VALUE name, ID id)
 {
   
   return (rb_obj_is_kind_of(self, rb_cModule)
     && rb_is_const_id(id)
-    && RTEST( rb_funcall(self, rb_intern("const_defined?"), 1, ID2SYM(id) )))  ? Qtrue : Qfalse;
+    && RTEST( rb_funcall(self, rb_intern("const_defined?"), 1, name )))  ? Qtrue : Qfalse;
 }
 
 static VALUE global_p(VALUE name);
