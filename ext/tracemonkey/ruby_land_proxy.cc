@@ -10,8 +10,8 @@ DEFINE_RUBY_WRAPPER(rb_yield, rb_yield, ARGLIST1(v))
 DECLARE_RUBY_WRAPPER(rb_check_type, VALUE o; int t)
 DEFINE_VOID_RUBY_WRAPPER(rb_check_type, rb_check_type, ARGLIST2(o, t))
 
-DEFINE_RUBY_WRAPPER(rb_string_value, rb_string_value, ARGLIST1T(volatile VALUE*,v))
-DEFINE_VOID_RUBY_WRAPPER(rb_string_value_cstr, rb_string_value_cstr, ARGLIST1T(volatile VALUE*,v))
+DEFINE_RUBY_WRAPPER(rb_string_value, rb_string_value, ARGLIST1T(VALUE*,v))
+DEFINE_VOID_RUBY_WRAPPER(rb_string_value_cstr, rb_string_value_cstr, ARGLIST1T(VALUE*,v))
 
 DEFINE_RUBY_WRAPPER(make_ruby_land_proxy, make_ruby_land_proxy, ARGLIST3(runtime, value, root_name))
 
