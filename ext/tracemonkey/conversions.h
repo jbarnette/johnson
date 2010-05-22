@@ -27,6 +27,8 @@ VALUE convert_to_ruby(JohnsonRuntime* runtime, jsval js);
 VALUE convert_js_string_to_ruby(JohnsonRuntime* runtime, JSString* str);
 
 NORETURN(void raise_js_error_in_ruby(JohnsonRuntime* runtime));
-JSBool report_ruby_error_in_js(JohnsonRuntime* runtime, int state, VALUE old_errinfo);
+JSBool report_ruby_error_in_js(JohnsonRuntime* runtime, VALUE old_errinfo);
+
+VALUE jprotect_error_handler(VALUE caller_info, VALUE exception);
 
 #endif

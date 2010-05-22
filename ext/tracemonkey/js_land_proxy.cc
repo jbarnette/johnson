@@ -58,9 +58,14 @@ static VALUE call_ruby_from_js_invoke(VALUE args)
   return rb_apply(self, SYM2ID(id), args);
 }
 
+VALUE call_ruby_from_js_err(VALUE runtime_ptr, VALUE exception)
+{
+  report_ruby_error_in_js((JohnsonRuntime*)runtime_ptr, exception);
+  return runtime_ptr;
+}
+
 JSBool call_ruby_from_js_va(JohnsonRuntime* runtime, VALUE* result, VALUE self, ID id, int argc, va_list va)
 {
-  VALUE old_errinfo = ruby_errinfo;
   VALUE args = rb_ary_new2((long)argc + 2);
 
   long i;
@@ -70,11 +75,13 @@ JSBool call_ruby_from_js_va(JohnsonRuntime* runtime, VALUE* result, VALUE self, 
   rb_ary_store(args, (long)argc, ID2SYM(id));
   rb_ary_store(args, (long)argc + 1, self);
 
-  int state;
-  *result = rb_protect(call_ruby_from_js_invoke, args, &state);
+  VALUE rt_ptr = (VALUE)runtime;
 
-  if (state)
-    return report_ruby_error_in_js(runtime, state, old_errinfo);
+  VALUE temp = rb_rescue2((VALUE(*)(ANYARGS))call_ruby_from_js_invoke, args, (VALUE(*)(ANYARGS))call_ruby_from_js_err, rt_ptr, rb_cObject, 0);
+  if (temp == rt_ptr)
+    return JS_FALSE;
+
+  *result = temp;
 
   return JS_TRUE;
 }
