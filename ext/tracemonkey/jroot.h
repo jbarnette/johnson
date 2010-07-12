@@ -34,11 +34,12 @@ typedef struct {
   JSContext* context;
   int cleanidx;
   int cleans;
-  jroot_cleanup_t cleanup[];
+  jroot_cleanup_t* cleanup;
 } jroot_info_t;
 
 #define _PREPARE_JROOTS(_rb, _context, _cleancount) \
-  jroot_info_t* _jroot = (jroot_info_t*)alloca(sizeof(jroot_info_t) + 2 * sizeof(void*) * _cleancount); \
+  jroot_info_t* _jroot = (jroot_info_t*)alloca(sizeof(jroot_info_t)); \
+  _jroot->cleanup = (jroot_cleanup_t*)alloca(sizeof(jroot_cleanup_t) * _cleancount); \
   _jroot->ruby = (_rb); \
   _jroot->cleans = (_cleancount); \
   _jroot->context = (_context); \
