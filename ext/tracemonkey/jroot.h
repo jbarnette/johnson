@@ -22,7 +22,7 @@
     Data_Get_Struct(_ruby_runtime, JohnsonRuntime, _johnson_runtime); \
     _johnson_runtime; \
    })
-    
+
 
 typedef struct {
   void (*func)(JSContext*, void*);
@@ -127,20 +127,10 @@ typedef struct {
 
 #define _JPROTECT(func, data, cast) \
   ({ \
-    int _state; \
-    const VALUE _old_errinfo = ruby_errinfo; \
-    const VALUE _result = rb_protect((func), (data), &_state); \
-    if (_state) \
-    { \
-      REMOVE_JROOTS; \
-      if (_jroot->ruby) \
-        rb_jump_tag(_state); \
-      else \
-        return cast(report_ruby_error_in_js(OUR_RUNTIME(_jroot->context), _state, _old_errinfo)); \
-    } \
+    const VALUE _result = rb_rescue2((VALUE(*)(ANYARGS))(func), (data), (VALUE(*)(ANYARGS))&jprotect_error_handler, (VALUE)(_jroot), rb_cObject, 0); \
+    if (!_jroot->ruby && _result == (VALUE)(_jroot)) return cast(JS_FALSE); \
     _result; \
   })
-
 #define JPROTECT(func, data) \
   _JPROTECT(func, data, )
 #define JPROTECT_T(T, func, data) \

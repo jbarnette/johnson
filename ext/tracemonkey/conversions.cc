@@ -326,40 +326,30 @@ NORETURN(void) raise_js_error_in_ruby(JohnsonRuntime* runtime)
 #define TAG_RAISE 0x6
 #define TAG_THROW 0x7
 
-JSBool report_ruby_error_in_js(JohnsonRuntime* runtime, int state, VALUE old_errinfo)
+JSBool report_ruby_error_in_js(JohnsonRuntime* runtime, VALUE local_error)
 {
   JSContext * context = johnson_get_current_context(runtime);
-  assert(state);
-  switch (state)
-  {
-    case TAG_RAISE:
-      {
-        VALUE local_error = ruby_errinfo;
-        ruby_errinfo = old_errinfo;
 
-        if (rb_funcall(local_error, rb_intern("respond_to?"), 1, ID2SYM(rb_intern("copy_ruby_stack_to_deck"))))
-          rb_funcall(local_error, rb_intern("copy_ruby_stack_to_deck"), 0);
+  if (rb_funcall(local_error, rb_intern("respond_to?"), 1, ID2SYM(rb_intern("copy_ruby_stack_to_deck"))))
+    rb_funcall(local_error, rb_intern("copy_ruby_stack_to_deck"), 0);
 
-        VALUE rb_runtime = (VALUE)JS_GetRuntimePrivate(runtime->js);
-        rb_iv_set(local_error, "@js_stack", rb_funcall(rb_runtime, rb_intern("current_stack"), 0));
+  VALUE rb_runtime = (VALUE)JS_GetRuntimePrivate(runtime->js);
+  rb_iv_set(local_error, "@js_stack", rb_funcall(rb_runtime, rb_intern("current_stack"), 0));
 
-        jsval js_error;
-        convert_to_js(runtime, local_error, &js_error);
-        JS_SetPendingException(context, js_error);
+  jsval js_error;
+  convert_to_js(runtime, local_error, &js_error);
+  JS_SetPendingException(context, js_error);
 
-        return JS_FALSE ;
-      }
+  return JS_FALSE;
+}
 
-    case TAG_THROW:
-      // FIXME: This should be propagated to JS... as an exception?
-
-    default:
-      {
-        JSString* str = JS_NewStringCopyZ(context, "Unexpected longjmp from ruby!");
-        if (str)
-          JS_SetPendingException(context, STRING_TO_JSVAL(str));
-        return JS_FALSE;
-      }
-  }
+VALUE jprotect_error_handler(VALUE caller_info, VALUE exception) {
+  jroot_info_t *_jroot = (jroot_info_t*)caller_info;
+  REMOVE_JROOTS;
+  if (_jroot->ruby)
+    rb_exc_raise(exception);
+  else
+    report_ruby_error_in_js(OUR_RUNTIME(_jroot->context), exception);
+  return caller_info;
 }
 
