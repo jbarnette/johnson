@@ -271,7 +271,7 @@ static VALUE data_pn_dval(VALUE self) {
   ImmutableNodeContext * ctx;
 
   Data_Get_Struct(self, ImmutableNodeContext, ctx);
-  if(JSVAL_IS_NUMBER(ATOM_KEY(ctx->node->pn_atom))) {
+  if(ctx->node->pn_type == TOK_NUMBER) {
     return rb_float_new(ctx->node->pn_dval);
   } else {
     return INT2NUM((long)(ctx->node->pn_dval));
