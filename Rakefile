@@ -13,6 +13,17 @@ INTERPRETERS = [ "tracemonkey" ]
 SUFFIXES = {}
 SUFFIXES[ "tracemonkey" ] = "cc"
 
+unless RbConfig::CONFIG['CC'].empty?
+  # Let's have TM use the same C compiler that our Ruby did.
+  ENV['CC'] = RbConfig::CONFIG['CC']
+
+  # Further, let's try to guess a "matching" C++ compiler. This is
+  # mostly about using c++-4.2, if available, on new Mac OS X; our TM
+  # won't build on gcc-clang... but nor will Ruby 1.8.7.
+  cxx_maybe = RbConfig::CONFIG['CC'].gsub(/gcc/, 'c++')
+  ENV['CXX'] = ENV['CCC'] = cxx_maybe if File.executable?(cxx_maybe)
+end
+
 generated_nodes = []
 
 INTERPRETERS.each do |interpreter|

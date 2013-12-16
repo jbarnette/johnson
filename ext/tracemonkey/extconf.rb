@@ -24,7 +24,7 @@ Dir.chdir tracemonkey_dir do
   system "autoconf213" or
     system "autoconf-2.13" or 
     raise "could not run autoconf" if Dir["configure"].empty?
-  system "./configure --enable-static" or raise "could not run configure" if Dir["Makefile"].empty?
+  system "./configure --disable-tests --enable-static" or raise "could not run configure" if Dir["Makefile"].empty?
   system 'egrep -q '+%q('MOZ_DEBUG[[:space:]]*=[[:space:]]*1')+' config/autoconf.mk'
   debug = ""
   if $?.exitstatus == 0
